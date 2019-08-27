@@ -501,7 +501,6 @@ class RegistrationHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def _join_user_to_room(self, requester, room_identifier):
-        room_id = None
         room_member_handler = self.hs.get_room_member_handler()
         if RoomID.is_valid(room_identifier):
             room_id = room_identifier
@@ -649,7 +648,7 @@ class RegistrationHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def post_registration_actions(
-        self, user_id, auth_result, access_token, bind_email, bind_msisdn
+        self, user_id, auth_result, access_token,
     ):
         """A user has completed registration
 
@@ -659,18 +658,12 @@ class RegistrationHandler(BaseHandler):
                 registered user.
             access_token (str|None): The access token of the newly logged in
                 device, or None if `inhibit_login` enabled.
-            bind_email (bool): Whether to bind the email with the identity
-                server.
-            bind_msisdn (bool): Whether to bind the msisdn with the identity
-                server.
         """
         if self.hs.config.worker_app:
             yield self._post_registration_client(
                 user_id=user_id,
                 auth_result=auth_result,
                 access_token=access_token,
-                bind_email=bind_email,
-                bind_msisdn=bind_msisdn,
             )
             return
 
@@ -684,12 +677,12 @@ class RegistrationHandler(BaseHandler):
                 yield self.store.upsert_monthly_active_user(user_id)
 
             yield self._register_email_threepid(
-                user_id, threepid, access_token, bind_email
+                user_id, threepid, access_token,
             )
 
         if auth_result and LoginType.MSISDN in auth_result:
             threepid = auth_result[LoginType.MSISDN]
-            yield self._register_msisdn_threepid(user_id, threepid, bind_msisdn)
+            yield self._register_msisdn_threepid(user_id, threepid)
 
         if auth_result and LoginType.TERMS in auth_result:
             yield self._on_user_consented(user_id, self.hs.config.user_consent_version)
@@ -708,13 +701,11 @@ class RegistrationHandler(BaseHandler):
         yield self.post_consent_actions(user_id)
 
     @defer.inlineCallbacks
-    def _register_email_threepid(self, user_id, threepid, token, bind_email):
+    def _register_email_threepid(self, user_id, threepid, token):
         """Add an email address as a 3pid identifier
 
         Also adds an email pusher for the email address, if configured in the
         HS config
-
-        Also optionally binds emails to the given user_id on the identity server
 
         Must be called on master.
 
@@ -723,8 +714,6 @@ class RegistrationHandler(BaseHandler):
             threepid (object): m.login.email.identity auth response
             token (str|None): access_token for the user, or None if not logged
                 in.
-            bind_email (bool): true if the client requested the email to be
-                bound at the identity server
         Returns:
             defer.Deferred:
         """
@@ -766,20 +755,9 @@ class RegistrationHandler(BaseHandler):
                 data={},
             )
 
-        if bind_email:
-            logger.info("bind_email specified: binding")
-            logger.debug("Binding emails %s to %s" % (threepid, user_id))
-            yield self.identity_handler.bind_threepid(
-                threepid["threepid_creds"], user_id
-            )
-        else:
-            logger.info("bind_email not specified: not binding email")
-
     @defer.inlineCallbacks
-    def _register_msisdn_threepid(self, user_id, threepid, bind_msisdn):
+    def _register_msisdn_threepid(self, user_id, threepid):
         """Add a phone number as a 3pid identifier
-
-        Also optionally binds msisdn to the given user_id on the identity server
 
         Must be called on master.
 
@@ -787,8 +765,6 @@ class RegistrationHandler(BaseHandler):
             user_id (str): id of user
             threepid (object): m.login.msisdn auth response
             token (str): access_token for the user
-            bind_email (bool): true if the client requested the email to be
-                bound at the identity server
         Returns:
             defer.Deferred:
         """
@@ -804,12 +780,3 @@ class RegistrationHandler(BaseHandler):
         yield self._auth_handler.add_threepid(
             user_id, threepid["medium"], threepid["address"], threepid["validated_at"]
         )
-
-        if bind_msisdn:
-            logger.info("bind_msisdn specified: binding")
-            logger.debug("Binding msisdn %s to %s", threepid, user_id)
-            yield self.identity_handler.bind_threepid(
-                threepid["threepid_creds"], user_id
-            )
-        else:
-            logger.info("bind_msisdn not specified: not binding msisdn")
