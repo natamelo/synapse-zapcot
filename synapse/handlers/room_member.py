@@ -830,6 +830,21 @@ class RoomMemberHandler(object):
 
     @defer.inlineCallbacks
     def _verify_any_signature(self, data, server_hostname):
+        """Verify a signature from a server
+
+        Note: This is only called after contacting an identity server via v1 Identity
+        Service API endpoints. As such, there's no need for this function to use v2 endpoints
+
+        Args:
+            data (dict): Dictionary containing a "signatures" key which will be verified
+                against the provided "server_hostname"
+            server_hostname (str): The hostname of the server to verify the signatures against
+
+        Raises:
+            ...
+
+
+        """
         if server_hostname not in data["signatures"]:
             raise AuthError(401, "No signature from server %s" % (server_hostname,))
         for key_name, signature in data["signatures"][server_hostname].items():
@@ -1018,7 +1033,7 @@ class RoomMemberHandler(object):
         if not public_keys:
             public_keys.append(fallback_public_key)
         display_name = data["display_name"]
-        return (token, public_keys, fallback_public_key, display_name)
+        return token, public_keys, fallback_public_key, display_name
 
     @defer.inlineCallbacks
     def _is_host_in_room(self, current_state_ids):
