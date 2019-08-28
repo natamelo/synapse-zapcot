@@ -172,13 +172,14 @@ class IdentityHandler(BaseHandler):
         return changed
 
     @defer.inlineCallbacks
-    def try_unbind_threepid_with_id_server(self, mxid, threepid, id_server):
+    def try_unbind_threepid_with_id_server(self, mxid, threepid, id_server, use_v2=True):
         """Removes a binding from an identity server
 
         Args:
             mxid (str): Matrix user ID of binding to be removed
             threepid (dict): Dict with medium & address of binding to be removed
             id_server (str): Identity server to unbind from
+            use_v2 (bool): Whether to use the v2 identity service unbind API
 
         Raises:
             SynapseError: If we failed to contact the identity server
@@ -187,7 +188,14 @@ class IdentityHandler(BaseHandler):
             Deferred[bool]: True on success, otherwise False if the identity
             server doesn't support unbinding
         """
-        url = "https://%s/_matrix/identity/api/v1/3pid/unbind" % (id_server,)
+        # First attempt the v2 endpoint
+        if use_v2:
+            url = "https://%s/_matrix/identity/v2/3pid/unbind" % (id_server,)
+            url_bytes = "/_matrix/identity/v2/3pid/unbind".encode("ascii")
+        else:
+            url = "https://%s/_matrix/identity/api/v1/3pid/unbind" % (id_server,)
+            url_bytes = "/_matrix/identity/api/v1/3pid/unbind".encode("ascii")
+
         content = {
             "mxid": mxid,
             "threepid": {"medium": threepid["medium"], "address": threepid["address"]},
@@ -199,7 +207,7 @@ class IdentityHandler(BaseHandler):
         auth_headers = self.federation_http_client.build_auth_headers(
             destination=None,
             method="POST",
-            url_bytes="/_matrix/identity/api/v1/3pid/unbind".encode("ascii"),
+            url_bytes=url_bytes,
             content=content,
             destination_is=id_server,
         )
@@ -210,7 +218,12 @@ class IdentityHandler(BaseHandler):
             changed = True
         except HttpResponseException as e:
             changed = False
-            if e.code in (400, 404, 501):
+            if e.code is 404 and use_v2:
+                # v2 is not supported yet, try again with v1
+                return (yield self.try_unbind_threepid_with_id_server(
+                    mxid, threepid, id_server, False
+                ))
+            elif e.code in (400, 404, 501):
                 # The remote server probably doesn't support unbinding (yet)
                 logger.warn("Received %d response while unbinding threepid", e.code)
             else:
