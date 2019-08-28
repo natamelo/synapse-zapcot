@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReplicationRegisterServlet(ReplicationEndpoint):
-    """Register a new user
-    """
+    """Register a new user"""
 
     NAME = "register_user"
     PATH_ARGS = ("user_id",)
@@ -94,8 +93,7 @@ class ReplicationRegisterServlet(ReplicationEndpoint):
 
 
 class ReplicationPostRegisterActionsServlet(ReplicationEndpoint):
-    """Run any post registration actions
-    """
+    """Run any post registration actions"""
 
     NAME = "post_register"
     PATH_ARGS = ("user_id",)

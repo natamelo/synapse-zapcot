@@ -62,20 +62,43 @@ class IdentityHandler(BaseHandler):
         return True
 
     @defer.inlineCallbacks
-    def threepid_from_creds(self, creds):
-        if "id_server" in creds:
-            id_server = creds["id_server"]
-        elif "idServer" in creds:
-            id_server = creds["idServer"]
-        else:
+    def threepid_from_creds(self, creds, use_v2=True):
+        """
+        Retrieve a threepid identifier from a "credentials" dictionary
+
+        Args:
+            creds (dict[str, str]): Dictionary of credentials that contain the following keys:
+                * client_secret|clientSecret: A unique secret str provided by the client
+                * id_server|idServer: the domain of the identity server to query
+                * id_access_token: The access token to authenticate to the identity
+                    server with. Required if use_v2 is true
+            use_v2 (bool): Whether to use v2 Identity Service API endpoints
+
+        Returns:
+            Deferred[dict[str,str|int]|None]: A dictionary consisting of response params to
+                the /getValidated3pid endpoint of the Identity Service API, or None if the
+                threepid was not found
+        """
+        client_secret = creds.get("client_secret") or creds.get("clientSecret")
+        if not client_secret:
+            raise SynapseError(400, "No client_secret in creds")
+
+        id_server = creds.get("id_server") or creds.get("idServer")
+        if not id_server:
             raise SynapseError(400, "No id_server in creds")
 
-        if "client_secret" in creds:
-            client_secret = creds["client_secret"]
-        elif "clientSecret" in creds:
-            client_secret = creds["clientSecret"]
+        if use_v2:
+            # v2 endpoints require an identity server access token. We need one if we're
+            # using v2 endpoints
+            id_access_token = creds.get("id_access_token")
+            if not id_access_token:
+                raise SynapseError(400, "No id_access_token in creds when id_server provided")
+
+            # Use the v2 API endpoint URLs
+            url_endpoint = "/_matrix/identity/v2/3pid/getValidated3pid"
         else:
-            raise SynapseError(400, "No client_secret in creds")
+            # Use the v1 API endpoint URLs
+            url_endpoint = "/_matrix/identity/api/v1/3pid/getValidated3pid"
 
         if not self._should_trust_id_server(id_server):
             logger.warn(
@@ -87,21 +110,23 @@ class IdentityHandler(BaseHandler):
         try:
             data = yield self.http_client.get_json(
                 "https://%s%s"
-                % (id_server, "/_matrix/identity/api/v1/3pid/getValidated3pid"),
+                % (id_server, url_endpoint),
                 {"sid": creds["sid"], "client_secret": client_secret},
             )
         except HttpResponseException as e:
+            if e.code is 404 and use_v2:
+                # This identity server is too old to understand Identity Service API v2
+                # Attempt v1 endpoint
+                return (yield self.threepid_from_creds(creds, use_v2=False))
+
             logger.info("getValidated3pid failed with Matrix error: %r", e)
             raise e.to_synapse_error()
 
-        if "medium" in data:
-            return data
-        return None
+        return data if "medium" in data else None
 
     @defer.inlineCallbacks
     def bind_threepid(self, creds, mxid):
         logger.debug("binding threepid %r to %s", creds, mxid)
-        data = None
 
         if "id_server" in creds:
             id_server = creds["id_server"]
@@ -221,7 +246,7 @@ class IdentityHandler(BaseHandler):
             if e.code is 404 and use_v2:
                 # v2 is not supported yet, try again with v1
                 return (yield self.try_unbind_threepid_with_id_server(
-                    mxid, threepid, id_server, False
+                    mxid, threepid, id_server, use_v2=False
                 ))
             elif e.code in (400, 404, 501):
                 # The remote server probably doesn't support unbinding (yet)
