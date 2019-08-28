@@ -87,10 +87,10 @@ class IdentityHandler(BaseHandler):
         if not id_server:
             raise SynapseError(400, "No id_server in creds")
 
+        id_access_token = creds.get("id_access_token")
         if use_v2:
             # v2 endpoints require an identity server access token. We need one if we're
             # using v2 endpoints
-            id_access_token = creds.get("id_access_token")
             if not id_access_token:
                 raise SynapseError(400, "No id_access_token in creds when id_server provided")
 
@@ -108,10 +108,14 @@ class IdentityHandler(BaseHandler):
             return None
 
         try:
+            query_params = {"sid": creds["sid"], "client_secret": client_secret},
+            if use_v2:
+                query_params["id_access_token"] = id_access_token
+
             data = yield self.http_client.get_json(
                 "https://%s%s"
                 % (id_server, url_endpoint),
-                {"sid": creds["sid"], "client_secret": client_secret},
+                query_params
             )
         except HttpResponseException as e:
             if e.code is 404 and use_v2:
