@@ -87,7 +87,7 @@ class IdentityHandler(BaseHandler):
         try:
             data = yield self.http_client.get_json(
                 "https://%s%s"
-                % (id_server, "/_matrix/identity/v2/3pid/getValidated3pid"),
+                % (id_server, "/_matrix/identity/api/v1/3pid/getValidated3pid"),
                 {"sid": creds["sid"], "client_secret": client_secret},
             )
         except HttpResponseException as e:

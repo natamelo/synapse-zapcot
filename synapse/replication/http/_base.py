@@ -89,7 +89,7 @@ class ReplicationEndpoint(object):
         assert self.METHOD in ("PUT", "POST", "GET")
 
     @abc.abstractmethod
-    def _serialize_payload(**kwargs):
+    def _serialize_payload(self, **kwargs):
         """Static method that is called when creating a request.
 
         Concrete implementations should have explicit parameters (rather than
