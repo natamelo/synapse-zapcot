@@ -953,6 +953,7 @@ class RoomMemberHandler(object):
         room_name,
         inviter_display_name,
         inviter_avatar_url,
+        use_v2=True,
     ):
         """
         Asks an identity server for a third party invite.
@@ -972,6 +973,7 @@ class RoomMemberHandler(object):
             inviter_display_name (str): The current display name of the
                 inviter.
             inviter_avatar_url (str): The URL of the inviter's avatar.
+            use_v2 (bool): Whether to use v2 Identity Service API endpoints.
 
         Returns:
             A deferred tuple containing:
@@ -983,10 +985,24 @@ class RoomMemberHandler(object):
                     user.
         """
 
-        is_url = "%s%s/_matrix/identity/api/v1/store-invite" % (
-            id_server_scheme,
-            id_server,
-        )
+        if use_v2:
+            is_url = "%s%s/_matrix/identity/v2/store-invite" % (
+                id_server_scheme,
+                id_server,
+            )
+            validity_url = "%s%s/_matrix/identity/v2/pubkey/isvalid" % (
+                id_server_scheme,
+                id_server,
+            )
+        else:
+            is_url = "%s%s/_matrix/identity/api/v1/store-invite" % (
+                id_server_scheme,
+                id_server,
+            )
+            validity_url = "%s%s/_matrix/identity/api/v1/pubkey/isvalid" % (
+                id_server_scheme,
+                id_server,
+            )
 
         invite_config = {
             "medium": medium,
@@ -1006,6 +1022,20 @@ class RoomMemberHandler(object):
                 is_url, invite_config
             )
         except HttpResponseException as e:
+            if use_v2 and HttpResponseException.code is 404:
+                # This identity server does not support v2 URLs
+                # Fallback to v1
+                logger.info(
+                    "Got 404 when POSTing JSON %s, falling back to v1 URL",
+                    is_url,
+                )
+                # Rerun this function with v1 endpoints
+                return (yield self._ask_id_server_for_third_party_invite(
+                    requester, id_server, medium, address, room_id, inviter_user_id,
+                    room_alias, room_avatar_url, room_join_rules, room_name,
+                    inviter_display_name, inviter_avatar_url, use_v2=False,
+                ))
+
             # Some identity servers may only support application/x-www-form-urlencoded
             # types. This is especially true with old instances of Sydent, see
             # https://github.com/matrix-org/sydent/pull/170
@@ -1024,8 +1054,7 @@ class RoomMemberHandler(object):
         if "public_key" in data:
             fallback_public_key = {
                 "public_key": data["public_key"],
-                "key_validity_url": "%s%s/_matrix/identity/api/v1/pubkey/isvalid"
-                % (id_server_scheme, id_server),
+                "key_validity_url": validity_url,
             }
         else:
             fallback_public_key = public_keys[0]

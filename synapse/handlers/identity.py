@@ -61,10 +61,40 @@ class IdentityHandler(BaseHandler):
                 return False
         return True
 
+    def _extract_items_from_creds_dict(self, creds, require_access_token=True):
+        """
+        Retrieve entries from a "credentials" dictionary
+
+        Args:
+            creds (dict[str, str]): Dictionary of credentials that contain the following keys:
+                * client_secret|clientSecret: A unique secret str provided by the client
+                * id_server|idServer: the domain of the identity server to query
+                * id_access_token: The access token to authenticate to the identity
+                    server with.
+            require_access_token: Whether id_access_token is a required key in creds
+
+        Returns:
+            tuple(str, str, str|None): A tuple containing the client_secret, the id_server,
+                and optionally the id_access_token values.
+        """
+        client_secret = creds.get("client_secret") or creds.get("clientSecret")
+        if not client_secret:
+            raise SynapseError(400, "No client_secret in creds")
+
+        id_server = creds.get("id_server") or creds.get("idServer")
+        if not id_server:
+            raise SynapseError(400, "No id_server in creds")
+
+        id_access_token = creds.get("id_access_token")
+        if require_access_token:
+            # v2 endpoints require an identity server access token
+            if not id_access_token:
+                raise SynapseError(400, "No id_access_token in creds when id_server provided")
+
     @defer.inlineCallbacks
     def threepid_from_creds(self, creds, use_v2=True):
         """
-        Retrieve a threepid identifier from a "credentials" dictionary
+        Retrieve and validate a threepid identitier from a "credentials" dictionary
 
         Args:
             creds (dict[str, str]): Dictionary of credentials that contain the following keys:
@@ -79,25 +109,14 @@ class IdentityHandler(BaseHandler):
                 the /getValidated3pid endpoint of the Identity Service API, or None if the
                 threepid was not found
         """
-        client_secret = creds.get("client_secret") or creds.get("clientSecret")
-        if not client_secret:
-            raise SynapseError(400, "No client_secret in creds")
+        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(
+            creds, require_access_token=use_v2
+        )
 
-        id_server = creds.get("id_server") or creds.get("idServer")
-        if not id_server:
-            raise SynapseError(400, "No id_server in creds")
-
-        id_access_token = creds.get("id_access_token")
+        # Decided which API endpoint URLs to use
         if use_v2:
-            # v2 endpoints require an identity server access token. We need one if we're
-            # using v2 endpoints
-            if not id_access_token:
-                raise SynapseError(400, "No id_access_token in creds when id_server provided")
-
-            # Use the v2 API endpoint URLs
             url_endpoint = "/_matrix/identity/v2/3pid/getValidated3pid"
         else:
-            # Use the v1 API endpoint URLs
             url_endpoint = "/_matrix/identity/api/v1/3pid/getValidated3pid"
 
         if not self._should_trust_id_server(id_server):
@@ -129,28 +148,37 @@ class IdentityHandler(BaseHandler):
         return data if "medium" in data else None
 
     @defer.inlineCallbacks
-    def bind_threepid(self, creds, mxid):
+    def bind_threepid(self, creds, mxid, use_v2=True):
+        """Bind a 3PID to an identity server
+
+        Args:
+            creds (dict[str, str]): Dictionary of credentials that contain the following keys:
+                * client_secret|clientSecret: A unique secret str provided by the client
+                * id_server|idServer: the domain of the identity server to query
+                * id_access_token: The access token to authenticate to the identity
+                    server with. Required if use_v2 is true
+            mxid (str): The MXID to bind the 3PID to
+            use_v2 (bool): Whether to use v2 Identity Service API endpoints
+
+        Returns:
+            Deferred[Dict]: The response from the identity server
+        """
         logger.debug("binding threepid %r to %s", creds, mxid)
 
-        if "id_server" in creds:
-            id_server = creds["id_server"]
-        elif "idServer" in creds:
-            id_server = creds["idServer"]
-        else:
-            raise SynapseError(400, "No id_server in creds")
+        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(
+            creds, require_access_token=use_v2
+        )
 
-        if "client_secret" in creds:
-            client_secret = creds["client_secret"]
-        elif "clientSecret" in creds:
-            client_secret = creds["clientSecret"]
+        # Decide which API endpoint URLs to use
+        bind_data = {"sid": creds["sid"], "client_secret": client_secret, "mxid": mxid}
+        if use_v2:
+            bind_url = "https://%s/_matrix/identity/v2/3pid/bind" % (id_server,)
+            bind_data["id_access_token"] = id_access_token
         else:
-            raise SynapseError(400, "No client_secret in creds")
+            bind_url = "https://%s/_matrix/identity/api/v1/3pid/bind" % (id_server,)
 
         try:
-            data = yield self.http_client.post_json_get_json(
-                "https://%s%s" % (id_server, "/_matrix/identity/api/v1/3pid/bind"),
-                {"sid": creds["sid"], "client_secret": client_secret, "mxid": mxid},
-            )
+            data = yield self.http_client.post_json_get_json(bind_url, bind_data)
             logger.debug("bound threepid %r to %s", creds, mxid)
 
             # Remember where we bound the threepid
