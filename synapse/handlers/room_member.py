@@ -1032,7 +1032,7 @@ class RoomMemberHandler(object):
             if use_v2 and HttpResponseException.code == 404:
                 # This identity server does not support v2 URLs
                 # Fallback to v1
-                logger.info(
+                logger.warn(
                     "Got 404 when POSTing JSON %s, falling back to v1 URL", is_url
                 )
                 # Rerun this function with v1 endpoints

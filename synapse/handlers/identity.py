@@ -123,9 +123,13 @@ class IdentityHandler(BaseHandler):
 
         # Decided which API endpoint URLs to use
         if use_v2:
-            url_endpoint = "/_matrix/identity/v2/3pid/getValidated3pid"
+            url = "https://%s%s" % (
+                id_server, "/_matrix/identity/v2/3pid/getValidated3pid"
+            )
         else:
-            url_endpoint = "/_matrix/identity/api/v1/3pid/getValidated3pid"
+            url = "https://%s%s" % (
+                id_server, "/_matrix/identity/api/v1/3pid/getValidated3pid"
+            )
 
         if not self._should_trust_id_server(id_server):
             logger.warn(
@@ -139,13 +143,14 @@ class IdentityHandler(BaseHandler):
             if use_v2:
                 query_params["id_access_token"] = id_access_token
 
-            data = yield self.http_client.get_json(
-                "https://%s%s" % (id_server, url_endpoint), query_params
-            )
+            data = yield self.http_client.get_json(url, query_params)
         except HttpResponseException as e:
             if e.code == 404 and use_v2:
                 # This identity server is too old to understand Identity Service API v2
                 # Attempt v1 endpoint
+                logger.warn(
+                    "Got 404 when POSTing JSON %s, falling back to v1 URL", url
+                )
                 return (yield self.threepid_from_creds(creds, use_v2=False))
 
             logger.info("getValidated3pid failed with Matrix error: %r", e)
@@ -285,6 +290,9 @@ class IdentityHandler(BaseHandler):
             changed = False
             if e.code == 404 and use_v2:
                 # v2 is not supported yet, try again with v1
+                logger.warn(
+                    "Got 404 when POSTing JSON %s, falling back to v1 URL", url
+                )
                 return (
                     yield self.try_unbind_threepid_with_id_server(
                         mxid, threepid, id_server, use_v2=False
