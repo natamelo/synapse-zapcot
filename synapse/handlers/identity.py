@@ -79,17 +79,25 @@ class IdentityHandler(BaseHandler):
         """
         client_secret = creds.get("client_secret") or creds.get("clientSecret")
         if not client_secret:
-            raise SynapseError(400, "No client_secret in creds")
+            raise SynapseError(
+                400, "No client_secret in creds", errcode=Codes.MISSING_PARAM
+            )
 
         id_server = creds.get("id_server") or creds.get("idServer")
         if not id_server:
-            raise SynapseError(400, "No id_server in creds")
+            raise SynapseError(
+                400, "No id_server in creds", errcode=Codes.MISSING_PARAM
+            )
 
         id_access_token = creds.get("id_access_token")
         if require_access_token:
             # v2 endpoints require an identity server access token
             if not id_access_token:
-                raise SynapseError(400, "Missing id_access_token in creds dictionary")
+                raise SynapseError(
+                    400,
+                    "Missing id_access_token in creds dictionary",
+                    errcode=Codes.MISSING_PARAM,
+                )
 
     @defer.inlineCallbacks
     def threepid_from_creds(self, creds, use_v2=True):
