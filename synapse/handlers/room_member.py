@@ -648,7 +648,15 @@ class RoomMemberHandler(object):
 
     @defer.inlineCallbacks
     def do_3pid_invite(
-        self, room_id, inviter, medium, address, id_server, id_access_token, requester, txn_id
+        self,
+        room_id,
+        inviter,
+        medium,
+        address,
+        id_server,
+        id_access_token,
+        requester,
+        txn_id,
     ):
         if self.config.block_non_admin_invites:
             is_requester_admin = yield self.auth.is_server_admin(requester.user)
@@ -679,8 +687,14 @@ class RoomMemberHandler(object):
             )
         else:
             yield self._make_and_store_3pid_invite(
-                requester, id_server, id_access_token, medium, address, room_id, inviter,
-                txn_id=txn_id
+                requester,
+                id_server,
+                id_access_token,
+                medium,
+                address,
+                room_id,
+                inviter,
+                txn_id=txn_id,
             )
 
     @defer.inlineCallbacks
@@ -868,7 +882,15 @@ class RoomMemberHandler(object):
 
     @defer.inlineCallbacks
     def _make_and_store_3pid_invite(
-        self, requester, id_server, id_access_token, medium, address, room_id, user, txn_id
+        self,
+        requester,
+        id_server,
+        id_access_token,
+        medium,
+        address,
+        room_id,
+        user,
+        txn_id,
     ):
         room_state = yield self.state_handler.get_current_state(room_id)
 
