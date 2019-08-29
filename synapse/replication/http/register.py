@@ -113,10 +113,7 @@ class ReplicationPostRegisterActionsServlet(ReplicationEndpoint):
             access_token (str|None): The access token of the newly logged in
                 device, or None if `inhibit_login` enabled.
         """
-        return {
-            "auth_result": auth_result,
-            "access_token": access_token,
-        }
+        return {"auth_result": auth_result, "access_token": access_token}
 
     @defer.inlineCallbacks
     def _handle_request(self, request, user_id):
@@ -126,9 +123,7 @@ class ReplicationPostRegisterActionsServlet(ReplicationEndpoint):
         access_token = content["access_token"]
 
         yield self.registration_handler.post_registration_actions(
-            user_id=user_id,
-            auth_result=auth_result,
-            access_token=access_token,
+            user_id=user_id, auth_result=auth_result, access_token=access_token
         )
 
         return 200, {}

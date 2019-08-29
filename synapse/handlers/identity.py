@@ -89,7 +89,7 @@ class IdentityHandler(BaseHandler):
         if require_access_token:
             # v2 endpoints require an identity server access token
             if not id_access_token:
-                raise SynapseError(400, "No id_access_token in creds when id_server provided")
+                raise SynapseError(400, "Missing id_access_token in creds dictionary")
 
     @defer.inlineCallbacks
     def threepid_from_creds(self, creds, use_v2=True):
@@ -127,17 +127,15 @@ class IdentityHandler(BaseHandler):
             return None
 
         try:
-            query_params = {"sid": creds["sid"], "client_secret": client_secret},
+            query_params = ({"sid": creds["sid"], "client_secret": client_secret},)
             if use_v2:
                 query_params["id_access_token"] = id_access_token
 
             data = yield self.http_client.get_json(
-                "https://%s%s"
-                % (id_server, url_endpoint),
-                query_params
+                "https://%s%s" % (id_server, url_endpoint), query_params
             )
         except HttpResponseException as e:
-            if e.code is 404 and use_v2:
+            if e.code == 404 and use_v2:
                 # This identity server is too old to understand Identity Service API v2
                 # Attempt v1 endpoint
                 return (yield self.threepid_from_creds(creds, use_v2=False))
@@ -229,7 +227,9 @@ class IdentityHandler(BaseHandler):
         return changed
 
     @defer.inlineCallbacks
-    def try_unbind_threepid_with_id_server(self, mxid, threepid, id_server, use_v2=True):
+    def try_unbind_threepid_with_id_server(
+        self, mxid, threepid, id_server, use_v2=True
+    ):
         """Removes a binding from an identity server
 
         Args:
@@ -275,11 +275,13 @@ class IdentityHandler(BaseHandler):
             changed = True
         except HttpResponseException as e:
             changed = False
-            if e.code is 404 and use_v2:
+            if e.code == 404 and use_v2:
                 # v2 is not supported yet, try again with v1
-                return (yield self.try_unbind_threepid_with_id_server(
-                    mxid, threepid, id_server, use_v2=False
-                ))
+                return (
+                    yield self.try_unbind_threepid_with_id_server(
+                        mxid, threepid, id_server, use_v2=False
+                    )
+                )
             elif e.code in (400, 404, 501):
                 # The remote server probably doesn't support unbinding (yet)
                 logger.warn("Received %d response while unbinding threepid", e.code)

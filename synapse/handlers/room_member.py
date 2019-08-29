@@ -1022,19 +1022,30 @@ class RoomMemberHandler(object):
                 is_url, invite_config
             )
         except HttpResponseException as e:
-            if use_v2 and HttpResponseException.code is 404:
+            if use_v2 and HttpResponseException.code == 404:
                 # This identity server does not support v2 URLs
                 # Fallback to v1
                 logger.info(
-                    "Got 404 when POSTing JSON %s, falling back to v1 URL",
-                    is_url,
+                    "Got 404 when POSTing JSON %s, falling back to v1 URL", is_url
                 )
                 # Rerun this function with v1 endpoints
-                return (yield self._ask_id_server_for_third_party_invite(
-                    requester, id_server, medium, address, room_id, inviter_user_id,
-                    room_alias, room_avatar_url, room_join_rules, room_name,
-                    inviter_display_name, inviter_avatar_url, use_v2=False,
-                ))
+                return (
+                    yield self._ask_id_server_for_third_party_invite(
+                        requester,
+                        id_server,
+                        medium,
+                        address,
+                        room_id,
+                        inviter_user_id,
+                        room_alias,
+                        room_avatar_url,
+                        room_join_rules,
+                        room_name,
+                        inviter_display_name,
+                        inviter_avatar_url,
+                        use_v2=False,
+                    )
+                )
 
             # Some identity servers may only support application/x-www-form-urlencoded
             # types. This is especially true with old instances of Sydent, see

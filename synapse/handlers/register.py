@@ -24,7 +24,6 @@ from synapse.api.errors import (
     AuthError,
     Codes,
     ConsentNotGivenError,
-    InvalidCaptchaError,
     LimitExceededError,
     RegistrationError,
     SynapseError,
@@ -39,7 +38,6 @@ from synapse.replication.http.register import (
 )
 from synapse.types import RoomAlias, RoomID, UserID, create_requester
 from synapse.util.async_helpers import Linearizer
-from synapse.util.threepids import check_3pid_allowed
 
 from ._base import BaseHandler
 
@@ -583,9 +581,7 @@ class RegistrationHandler(BaseHandler):
         return (device_id, access_token)
 
     @defer.inlineCallbacks
-    def post_registration_actions(
-        self, user_id, auth_result, access_token,
-    ):
+    def post_registration_actions(self, user_id, auth_result, access_token):
         """A user has completed registration
 
         Args:
@@ -597,9 +593,7 @@ class RegistrationHandler(BaseHandler):
         """
         if self.hs.config.worker_app:
             yield self._post_registration_client(
-                user_id=user_id,
-                auth_result=auth_result,
-                access_token=access_token,
+                user_id=user_id, auth_result=auth_result, access_token=access_token
             )
             return
 
@@ -612,9 +606,7 @@ class RegistrationHandler(BaseHandler):
             ):
                 yield self.store.upsert_monthly_active_user(user_id)
 
-            yield self._register_email_threepid(
-                user_id, threepid, access_token,
-            )
+            yield self._register_email_threepid(user_id, threepid, access_token)
 
         if auth_result and LoginType.MSISDN in auth_result:
             threepid = auth_result[LoginType.MSISDN]
