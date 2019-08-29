@@ -52,11 +52,12 @@ class IdentityTestCase(unittest.HomeserverTestCase):
 
         params = {
             "id_server": "testis",
+            "id_access_token": "some_fake_token",
             "medium": "email",
             "address": "test@example.com",
         }
         request_data = json.dumps(params)
-        request_url = ("/rooms/%s/invite" % (room_id)).encode("ascii")
+        request_url = ("/rooms/%s/invite" % room_id).encode("ascii")
         request, channel = self.make_request(
             b"POST", request_url, request_data, access_token=tok
         )
