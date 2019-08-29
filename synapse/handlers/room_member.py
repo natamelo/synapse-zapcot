@@ -648,7 +648,7 @@ class RoomMemberHandler(object):
 
     @defer.inlineCallbacks
     def do_3pid_invite(
-        self, room_id, inviter, medium, address, id_server, requester, txn_id
+        self, room_id, inviter, medium, address, id_server, id_access_token, requester, txn_id
     ):
         if self.config.block_non_admin_invites:
             is_requester_admin = yield self.auth.is_server_admin(requester.user)
@@ -679,7 +679,8 @@ class RoomMemberHandler(object):
             )
         else:
             yield self._make_and_store_3pid_invite(
-                requester, id_server, medium, address, room_id, inviter, txn_id=txn_id
+                requester, id_server, id_access_token, medium, address, room_id, inviter,
+                txn_id=txn_id
             )
 
     @defer.inlineCallbacks
@@ -867,7 +868,7 @@ class RoomMemberHandler(object):
 
     @defer.inlineCallbacks
     def _make_and_store_3pid_invite(
-        self, requester, id_server, medium, address, room_id, user, txn_id
+        self, requester, id_server, id_access_token, medium, address, room_id, user, txn_id
     ):
         room_state = yield self.state_handler.get_current_state(room_id)
 
@@ -906,6 +907,7 @@ class RoomMemberHandler(object):
             yield self._ask_id_server_for_third_party_invite(
                 requester=requester,
                 id_server=id_server,
+                id_access_token=id_access_token,
                 medium=medium,
                 address=address,
                 room_id=room_id,
@@ -943,6 +945,7 @@ class RoomMemberHandler(object):
         self,
         requester,
         id_server,
+        id_access_token,
         medium,
         address,
         room_id,
@@ -961,6 +964,7 @@ class RoomMemberHandler(object):
         Args:
             requester (Requester)
             id_server (str): hostname + optional port for the identity server.
+            id_access_token (str): Access token for authenticating with the identity server.
             medium (str): The literal string "email".
             address (str): The third party address being invited.
             room_id (str): The ID of the room to which the user is invited.
@@ -985,25 +989,6 @@ class RoomMemberHandler(object):
                     user.
         """
 
-        if use_v2:
-            is_url = "%s%s/_matrix/identity/v2/store-invite" % (
-                id_server_scheme,
-                id_server,
-            )
-            validity_url = "%s%s/_matrix/identity/v2/pubkey/isvalid" % (
-                id_server_scheme,
-                id_server,
-            )
-        else:
-            is_url = "%s%s/_matrix/identity/api/v1/store-invite" % (
-                id_server_scheme,
-                id_server,
-            )
-            validity_url = "%s%s/_matrix/identity/api/v1/pubkey/isvalid" % (
-                id_server_scheme,
-                id_server,
-            )
-
         invite_config = {
             "medium": medium,
             "address": address,
@@ -1016,6 +1001,28 @@ class RoomMemberHandler(object):
             "sender_display_name": inviter_display_name,
             "sender_avatar_url": inviter_avatar_url,
         }
+
+        if use_v2:
+            is_url = "%s%s/_matrix/identity/v2/store-invite" % (
+                id_server_scheme,
+                id_server,
+            )
+            validity_url = "%s%s/_matrix/identity/v2/pubkey/isvalid" % (
+                id_server_scheme,
+                id_server,
+            )
+
+            # Add the id_access_token to the json body
+            invite_config["id_access_token"] = id_access_token
+        else:
+            is_url = "%s%s/_matrix/identity/api/v1/store-invite" % (
+                id_server_scheme,
+                id_server,
+            )
+            validity_url = "%s%s/_matrix/identity/api/v1/pubkey/isvalid" % (
+                id_server_scheme,
+                id_server,
+            )
 
         try:
             data = yield self.simple_http_client.post_json_get_json(

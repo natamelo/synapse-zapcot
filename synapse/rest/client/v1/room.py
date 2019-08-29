@@ -699,11 +699,11 @@ class RoomMembershipRestServlet(TransactionRestServlet):
                 content["medium"],
                 content["address"],
                 content["id_server"],
+                content["id_access_token"],
                 requester,
                 txn_id,
             )
-            return (200, {})
-            return
+            return 200, {}
 
         target = requester.user
         if membership_action in ["invite", "ban", "unban", "kick"]:
@@ -732,7 +732,7 @@ class RoomMembershipRestServlet(TransactionRestServlet):
         return (200, return_value)
 
     def _has_3pid_invite_keys(self, content):
-        for key in {"id_server", "medium", "address"}:
+        for key in {"id_server", "medium", "address", "id_access_token"}:
             if key not in content:
                 return False
         return True
