@@ -679,7 +679,7 @@ class RoomMemberHandler(object):
                 Codes.FORBIDDEN,
             )
 
-        invitee = yield self._lookup_3pid(id_server, medium, address)
+        invitee = yield self._lookup_3pid(id_server, id_access_token, medium, address)
 
         if invitee:
             yield self.update_membership(
@@ -698,12 +698,13 @@ class RoomMemberHandler(object):
             )
 
     @defer.inlineCallbacks
-    def _lookup_3pid(self, id_server, medium, address):
+    def _lookup_3pid(self, id_server, id_access_token, medium, address):
         """Looks up a 3pid in the passed identity server.
 
         Args:
             id_server (str): The server name (including port, if required)
                 of the identity server to use.
+            id_access_token (str): The access token to authenticate with the identity server
             medium (str): The type of the third party identifier (e.g. "email").
             address (str): The third party identifier (e.g. "foo@example.com").
 
@@ -720,7 +721,8 @@ class RoomMemberHandler(object):
         hash_details = None
         try:
             hash_details = yield self.simple_http_client.get_json(
-                "%s%s/_matrix/identity/v2/hash_details" % (id_server_scheme, id_server)
+                "%s%s/_matrix/identity/v2/hash_details" % (id_server_scheme, id_server),
+                {"id_access_token": id_access_token}
             )
         except (HttpResponseException, ValueError) as e:
             # Catch HttpResponseExcept for a non-200 response code
@@ -737,7 +739,9 @@ class RoomMemberHandler(object):
         if use_v1:
             return (yield self._lookup_3pid_v1(id_server, medium, address))
 
-        return (yield self._lookup_3pid_v2(id_server, medium, address, hash_details))
+        return (yield self._lookup_3pid_v2(
+            id_server, id_access_token, medium, address, hash_details
+        ))
 
     @defer.inlineCallbacks
     def _lookup_3pid_v1(self, id_server, medium, address):
@@ -770,12 +774,13 @@ class RoomMemberHandler(object):
         return None
 
     @defer.inlineCallbacks
-    def _lookup_3pid_v2(self, id_server, medium, address, hash_details):
+    def _lookup_3pid_v2(self, id_server, id_access_token, medium, address, hash_details):
         """Looks up a 3pid in the passed identity server using v2 lookup.
 
         Args:
             id_server (str): The server name (including port, if required)
                 of the identity server to use.
+            id_access_token (str): The access token to authenticate with the identity server.
             medium (str): The type of the third party identifier (e.g. "email").
             address (str): The third party identifier (e.g. "foo@example.com").
             hash_details (dict[str, str|list]): A dictionary containing hashing information
@@ -824,6 +829,7 @@ class RoomMemberHandler(object):
                     "addresses": [lookup_value],
                     "algorithm": lookup_algorithm,
                     "pepper": lookup_pepper,
+                    "id_access_token": id_access_token,
                 },
             )
         except (HttpResponseException, ValueError) as e:
