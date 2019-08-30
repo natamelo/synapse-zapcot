@@ -722,7 +722,7 @@ class RoomMemberHandler(object):
         try:
             hash_details = yield self.simple_http_client.get_json(
                 "%s%s/_matrix/identity/v2/hash_details" % (id_server_scheme, id_server),
-                {"id_access_token": id_access_token}
+                {"id_access_token": id_access_token},
             )
         except (HttpResponseException, ValueError) as e:
             # Catch HttpResponseExcept for a non-200 response code
@@ -739,9 +739,11 @@ class RoomMemberHandler(object):
         if use_v1:
             return (yield self._lookup_3pid_v1(id_server, medium, address))
 
-        return (yield self._lookup_3pid_v2(
-            id_server, id_access_token, medium, address, hash_details
-        ))
+        return (
+            yield self._lookup_3pid_v2(
+                id_server, id_access_token, medium, address, hash_details
+            )
+        )
 
     @defer.inlineCallbacks
     def _lookup_3pid_v1(self, id_server, medium, address):
@@ -774,7 +776,9 @@ class RoomMemberHandler(object):
         return None
 
     @defer.inlineCallbacks
-    def _lookup_3pid_v2(self, id_server, id_access_token, medium, address, hash_details):
+    def _lookup_3pid_v2(
+        self, id_server, id_access_token, medium, address, hash_details
+    ):
         """Looks up a 3pid in the passed identity server using v2 lookup.
 
         Args:
