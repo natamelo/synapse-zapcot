@@ -667,12 +667,14 @@ class RoomCreationHandler(BaseHandler):
             id_server = invite_3pid["id_server"]
             address = invite_3pid["address"]
             medium = invite_3pid["medium"]
+            id_access_token = invite_3pid["id_access_token"]
             yield self.hs.get_room_member_handler().do_3pid_invite(
                 room_id,
                 requester.user,
                 medium,
                 address,
                 id_server,
+                id_access_token,
                 requester,
                 txn_id=None,
             )

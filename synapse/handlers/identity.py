@@ -90,14 +90,15 @@ class IdentityHandler(BaseHandler):
             )
 
         id_access_token = creds.get("id_access_token")
-        if require_access_token:
+        if require_access_token and not id_access_token:
             # v2 endpoints require an identity server access token
-            if not id_access_token:
-                raise SynapseError(
-                    400,
-                    "Missing id_access_token in creds dictionary",
-                    errcode=Codes.MISSING_PARAM,
-                )
+            raise SynapseError(
+                400,
+                "Missing id_access_token in creds dictionary",
+                errcode=Codes.MISSING_PARAM,
+            )
+
+        return client_secret, id_server, id_access_token
 
     @defer.inlineCallbacks
     def threepid_from_creds(self, creds, use_v2=True):
@@ -141,7 +142,7 @@ class IdentityHandler(BaseHandler):
             return None
 
         try:
-            query_params = ({"sid": creds["sid"], "client_secret": client_secret},)
+            query_params = {"sid": creds["sid"], "client_secret": client_secret}
             if use_v2:
                 query_params["id_access_token"] = id_access_token
 
