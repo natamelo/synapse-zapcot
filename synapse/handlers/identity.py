@@ -161,7 +161,7 @@ class IdentityHandler(BaseHandler):
             use_v2 (bool): Whether to use v2 Identity Service API endpoints
 
         Returns:
-            Deferred[Dict]: The response from the identity server
+            Deferred[dict]: The response from the identity server
         """
         logger.debug("binding threepid %r to %s", creds, mxid)
 
