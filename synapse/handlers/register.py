@@ -646,7 +646,7 @@ class RegistrationHandler(BaseHandler):
 
         Also adds an email pusher for the email address, if configured in the
         HS config
-        
+
         Also optionally binds emails to the given user_id on the identity server
 
         Must be called on master.
@@ -698,7 +698,7 @@ class RegistrationHandler(BaseHandler):
                 lang=None,  # We don't know a user's language here
                 data={},
             )
-            
+
         if bind_email:
             logger.info("bind_email specified: binding")
             logger.debug("Binding emails %s to %s" % (threepid, user_id))
