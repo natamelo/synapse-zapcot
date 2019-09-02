@@ -109,7 +109,9 @@ class IdentityHandler(BaseHandler):
                 the /getValidated3pid endpoint of the Identity Service API, or None if the
                 threepid was not found
         """
-        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(creds)
+        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(
+            creds
+        )
 
         query_params = {"sid": creds["sid"], "client_secret": client_secret}
 
@@ -165,7 +167,9 @@ class IdentityHandler(BaseHandler):
         """
         logger.debug("binding threepid %r to %s", creds, mxid)
 
-        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(creds)
+        client_secret, id_server, id_access_token = self._extract_items_from_creds_dict(
+            creds
+        )
 
         # Decide which API endpoint URLs to use
         bind_data = {"sid": creds["sid"], "client_secret": client_secret, "mxid": mxid}
