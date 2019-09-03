@@ -132,3 +132,43 @@ class RelationTypes(object):
     ANNOTATION = "m.annotation"
     REPLACE = "m.replace"
     REFERENCE = "m.reference"
+
+
+class SolicitationStatus(object):
+    """The possible status.
+    """
+
+    NOT_ANSWERED = "NOT_ANSWERED"
+    AWARE = "AWARE"
+    ANSWERED = "ANSWERED"
+    CANCELED = "CANCELED"
+    EXPIRED = "EXPIRED"
+    RETURNED = "RETURNED"
+
+
+class Companies(object):
+    """The companies.
+    """
+
+    ONS = "ONS"
+    CHESF = "CHESF"
+    CTEEP = "CTEEP"
+
+
+class SolicitationActions(object):
+    """The possible actions.
+    """
+    LIGAR = "LIGAR"
+    DESLIGAR = "DESLIGAR"
+    ELEVAR = "ELEVAR"
+    REDUZIR = "REDUZIR"
+
+
+class EquipmentTypes(object):
+    """The equipment types.
+    """
+
+    CAPACITOR = "CAPACITOR"
+    REATOR = "REATOR"
+    SINCRONO = "SINCRONO"
+    TAP = "TAP"
