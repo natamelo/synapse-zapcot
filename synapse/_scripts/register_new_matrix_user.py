@@ -28,6 +28,7 @@ from six.moves import input
 import requests as _requests
 import yaml
 
+from synapse.api.constants import Companies
 
 def request_registration(
     user,
@@ -36,6 +37,7 @@ def request_registration(
     shared_secret,
     admin=False,
     user_type=None,
+    company_code=None,
     requests=_requests,
     _print=print,
     exit=sys.exit,
@@ -79,6 +81,7 @@ def request_registration(
         "mac": mac,
         "admin": admin,
         "user_type": user_type,
+        "company_code": company_code,
     }
 
     _print("Sending registration request...")
@@ -96,7 +99,7 @@ def request_registration(
     _print("Success!")
 
 
-def register_new_user(user, password, server_location, shared_secret, admin, user_type):
+def register_new_user(user, password, server_location, shared_secret, admin, user_type, company_code):
     if not user:
         try:
             default_user = getpass.getuser()
@@ -134,8 +137,15 @@ def register_new_user(user, password, server_location, shared_secret, admin, use
         else:
             admin = False
 
+    if company_code is None:
+        company_code = input("Company code " + str(Companies.ALL_COMPANIES) + ": ")
+
+        if company_code not in Companies.ALL_COMPANIES:
+            print("Invalid company")
+            sys.exit(1)
+
     request_registration(
-        user, password, server_location, shared_secret, bool(admin), user_type
+        user, password, server_location, shared_secret, bool(admin), user_type, company_code
     )
 
 

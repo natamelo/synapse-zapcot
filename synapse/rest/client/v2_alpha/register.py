@@ -45,6 +45,8 @@ from synapse.util.threepids import check_3pid_allowed
 
 from ._base import client_patterns, interactive_auth_handler
 
+from synapse.api.constants import Companies
+
 # We ought to be using hmac.compare_digest() but on older pythons it doesn't
 # exist. It's a _really minor_ security flaw to use plain string comparison
 # because the timing attack is so obscured by all the other code here it's
@@ -256,6 +258,14 @@ class RegisterRestServlet(RestServlet):
             ):
                 raise SynapseError(400, "Invalid username")
             desired_username = body["username"]
+
+        ''' Por enquanto, não é obrigatório informar a empresa! '''
+
+        company_code = None
+        if "company_code" in body:
+            company_code = body['company_code']
+            if company_code is not None and company_code not in Companies.ALL_COMPANIES:
+                raise SynapseError(400, "Invalid company")
 
         appservice = None
         if self.auth.has_access_token(request):
@@ -470,6 +480,7 @@ class RegisterRestServlet(RestServlet):
                 guest_access_token=guest_access_token,
                 threepid=threepid,
                 address=client_addr,
+                company_code=company_code,
             )
             # Necessary due to auth checks prior to the threepid being
             # written to the db
