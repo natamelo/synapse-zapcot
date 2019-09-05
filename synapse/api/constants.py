@@ -144,6 +144,8 @@ class SolicitationStatus(object):
     CANCELED = "CANCELED"
     EXPIRED = "EXPIRED"
     RETURNED = "RETURNED"
+    ALL_SOLICITATION_TYPES = [NOT_ANSWERED, AWARE, ANSWERED,
+    CANCELED, EXPIRED, RETURNED]
 
 
 class Companies(object):
@@ -153,6 +155,7 @@ class Companies(object):
     ONS = "ONS"
     CHESF = "CHESF"
     CTEEP = "CTEEP"
+    ALL_COMPANIES = [ONS, CHESF, CTEEP]
 
 
 class SolicitationActions(object):
@@ -162,6 +165,7 @@ class SolicitationActions(object):
     DESLIGAR = "DESLIGAR"
     ELEVAR = "ELEVAR"
     REDUZIR = "REDUZIR"
+    ALL_ACTIONS = [LIGAR, DESLIGAR, ELEVAR, REDUZIR]
 
 
 class EquipmentTypes(object):
@@ -172,3 +176,4 @@ class EquipmentTypes(object):
     REATOR = "REATOR"
     SINCRONO = "SINCRONO"
     TAP = "TAP"
+    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TAP]

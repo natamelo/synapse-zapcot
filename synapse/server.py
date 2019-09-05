@@ -79,6 +79,7 @@ from synapse.handlers.stats import StatsHandler
 from synapse.handlers.sync import SyncHandler
 from synapse.handlers.typing import TypingHandler
 from synapse.handlers.user_directory import UserDirectoryHandler
+from synapse.handlers.voltage_control import VoltageControlHandler
 from synapse.http.client import InsecureInterceptableContextFactory, SimpleHttpClient
 from synapse.http.matrixfederationclient import MatrixFederationHttpClient
 from synapse.notifier import Notifier
@@ -157,6 +158,7 @@ class HomeServer(object):
         "device_message_handler",
         "profile_handler",
         "event_creation_handler",
+        "voltage_control_handler",
         "deactivate_account_handler",
         "set_password_handler",
         "notifier",
@@ -306,6 +308,9 @@ class HomeServer(object):
 
     def build_room_creation_handler(self):
         return RoomCreationHandler(self)
+
+    def build_voltage_control_handler(self):
+        return VoltageControlHandler
 
     def build_sendmail(self):
         return sendmail
