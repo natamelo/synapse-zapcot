@@ -40,4 +40,7 @@ _trial_temp*/
 /pip-wheel-metadata/
 
 synapse/.idea/
-
+*.iml
+*.class
+/target/
+zapcot-test/.idea/
