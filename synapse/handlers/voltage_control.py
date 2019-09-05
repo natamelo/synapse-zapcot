@@ -41,3 +41,11 @@ class VoltageControlHandler(BaseHandler):
         status = "NOT_ANSWERED"
         yield self.store.create_solicitation(action=action, equipment=equipment, substation=substation, 
         bar=bar, userId=userId, ts=ts, status=status, value=value)
+
+    @defer.inlineCallbacks
+    def get_substations_codes(self):
+        subs = yield self.store.get_substations()
+        subs_codes = []
+        for sub in subs:
+            subs_codes.append(sub['code'])
+        return subs_codes

@@ -14,7 +14,6 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, bar, userId, ts, status, value):
         try:
-            logger.info("ID TYPE %r %r", type(self._voltage_list_id_gen.get_next()), self._voltage_list_id_gen.get_next())
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
@@ -26,8 +25,24 @@ class VoltageControlStore(SQLBaseStore):
                     "request_user_id": userId,
                     "creation_timestamp": ts,
                     "status": status,
+                    "value_": value,
                 }
             )
         except Exception as e:
             logger.warning("create_solicitation failed: %s",e)
             raise StoreError(500, "Problem creating solicitation.")
+
+
+    @defer.inlineCallbacks
+    def get_substations(self):
+        try:
+            subs = yield self._simple_select_list(
+                "substation",
+                keyvalues=None,
+                retcols=("code", "name", "company_code"),
+            )
+
+            return subs
+        except Exception as e:
+            logger.warning("get_substation failed: %s", e)
+            raise StoreError(500, "Problem recovering substations")
