@@ -60,6 +60,7 @@ from .stats import StatsStore
 from .stream import StreamStore
 from .tags import TagsStore
 from .transactions import TransactionStore
+from .voltage_control import VoltageControlStore
 from .user_directory import UserDirectoryStore
 from .util.id_generators import ChainedIdGenerator, IdGenerator, StreamIdGenerator
 
@@ -105,6 +106,7 @@ class DataStore(
     MonthlyActiveUsersStore,
     StatsStore,
     RelationsStore,
+    VoltageControlStore,
 ):
     def __init__(self, db_conn, hs):
         self.hs = hs
@@ -135,6 +137,9 @@ class DataStore(
         )
         self._device_list_id_gen = StreamIdGenerator(
             db_conn, "device_lists_stream", "stream_id"
+        )
+        self._voltage_list_id_gen = IdGenerator(
+            db_conn, "voltage_control_solicitation", "id"
         )
 
         self._access_tokens_id_gen = IdGenerator(db_conn, "access_tokens", "id")
