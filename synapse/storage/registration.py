@@ -738,6 +738,7 @@ class RegistrationStore(
         create_profile_with_displayname=None,
         admin=False,
         user_type=None,
+        company_code=None,
     ):
         """Attempts to register an account.
 
@@ -754,6 +755,7 @@ class RegistrationStore(
             admin (boolean): is an admin user?
             user_type (str|None): type of user. One of the values from
                 api.constants.UserTypes, or None for a normal user.
+            company_code: the company code that the user belong to.
 
         Raises:
             StoreError if the user_id could not be registered.
@@ -769,6 +771,7 @@ class RegistrationStore(
             create_profile_with_displayname,
             admin,
             user_type,
+            company_code,
         )
 
     def _register_user(
@@ -782,6 +785,7 @@ class RegistrationStore(
         create_profile_with_displayname,
         admin,
         user_type,
+        company_code,
     ):
         user_id_obj = UserID.from_string(user_id)
 
@@ -811,6 +815,7 @@ class RegistrationStore(
                         "appservice_id": appservice_id,
                         "admin": 1 if admin else 0,
                         "user_type": user_type,
+                        "company_code": company_code,
                     },
                 )
             else:
@@ -825,6 +830,7 @@ class RegistrationStore(
                         "appservice_id": appservice_id,
                         "admin": 1 if admin else 0,
                         "user_type": user_type,
+                        "company_code": company_code,
                     },
                 )
 

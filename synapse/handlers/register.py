@@ -152,6 +152,7 @@ class RegistrationHandler(BaseHandler):
         default_display_name=None,
         address=None,
         bind_emails=[],
+        company_code = None,
     ):
         """Registers a new client on the server.
 
@@ -211,6 +212,7 @@ class RegistrationHandler(BaseHandler):
                 admin=admin,
                 user_type=user_type,
                 address=address,
+                company_code=company_code,
             )
 
             if self.hs.config.user_directory_search_all_users:
@@ -536,6 +538,7 @@ class RegistrationHandler(BaseHandler):
         admin=False,
         user_type=None,
         address=None,
+        company_code=None
     ):
         """Register user in the datastore.
 
@@ -553,6 +556,7 @@ class RegistrationHandler(BaseHandler):
             user_type (str|None): type of user. One of the values from
                 api.constants.UserTypes, or None for a normal user.
             address (str|None): the IP address used to perform the registration.
+            company_code: the company code that the user belong to.
 
         Returns:
             Deferred
@@ -595,6 +599,7 @@ class RegistrationHandler(BaseHandler):
                 create_profile_with_displayname=create_profile_with_displayname,
                 admin=admin,
                 user_type=user_type,
+                company_code=company_code,
             )
 
     @defer.inlineCallbacks

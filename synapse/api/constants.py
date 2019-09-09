@@ -157,6 +157,8 @@ class Companies(object):
     CTEEP = "CTEEP"
     ALL_COMPANIES = [ONS, CHESF, CTEEP]
 
+    ALL_COMPANIES = (ONS, CTEEP, CHESF)
+
 
 class SolicitationActions(object):
     """The possible actions.
