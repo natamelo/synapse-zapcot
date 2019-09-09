@@ -223,6 +223,7 @@ class Auth(object):
 
             user_info = yield self.get_user_by_access_token(access_token, rights)
             user = user_info["user"]
+            company_code = user_info["company_code"]
             token_id = user_info["token_id"]
             is_guest = user_info["is_guest"]
 
@@ -261,7 +262,7 @@ class Auth(object):
             request.authenticated_entity = user.to_string()
 
             return synapse.types.create_requester(
-                user, token_id, is_guest, device_id, app_service=app_service
+                user, company_code, token_id, is_guest, device_id, app_service=app_service
             )
         except KeyError:
             raise MissingClientTokenError()
@@ -492,6 +493,7 @@ class Auth(object):
         user_info = {
             "user": UserID.from_string(ret.get("name")),
             "token_id": ret.get("token_id", None),
+            "company_code": ret.get("company_code", None),
             "is_guest": False,
             "device_id": ret.get("device_id"),
             "valid_until_ms": ret.get("valid_until_ms"),

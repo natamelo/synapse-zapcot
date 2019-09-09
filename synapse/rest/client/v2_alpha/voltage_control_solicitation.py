@@ -42,7 +42,10 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         requester = yield self.auth.get_user_by_req(request)
         userId = requester.user.to_string()
-        #TODO: Verificar se tipo de usuário autenticado é ONS
+        company_code = requester.company_code
+
+        if company_code != Companies.ONS:
+            return (401, "Permission denied.")
         
         body = parse_json_object_from_request(request)
         action = body['action']
