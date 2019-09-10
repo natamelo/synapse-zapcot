@@ -38,7 +38,6 @@ public class Test01CreateUserWithCompany {
 
         Map<String, Object> user = new HashMap<>();
         //user.put("auth", null);
-        user.put("username", "testerONS1");
         user.put("password", "tester123");
         user.put("bind_email", true);
         user.put("bind_msisdn", true);
@@ -54,29 +53,44 @@ public class Test01CreateUserWithCompany {
 
         user.put("auth", auth);
 
+        user.put("username", "testerons");
+        user.put("company_code", "ONS");
+
         String userId = RestAssured.given().body(user).
                 when().post("register").then().statusCode(200).
                 extract().path("user_id");
 
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerONS"));
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testerons"));
 
-        user.put("username", "testerCTEEP");
+        session = RestAssured.given().body(user).
+                when().post("register").then().extract().path("session");
+
+        auth.put("session", session);
+
+        user.put("username", "testercteep");
         user.put("company_code", "CTEEP");
+        user.put("auth", auth);
 
         userId = RestAssured.given().body(user).
                 when().post("register").then().statusCode(200).
                 extract().path("user_id");
 
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCTEEP"));
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testercteep"));
 
-        user.put("username", "testerCHESF");
-        user.put("company_code", "CHESF");
+        session = RestAssured.given().body(user).
+                when().post("register").then().extract().path("session");
+
+        auth.put("session", session);
+
+        user.put("username", "testerchesf");
+        user.put("company_code", "CTEEP");
+        user.put("auth", auth);
 
         userId = RestAssured.given().body(user).
                 when().post("register").then().statusCode(200).
                 extract().path("user_id");
 
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCHESF"));
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testerchesf"));
 
     }
 
