@@ -59,7 +59,7 @@ from synapse.rest.client.v1.room import (
 from synapse.rest.client.v1.voip import VoipRestServlet
 from synapse.rest.client.v2_alpha.account import ThreepidRestServlet
 from synapse.rest.client.v2_alpha.keys import KeyChangesServlet, KeyQueryServlet
-from synapse.rest.client.v2_alpha.register import RegisterRestServlet
+from synapse.rest.client.v2_alpha.register import RegisterRestServlet, UserUpdateTablesServlet
 from synapse.rest.client.versions import VersionsRestServlet
 from synapse.server import HomeServer
 from synapse.storage.engines import create_engine
@@ -113,6 +113,7 @@ class ClientReaderServer(HomeServer):
                     RoomEventContextServlet(self).register(resource)
                     RoomMessageListRestServlet(self).register(resource)
                     RegisterRestServlet(self).register(resource)
+                    UserUpdateTablesServlet(self).register(resource)
                     LoginRestServlet(self).register(resource)
                     ThreepidRestServlet(self).register(resource)
                     KeyQueryServlet(self).register(resource)
