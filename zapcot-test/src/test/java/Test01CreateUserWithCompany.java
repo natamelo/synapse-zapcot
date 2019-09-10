@@ -1,4 +1,5 @@
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -6,8 +7,8 @@ import org.junit.Test;
 import util.DataUtil;
 import util.ServiceUtil;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class Test01CreateUserWithCompany {
@@ -44,9 +45,15 @@ public class Test01CreateUserWithCompany {
         userTesterONS.put("auth", ServiceUtil.getAuthObject(session));
 
         //Act
-        String userId = RestAssured.given().body(userTesterONS).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
+        String userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterONS).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerons"));
@@ -57,9 +64,15 @@ public class Test01CreateUserWithCompany {
         userTesterCTEEP.put("auth", ServiceUtil.getAuthObject(session));
 
         //Act
-        userId = RestAssured.given().body(userTesterCTEEP).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
+        userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterCTEEP).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testercteep"));
@@ -70,13 +83,20 @@ public class Test01CreateUserWithCompany {
         userTesterCHESF.put("auth", ServiceUtil.getAuthObject(session));
 
         //Act
-        userId = RestAssured.given().body(userTesterCHESF).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
+        userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterCHESF).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerchesf"));
 
+        ServiceUtil.wait(5);
     }
 
     @Test
@@ -88,10 +108,15 @@ public class Test01CreateUserWithCompany {
         user.put("auth", ServiceUtil.getAuthObject(session));
 
         //Act & Assert
-        RestAssured.given().body(user).
-                when().post("register").then().statusCode(400);
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(user).
+                when().
+                    post("register").
+                then().
+                    statusCode(400);
 
     }
-
 
 }

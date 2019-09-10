@@ -1,9 +1,10 @@
 package util;
 
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ServiceUtil {
 
@@ -17,6 +18,15 @@ public class ServiceUtil {
         auth.put("session", session);
         auth.put("type", "m.login.dummy");
         return auth;
+    }
+
+    public static void wait (int seconds) {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
