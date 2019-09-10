@@ -66,7 +66,7 @@ public class Test02CreateVoltageControlSolicitation {
                 .header("Authorization", "Bearer " + access_token)
                 .body(solicitation)
                 .when().post("voltage_control_solicitation").then().statusCode(201).extract()
-                .path("");
+                .body().asString();
 
         System.out.println(test);
 //        Map<String, Object> auth = new HashMap<>();
