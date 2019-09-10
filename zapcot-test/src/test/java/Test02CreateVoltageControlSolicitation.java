@@ -1,11 +1,12 @@
-import com.jayway.restassured.RestAssured;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
+import io.restassured.RestAssured;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import util.ServiceUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.equalTo;
 
 
 public class Test02CreateVoltageControlSolicitation {
@@ -34,7 +35,7 @@ public class Test02CreateVoltageControlSolicitation {
     }
 
     @Test
-    public void test01CreateValidSoicitations() {
+    public void test01CreateValidSolicitations() {
 
         Map<String, Object> login = new HashMap<>();
         login.put("type", "m.login.password");
@@ -44,15 +45,18 @@ public class Test02CreateVoltageControlSolicitation {
 
         Map<String, Object> identifier = new HashMap<>();
         identifier.put("type", "m.id.user");
-        identifier.put("user", "testerons1");
+        identifier.put("user", "testerons");
 
         login.put("identifier", identifier);
 
-        String access_token = RestAssured.given().body(login).
-                when().post("login").then().statusCode(200).
-                extract().path("access_token");
-
-        System.out.println(access_token);
+        String access_token = RestAssured.
+                    given().
+                        body(login).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
 
         Map<String, String> solicitation = new HashMap<>();
         solicitation.put("action", "LIGAR");
@@ -61,14 +65,17 @@ public class Test02CreateVoltageControlSolicitation {
         solicitation.put("bar", "FASE");
         solicitation.put("value", "5000kV");
 
-        System.out.println(solicitation.toString());
-        String test = RestAssured.given()
-                .header("Authorization", "Bearer " + access_token)
-                .body(solicitation)
-                .when().post("voltage_control_solicitation").then().statusCode(201).extract()
-                .body().asString();
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body(equalTo("\"Voltage control solicitation created with success.\""));
 
-        System.out.println(test);
+
 //        Map<String, Object> auth = new HashMap<>();
 //        auth.put("session", session);
 //        auth.put("type", "m.login.dummy");
@@ -99,6 +106,7 @@ public class Test02CreateVoltageControlSolicitation {
 //
 //        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCHESF"));
 
+        ServiceUtil.wait(5);
     }
 
 }

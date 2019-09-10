@@ -17,9 +17,10 @@ import logging
 
 from twisted.internet import defer
 
-from synapse.events.utils import format_event_for_client_v2_without_room_id
 from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
 from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes
+
+from synapse.api.errors import SynapseError
 
 from ._base import client_patterns
 
@@ -55,13 +56,13 @@ class VoltageControlSolicitationServlet(RestServlet):
         value = body['value']
         
         if action not in SolicitationActions.ALL_ACTIONS:
-            return (400, "Action must be valid.")
+            return SynapseError(400, "Action must be valid.")
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
-            return (400, "Equipment type must be valid.")
+            return SynapseError(400, "Equipment type must be valid.")
 
         subs_codes = yield self._voltage_control_handler.get_substations_codes(self=self)
         if substation not in subs_codes:
-            return (400, "Substation code must be valid.")
+            return SynapseError(400, "Substation code must be valid.")
 
         yield self._voltage_control_handler.create_solicitation(self=self, action=action,
         equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)

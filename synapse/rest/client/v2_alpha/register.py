@@ -610,8 +610,49 @@ class RegisterRestServlet(RestServlet):
         )
 
 
+class UserUpdateTablesServlet(RestServlet):
+    #PATTERNS = historical_admin_path_patterns("/update_tables/(?P<user_id>[^/]*)")
+    PATTERNS = client_patterns("/update_tables$")
+
+    def __init__(self, hs):
+        """
+        Args:
+            hs (synapse.server.HomeServer): server
+        """
+        super(UserUpdateTablesServlet, self).__init__()
+
+        self.hs = hs
+        self.auth = hs.get_auth()
+        self.store = hs.get_datastore()
+        self.auth_handler = hs.get_auth_handler()
+        self.registration_handler = hs.get_registration_handler()
+        self.identity_handler = hs.get_handlers().identity_handler
+        self.room_member_handler = hs.get_room_member_handler()
+        self.macaroon_gen = hs.get_macaroon_generator()
+        self.ratelimiter = hs.get_registration_ratelimiter()
+        self.clock = hs.get_clock()
+
+    @defer.inlineCallbacks
+    def on_PUT(self, request):
+        requester = yield self.auth.get_user_by_req(request)
+        #yield assert_user_is_admin(self.auth, requester.user)
+
+        content = parse_json_object_from_request(request)
+        tables_dict = {}
+
+        if "tables" in content and content["tables"]:
+            return 201, {}
+        else:
+            raise SynapseError(400, "Empty tables!")
+
+        return 200, {}
+
+
 def register_servlets(hs, http_server):
     EmailRegisterRequestTokenRestServlet(hs).register(http_server)
     MsisdnRegisterRequestTokenRestServlet(hs).register(http_server)
     UsernameAvailabilityRestServlet(hs).register(http_server)
     RegisterRestServlet(hs).register(http_server)
+    UserUpdateTablesServlet(hs).register(http_server)
+
+

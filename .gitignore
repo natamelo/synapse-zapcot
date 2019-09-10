@@ -44,3 +44,6 @@ synapse/.idea/
 *.class
 /target/
 zapcot-test/.idea/
+*.lst
+/zapcot-test/target
+

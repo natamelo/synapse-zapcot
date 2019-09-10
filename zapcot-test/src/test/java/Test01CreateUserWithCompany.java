@@ -1,11 +1,14 @@
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import util.DataUtil;
+import util.ServiceUtil;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class Test01CreateUserWithCompany {
@@ -36,74 +39,84 @@ public class Test01CreateUserWithCompany {
     @Test
     public void test01CreateValidUsers() {
 
-        Map<String, Object> user = new HashMap<>();
-        //user.put("auth", null);
-        user.put("username", "testerONS1");
-        user.put("password", "tester123");
-        user.put("bind_email", true);
-        user.put("bind_msisdn", true);
-        user.put("x_show_msisdn", true);
-        user.put("company_code", "ONS");
+        //Arrange
+        Map<String, Object> userTesterONS = DataUtil.buildUser("testerons", "tester123", "ONS");
+        String session = ServiceUtil.getSession(userTesterONS);
+        userTesterONS.put("auth", ServiceUtil.getAuthObject(session));
 
-        String session = RestAssured.given().body(user).
-                when().post("register").then().extract().path("session");
+        //Act
+        String userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterONS).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
-        Map<String, Object> auth = new HashMap<>();
-        auth.put("session", session);
-        auth.put("type", "m.login.dummy");
+        //Assert
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testerons"));
 
-        user.put("auth", auth);
+        //Arrange
+        Map<String, Object> userTesterCTEEP = DataUtil.buildUser("testercteep", "tester123", "CTEEP");
+        session = ServiceUtil.getSession(userTesterCTEEP);
+        userTesterCTEEP.put("auth", ServiceUtil.getAuthObject(session));
 
-        String userId = RestAssured.given().body(user).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
+        //Act
+        userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterCTEEP).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerONS"));
+        //Assert
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testercteep"));
 
-        user.put("username", "testerCTEEP");
-        user.put("company_code", "CTEEP");
+        //Arrange
+        Map<String, Object> userTesterCHESF = DataUtil.buildUser("testerchesf", "tester123", "CHESF");
+        session = ServiceUtil.getSession(userTesterCTEEP);
+        userTesterCHESF.put("auth", ServiceUtil.getAuthObject(session));
 
-        userId = RestAssured.given().body(user).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
+        //Act
+        userId = RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userTesterCHESF).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCTEEP"));
+        //Assert
+        Assert.assertThat(userId, CoreMatchers.startsWith("@testerchesf"));
 
-        user.put("username", "testerCHESF");
-        user.put("company_code", "CHESF");
-
-        userId = RestAssured.given().body(user).
-                when().post("register").then().statusCode(200).
-                extract().path("user_id");
-
-        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCHESF"));
-
+        ServiceUtil.wait(5);
     }
 
     @Test
     public void test02CreateUserWithInvalidCompany() {
 
-        Map<String, Object> user = new HashMap<>();
-        user.put("username", "tester");
-        user.put("password", "tester123");
-        user.put("bind_email", true);
-        user.put("bind_msisdn", true);
-        user.put("x_show_msisdn", true);
-        user.put("company_code", "TORADA");
+        //Arrange
+        Map<String, Object> user = DataUtil.buildUser("tester", "tester123", "TORADA");
+        String session = ServiceUtil.getSession(user);
+        user.put("auth", ServiceUtil.getAuthObject(session));
 
-        String session = RestAssured.given().body(user).
-                when().post("register").then().extract().path("session");
-
-        Map<String, Object> auth = new HashMap<>();
-        auth.put("session", session);
-        auth.put("type", "m.login.dummy");
-
-        user.put("auth", auth);
-
-        RestAssured.given().body(user).
-                when().post("register").then().statusCode(400);
+        //Act & Assert
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(user).
+                when().
+                    post("register").
+                then().
+                    statusCode(400);
 
     }
-
 
 }
