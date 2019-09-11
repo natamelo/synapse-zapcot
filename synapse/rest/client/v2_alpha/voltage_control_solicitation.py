@@ -85,9 +85,12 @@ class VoltageControlStatusServlet(RestServlet):
         self._event_serializer = hs.get_event_client_serializer()
         self._voltage_control_handler = hs.get_voltage_control_handler()
 
+    @defer.inlineCallbacks
     def on_PUT(self, request, solicitation_id):
 
-        #TODO: Recuperar usuário através do token
+        requester = yield self.auth.get_user_by_req(request)
+        userId = requester.user.to_string()
+        company_code = requester.company_code
 
         #TODO: Recuperar a solicitação usando o ID
 
@@ -100,7 +103,7 @@ class VoltageControlStatusServlet(RestServlet):
 
         #TODO: Retornar resultado final da operação
 
-        return (200, solicitation_id)
+        return (200, userId)
 
 
 
