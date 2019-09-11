@@ -46,3 +46,20 @@ class VoltageControlStore(SQLBaseStore):
         except Exception as e:
             logger.warning("get_substation failed: %s", e)
             raise StoreError(500, "Problem recovering substations")
+
+    @defer.inlineCallbacks
+    def get_solicitation_by_id(self, id):
+        try:
+            result = yield self._simple_select_one(
+                "voltage_control_solicitation",
+                dict(id=id),
+                retcols=("action_code", "equipment_code", "substation_code", "bar",
+                 "value_", "request_user_id", "creation_timestamp", "status"),
+                allow_none=True,
+            )
+            if result:
+                return result
+            return None
+        except Exception as e:
+            logger.warning("ged_solicitation failed: %s", e)
+            raise StoreError(500, "Problem recovering solicitation")
