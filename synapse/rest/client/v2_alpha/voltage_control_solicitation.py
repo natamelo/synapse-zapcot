@@ -24,6 +24,11 @@ from synapse.api.errors import SynapseError
 
 from ._base import client_patterns
 
+from synapse.api.errors import (
+    InvalidClientTokenError,
+    SynapseError,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +51,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         company_code = requester.company_code
 
         if company_code != Companies.ONS:
-            return (401, "Permission denied.")
+            raise InvalidClientTokenError(401, "Permission denied.")
         
         body = parse_json_object_from_request(request)
         action = body['action']
@@ -56,18 +61,36 @@ class VoltageControlSolicitationServlet(RestServlet):
         value = body['value']
         
         if action not in SolicitationActions.ALL_ACTIONS:
-            return (400, "Action must be valid.")
+            raise SynapseError(400, "Action must be valid.")
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
-            return (400, "Equipment type must be valid.")
+            raise SynapseError(400, "Equipment type must be valid.")
 
         subs_codes = yield self._voltage_control_handler.get_substations_codes(self=self)
         if substation not in subs_codes:
-            return (400, "Substation code must be valid.")
+            raise SynapseError(400, "Substation code must be valid.")
 
         yield self._voltage_control_handler.create_solicitation(self=self, action=action,
         equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
 
         return (201, "Voltage control solicitation created with success.")
 
+class VoltageControlStatusServlet(RestServlet):
+    PATTERNS = client_patterns("/voltage_control_solicitation/(?P<solicitation_id>[^/]*)")
+
+    def __init__(self, hs):
+        super(VoltageControlStatusServlet, self).__init__()
+        self.store = hs.get_datastore()
+        self.auth = hs.get_auth()
+        self.clock = hs.get_clock()
+        self._event_serializer = hs.get_event_client_serializer()
+        self._voltage_control_handler = hs.get_voltage_control_handler()
+
+    def on_PUT(self, request, solicitation_id):
+
+        return (200, solicitation_id)
+
+
+
 def register_servlets(hs, http_server):
     VoltageControlSolicitationServlet(hs).register(http_server)
+    VoltageControlStatusServlet(hs).register(http_server)
