@@ -25,6 +25,7 @@ from synapse.api.errors import SynapseError
 from ._base import client_patterns
 
 from synapse.api.errors import (
+    Codes,
     InvalidClientTokenError,
     SynapseError,
 )
@@ -92,7 +93,9 @@ class VoltageControlStatusServlet(RestServlet):
         userId = requester.user.to_string()
         company_code = requester.company_code
 
-        #TODO: Recuperar a solicitação usando o ID
+        solicitation = yield self._voltage_control_handler.get_solicitation_by_id(self=self, id=solicitation_id)
+        if not solicitation:
+            raise SynapseError(404, "Solicitation was not found.", Codes.NOT_FOUND)
 
         #TODO: Verificar se a mudança de status é válida
         # AWARE (apenas usuários que não são ONS, status atual NOT_ANSWERED e tempo de criação menor que 5 minutos)
@@ -102,8 +105,7 @@ class VoltageControlStatusServlet(RestServlet):
         # RETURNED (apenas usuários que não são ONS e status atual ANSWERED)
 
         #TODO: Retornar resultado final da operação
-
-        return (200, userId)
+        return (200, solicitation)
 
 
 

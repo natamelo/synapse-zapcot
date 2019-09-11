@@ -49,3 +49,8 @@ class VoltageControlHandler(BaseHandler):
         for sub in subs:
             subs_codes.append(sub['code'])
         return subs_codes
+
+    @defer.inlineCallbacks
+    def get_solicitation_by_id(self, id):
+        solicitation = yield self.store.get_solicitation_by_id(id=id)
+        return solicitation
