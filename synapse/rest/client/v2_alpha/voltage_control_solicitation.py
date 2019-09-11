@@ -87,6 +87,19 @@ class VoltageControlStatusServlet(RestServlet):
 
     def on_PUT(self, request, solicitation_id):
 
+        #TODO: Recuperar usuário através do token
+
+        #TODO: Recuperar a solicitação usando o ID
+
+        #TODO: Verificar se a mudança de status é válida
+        # AWARE (apenas usuários que não são ONS, status atual NOT_ANSWERED e tempo de criação menor que 5 minutos)
+        # ANSWERED (apenas usuários que não são ONS e status atual AWARE)
+        # CANCELED (apenas usuários que são ONS e status atual NOT_ANSWERED)
+        # EXPIRED (não pode mudar nada para o estado inicial)
+        # RETURNED (apenas usuários que não são ONS e status atual ANSWERED)
+
+        #TODO: Retornar resultado final da operação
+
         return (200, solicitation_id)
 
 
