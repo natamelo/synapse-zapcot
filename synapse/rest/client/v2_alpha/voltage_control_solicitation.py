@@ -17,9 +17,10 @@ import logging
 
 from twisted.internet import defer
 
-from synapse.events.utils import format_event_for_client_v2_without_room_id
 from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
 from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes
+
+from synapse.api.errors import SynapseError
 
 from ._base import client_patterns
 

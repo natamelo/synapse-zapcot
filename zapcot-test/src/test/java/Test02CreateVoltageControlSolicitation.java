@@ -1,11 +1,12 @@
-import com.jayway.restassured.RestAssured;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
+import io.restassured.RestAssured;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import util.ServiceUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.equalTo;
 
 
 public class Test02CreateVoltageControlSolicitation {
@@ -34,70 +35,208 @@ public class Test02CreateVoltageControlSolicitation {
     }
 
     @Test
-    public void test01CreateValidSoicitations() {
+    public void test01CreateValidSolicitations() {
 
         Map<String, Object> login = new HashMap<>();
         login.put("type", "m.login.password");
         login.put("password", "tester123");
         login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
-        login.put("testerons1", true);
+        login.put("testerons", true);
 
         Map<String, Object> identifier = new HashMap<>();
         identifier.put("type", "m.id.user");
-        identifier.put("user", "testerons1");
+        identifier.put("user", "testerons");
 
         login.put("identifier", identifier);
 
-        String access_token = RestAssured.given().body(login).
-                when().post("login").then().statusCode(200).
-                extract().path("access_token");
-
-        System.out.println(access_token);
+        String access_token = RestAssured.
+                    given().
+                        body(login).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
 
         Map<String, String> solicitation = new HashMap<>();
+
         solicitation.put("action", "LIGAR");
         solicitation.put("equipment", "CAPACITOR");
         solicitation.put("substation", "MOS");
         solicitation.put("bar", "FASE");
         solicitation.put("value", "5000kV");
 
-        System.out.println(solicitation.toString());
-        String test = RestAssured.given()
-                .header("Authorization", "Bearer " + access_token)
-                .body(solicitation)
-                .when().post("voltage_control_solicitation").then().statusCode(201).extract()
-                .body().asString();
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body(equalTo("\"Voltage control solicitation created with success.\""));
 
-        System.out.println(test);
-//        Map<String, Object> auth = new HashMap<>();
-//        auth.put("session", session);
-//        auth.put("type", "m.login.dummy");
-//
-//        user.put("auth", auth);
-//
-//        String userId = RestAssured.given().body(user).
-//                when().post("register").then().statusCode(200).
-//                extract().path("user_id");
-//
-//        Assert.assertThat(userId, CoreMatchers.startsWith("@testerONS"));
-//
-//        user.put("username", "testerCTEEP");
-//        user.put("company_code", "CTEEP");
-//
-//        userId = RestAssured.given().body(user).
-//                when().post("register").then().statusCode(200).
-//                extract().path("user_id");
-//
-//        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCTEEP"));
-//
-//        user.put("username", "testerCHESF");
-//        user.put("company_code", "CHESF");
-//
-//        userId = RestAssured.given().body(user).
-//                when().post("register").then().statusCode(200).
-//                extract().path("user_id");
-//
-//        Assert.assertThat(userId, CoreMatchers.startsWith("@testerCHESF"));
+        solicitation.put("action", "DESLIGAR");
+        solicitation.put("equipment", "REATOR");
+        solicitation.put("substation", "ATI");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body(equalTo("\"Voltage control solicitation created with success.\""));
+        
+        solicitation.put("action", "ELEVAR");
+        solicitation.put("equipment", "SINCRONO");
+        solicitation.put("substation", "SAL");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    
+        solicitation.put("action", "REDUZIR");
+        solicitation.put("equipment", "TAP");
+        solicitation.put("substation", "PIR");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    
+
+        ServiceUtil.wait(5);
+    }
+
+    @Test
+    public void test02CreateInvalidSolicitations() {
+        Map<String, Object> login = new HashMap<>();
+        login.put("type", "m.login.password");
+        login.put("password", "tester123");
+        login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
+        login.put("testerons", true);
+
+        Map<String, Object> identifier = new HashMap<>();
+        identifier.put("type", "m.id.user");
+        identifier.put("user", "testerons");
+
+        login.put("identifier", identifier);
+
+        String access_token = RestAssured.
+                    given().
+                        body(login).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
+
+        Map<String, String> solicitation = new HashMap<>();
+
+        solicitation.put("action", "LIGAR");
+        solicitation.put("equipment", "INVALIDEQUIPMENT");
+        solicitation.put("substation", "MOS");
+        solicitation.put("bar", "FASE");
+        solicitation.put("value", "5000kV");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(400).
+                    body(equalTo("\"Equipment type must be valid.\""));
+
+
+        solicitation.put("action", "INVALID ACTION");
+        solicitation.put("equipment", "CAPACITOR");
+        solicitation.put("substation", "MOS");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(400).
+                    body(equalTo("\"Action must be valid.\""));
+
+        
+        solicitation.put("action", "LIGAR");
+        solicitation.put("equipment", "CAPACITOR");
+        solicitation.put("substation", "INVALIDSUBSTATION");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(400).
+                    body(equalTo("\"Substation code must be valid.\""));
+
+    }
+
+    @Test
+    public void test03CreateSolicitationsWithUnauthorizedUser() {
+
+        Map<String, Object> login = new HashMap<>();
+        login.put("type", "m.login.password");
+        login.put("password", "tester123");
+        login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
+        login.put("testercteep", true);
+
+        Map<String, Object> identifier = new HashMap<>();
+        identifier.put("type", "m.id.user");
+        identifier.put("user", "testercteep");
+
+        login.put("identifier", identifier);
+
+        String access_token = RestAssured.
+                    given().
+                        body(login).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
+
+        Map<String, String> solicitation = new HashMap<>();
+
+        solicitation.put("action", "LIGAR");
+        solicitation.put("equipment", "CAPACITOR");
+        solicitation.put("substation", "MOS");
+        solicitation.put("bar", "FASE");
+        solicitation.put("value", "5000kV");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(401).
+                    body(equalTo("\"Permission denied.\""));
+
 
     }
 
