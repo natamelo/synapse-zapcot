@@ -1,4 +1,7 @@
 import io.restassured.RestAssured;
+import org.junit.Assert;
+
+import org.hamcrest.CoreMatchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import util.ServiceUtil;
@@ -153,7 +156,7 @@ public class Test02CreateVoltageControlSolicitation {
         solicitation.put("bar", "FASE");
         solicitation.put("value", "5000kV");
 
-        RestAssured.
+        String error = RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
                     body(solicitation)
@@ -161,14 +164,15 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body(equalTo("\"Equipment type must be valid.\""));
-
+                    extract().path("error");
+        
+        Assert.assertThat(error, CoreMatchers.equalTo("Equipment type must be valid."));
 
         solicitation.put("action", "INVALID ACTION");
         solicitation.put("equipment", "CAPACITOR");
         solicitation.put("substation", "MOS");
 
-        RestAssured.
+        error = RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
                     body(solicitation)
@@ -176,14 +180,15 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body(equalTo("\"Action must be valid.\""));
-
+                    extract().path("error");
+        
+        Assert.assertThat(error, CoreMatchers.equalTo("Action must be valid."));
         
         solicitation.put("action", "LIGAR");
         solicitation.put("equipment", "CAPACITOR");
         solicitation.put("substation", "INVALIDSUBSTATION");
 
-        RestAssured.
+        error = RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
                     body(solicitation)
@@ -191,8 +196,9 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body(equalTo("\"Substation code must be valid.\""));
+                    extract().path("error");
 
+        Assert.assertThat(error, CoreMatchers.equalTo("Substation code must be valid."));
     }
 
     @Test
@@ -227,7 +233,7 @@ public class Test02CreateVoltageControlSolicitation {
         solicitation.put("bar", "FASE");
         solicitation.put("value", "5000kV");
 
-        RestAssured.
+        String response = RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
                     body(solicitation)
@@ -235,8 +241,9 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(401).
-                    body(equalTo("\"Permission denied.\""));
-
+                    extract().path("soft_logout");
+        
+        Assert.assertThat(response, CoreMatchers.equalTo("Permission denied."));
 
     }
 
