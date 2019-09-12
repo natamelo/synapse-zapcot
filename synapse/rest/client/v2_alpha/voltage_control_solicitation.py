@@ -64,7 +64,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        codes = yield self._voltage_control_handler.get_substations_codes(self=self)
+        codes = yield self._voltage_control_handler.get_substation_codes(self=self)
         if substation not in codes:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
