@@ -63,3 +63,15 @@ class VoltageControlStore(SQLBaseStore):
         except Exception as e:
             logger.warning("ged_solicitation failed: %s", e)
             raise StoreError(500, "Problem recovering solicitation")
+
+    @defer.inlineCallbacks
+    def change_solicitation_status(self, new_status, id):
+        try:
+            yield self._simple_update_one(
+                table="voltage_control_solicitation",
+                keyvalues={"id": id},
+                updatevalues={"status": new_status},
+            )
+        except Exception as e:
+            logger.warning("change_solicitation_status failed: %s", e)
+            raise StoreError(500, "Problem on update solicitation")

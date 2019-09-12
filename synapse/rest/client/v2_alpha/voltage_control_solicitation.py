@@ -30,6 +30,9 @@ from synapse.api.errors import (
     SynapseError,
 )
 
+import calendar;
+import time;
+
 logger = logging.getLogger(__name__)
 
 
@@ -90,24 +93,63 @@ class VoltageControlStatusServlet(RestServlet):
     def on_PUT(self, request, solicitation_id):
 
         requester = yield self.auth.get_user_by_req(request)
-        userId = requester.user.to_string()
         company_code = requester.company_code
+
+        body = parse_json_object_from_request(request)
+        new_status = body["status"]
+        if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
+            raise SynapseError(400, "Status must be valid.", Codes.INVALID_PARAM)
 
         solicitation = yield self._voltage_control_handler.get_solicitation_by_id(self=self, id=solicitation_id)
         if not solicitation:
             raise SynapseError(404, "Solicitation was not found.", Codes.NOT_FOUND)
 
-        #TODO: Verificar se a mudança de status é válida
-        # AWARE (apenas usuários que não são ONS, status atual NOT_ANSWERED e tempo de criação menor que 5 minutos)
-        # ANSWERED (apenas usuários que não são ONS e status atual AWARE)
-        # CANCELED (apenas usuários que são ONS e status atual NOT_ANSWERED)
-        # EXPIRED (não pode mudar nada para o estado inicial)
-        # RETURNED (apenas usuários que não são ONS e status atual ANSWERED)
+        atual_status = solicitation["status"]
+        creation_ts = solicitation["creation_timestamp"]
 
-        #TODO: Retornar resultado final da operação
-        return (200, solicitation)
+        if self._validate_status_change(atual_status, new_status, company_code, creation_ts):
+            yield self._voltage_control_handler.change_solicitation_status(self=self, new_status=new_status, id=solicitation_id)
+            return (200, {"message": "Solicitation status changed."})
 
+    def _validate_creation_time(self, creation_ts):
+        
+        result = calendar.timegm(time.gmtime()) - creation_ts
+        return result <= 300 # 300 = 5 minutes in timestamp
 
+    def _validate_status_change(self, atual_status, new_status, company_code, creation_ts):
+        
+        if new_status == SolicitationStatus.AWARE:
+            if company_code == Companies.ONS:
+                raise InvalidClientTokenError(401, "Permission denied")
+            elif atual_status != SolicitationStatus.NOT_ANSWERED:
+                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+            elif not self._validate_creation_time(creation_ts):
+                raise SynapseError(400, "Solicitation expired.", Codes.LIMIT_EXCEEDED)
+            else:
+                return True
+        elif new_status == SolicitationStatus.ANSWERED:
+            if company_code == Companies.ONS:
+                raise InvalidClientTokenError(401, "Permission denied")
+            elif atual_status != SolicitationStatus.AWARE:
+                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+            else:
+                return True
+        elif new_status == SolicitationStatus.CANCELED:
+            if company_code != Companies.ONS:
+                raise InvalidClientTokenError(401, "Permission denied")
+            elif atual_status != SolicitationStatus.NOT_ANSWERED:
+                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+            else:
+                return True
+        elif new_status == SolicitationStatus.EXPIRED:
+            raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+        elif new_status == SolicitationStatus.RETURNED:
+            if company_code == Companies.ONS:
+                raise InvalidClientTokenError(401, "Permission denied")
+            elif atual_status != SolicitationStatus.ANSWERED:
+                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+            else:
+                return True
 
 def register_servlets(hs, http_server):
     VoltageControlSolicitationServlet(hs).register(http_server)
