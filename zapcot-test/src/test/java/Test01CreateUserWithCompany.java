@@ -56,6 +56,8 @@ public class Test01CreateUserWithCompany {
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerons"));
 
+        ServiceUtil.wait(5);
+
         //Arrange
         Map<String, Object> userTesterCTEEP = DataUtil.buildPayloadUser("testercteep", "tester123", "CTEEP");
         session = ServiceUtil.getSession(userTesterCTEEP);
@@ -74,6 +76,8 @@ public class Test01CreateUserWithCompany {
 
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testercteep"));
+
+        ServiceUtil.wait(5);
 
         //Arrange
         Map<String, Object> userTesterCHESF = DataUtil.buildPayloadUser("testerchesf", "tester123", "CHESF");
@@ -115,6 +119,8 @@ public class Test01CreateUserWithCompany {
                     post("register").
                 then().
                     statusCode(400);
+
+        ServiceUtil.wait(5);
 
     }
 

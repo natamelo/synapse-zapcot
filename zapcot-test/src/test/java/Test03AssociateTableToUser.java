@@ -45,7 +45,7 @@ public class Test03AssociateTableToUser {
         Map<String, Object> userCTEEP = DataUtil.buildPayloadUser("testercteep03", "tester123", "CTEEP");
         String session = ServiceUtil.getSession(userCTEEP);
         userCTEEP.put("auth", ServiceUtil.getAuthObject(session));
-        userCTEEP.put("admin", "True");
+        userCTEEP.put("admin", true);
 
         userID = RestAssured.
                 given().
@@ -56,6 +56,8 @@ public class Test03AssociateTableToUser {
                 then().
                     statusCode(200).
                     extract().path("user_id");
+
+        ServiceUtil.wait(2);
 
     }
 
