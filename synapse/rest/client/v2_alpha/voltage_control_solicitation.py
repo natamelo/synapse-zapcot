@@ -43,8 +43,6 @@ class VoltageControlSolicitationServlet(RestServlet):
         super(VoltageControlSolicitationServlet, self).__init__()
         self.store = hs.get_datastore()
         self.auth = hs.get_auth()
-        self.clock = hs.get_clock()
-        self._event_serializer = hs.get_event_client_serializer()
         self._voltage_control_handler = hs.get_voltage_control_handler()
 
     @defer.inlineCallbacks
@@ -55,7 +53,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         company_code = requester.company_code
 
         if company_code != Companies.ONS:
-            raise InvalidClientTokenError(401, "Permission denied.")
+            raise InvalidClientTokenError(401, "User should to belong ONS.")
         
         body = parse_json_object_from_request(request)
         action = body['action']
@@ -65,13 +63,13 @@ class VoltageControlSolicitationServlet(RestServlet):
         value = body['value']
         
         if action not in SolicitationActions.ALL_ACTIONS:
-            raise SynapseError(400, "Action must be valid.")
+            raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
-            raise SynapseError(400, "Equipment type must be valid.")
+            raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        subs_codes = yield self._voltage_control_handler.get_substations_codes(self=self)
-        if substation not in subs_codes:
-            raise SynapseError(400, "Substation code must be valid.")
+        codes = yield self._voltage_control_handler.get_substations_codes(self=self)
+        if substation not in codes:
+            raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
         yield self._voltage_control_handler.create_solicitation(self=self, action=action,
         equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
@@ -85,7 +83,6 @@ class VoltageControlStatusServlet(RestServlet):
         super(VoltageControlStatusServlet, self).__init__()
         self.store = hs.get_datastore()
         self.auth = hs.get_auth()
-        self.clock = hs.get_clock()
         self._event_serializer = hs.get_event_client_serializer()
         self._voltage_control_handler = hs.get_voltage_control_handler()
 
