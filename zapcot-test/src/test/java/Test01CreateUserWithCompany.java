@@ -37,7 +37,6 @@ public class Test01CreateUserWithCompany {
 
     @Test
     public void test01CreateValidUsers() {
-
         //Arrange
         Map<String, Object> userTesterONS = DataUtil.buildPayloadUser("testerons", "tester123", "ONS");
         String session = ServiceUtil.getSession(userTesterONS);
@@ -96,6 +95,7 @@ public class Test01CreateUserWithCompany {
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerchesf"));
 
         ServiceUtil.wait(5);
+
     }
 
     @Test
