@@ -33,7 +33,6 @@ class VoltageControlHandler(BaseHandler):
         self.hs = hs
         self.store = hs.get_datastore()
         self.state = hs.get_state_handler()
-        self.event_creation_handler = hs.get_event_creation_handler()
 
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, bar, value, userId):
