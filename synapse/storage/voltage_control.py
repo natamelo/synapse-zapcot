@@ -36,13 +36,13 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def get_substations(self):
         try:
-            subs = yield self._simple_select_list(
+            substations = yield self._simple_select_list(
                 "substation",
                 keyvalues=None,
                 retcols=("code", "name", "company_code"),
             )
 
-            return subs
+            return substations
         except Exception as e:
             logger.warning("get_substation failed: %s", e)
             raise StoreError(500, "Problem recovering substations")
