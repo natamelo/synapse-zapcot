@@ -10,7 +10,7 @@ from twisted.internet import defer
 logger = logging.getLogger(__name__)
 
 
-class TableServlet(RestServlet):
+class AssociateTableServlet(RestServlet):
     PATTERNS = client_patterns("/associate_tables/(?P<user_id>[^/]*)$")
 
     def __init__(self, hs):
@@ -18,7 +18,33 @@ class TableServlet(RestServlet):
         Args:
             hs (synapse.server.HomeServer): server
         """
-        super(TableServlet, self).__init__()
+        super(AssociateTableServlet, self).__init__()
+
+        self.hs = hs
+        self.auth = hs.get_auth()
+        self.table_handler = hs.get_table_handler()
+
+    @defer.inlineCallbacks
+    def on_PUT(self, request, user_id):
+        yield assert_requester_is_admin(self.auth, request)
+        content = parse_json_object_from_request(request)
+
+        if "tables" in content and content["tables"]:
+            yield self.table_handler.associate_tables_to_user(user_id, content["tables"])
+            return 200, "The tables were associated with the user!"
+        else:
+            raise SynapseError(400, "Empty tables!")
+
+
+class FilterTableServlet(RestServlet):
+    PATTERNS = client_patterns("/tables$")
+
+    def __init__(self, hs):
+        """
+        Args:
+            hs (synapse.server.HomeServer): server
+        """
+        super(FilterTableServlet, self).__init__()
 
         self.hs = hs
         self.auth = hs.get_auth()
@@ -37,4 +63,5 @@ class TableServlet(RestServlet):
 
 
 def register_servlets(hs, http_server):
-    TableServlet(hs).register(http_server)
+    AssociateTableServlet(hs).register(http_server)
+    FilterTableServlet(hs).register(http_server)
