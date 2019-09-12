@@ -1,5 +1,6 @@
 import logging
 
+from synapse.api.constants import Companies
 from synapse.rest.admin._base import assert_requester_is_admin
 from synapse.api.errors import SynapseError
 from synapse.http.servlet import (RestServlet,
@@ -53,15 +54,19 @@ class FilterTableServlet(RestServlet):
         self.table_handler = hs.get_table_handler()
 
     @defer.inlineCallbacks
-    def on_PUT(self, request, user_id):
-        yield assert_requester_is_admin(self.auth, request)
-        content = parse_json_object_from_request(request)
+    def on_GET(self, request):
+        yield self.auth.get_user_by_req(request, allow_guest=False)
 
-        if "tables" in content and content["tables"]:
-            yield self.table_handler.associate_tables_to_user(user_id, content["tables"])
-            return 200, "The tables were associated with the user!"
-        else:
-            raise SynapseError(400, "Empty tables!", Codes.BAD_JSON)
+        company_code = None
+        company_code_params = request.args.get(b"company_code")
+        if company_code_params is not None:
+            company_code = company_code_params[0].decode("ascii")
+            if company_code not in Companies.ALL_COMPANIES:
+                raise SynapseError(400, "Invalid company", Codes.NOT_FOUND)
+
+        tables = self.table_handler.filter_tables_by_company_code(company_code)
+
+        return 200, tables
 
 
 def register_servlets(hs, http_server):

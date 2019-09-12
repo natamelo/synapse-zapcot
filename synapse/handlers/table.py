@@ -40,3 +40,7 @@ class TableHandler(BaseHandler):
         for code in tables:
             self.store.associate_table_to_user(user_id, code)
 
+    @defer.inlineCallbacks
+    def filter_tables_by_company_code(self, company_code):
+        tables = yield self.store.get_tables_by_company_code(company_code)
+        return tables
