@@ -44,8 +44,8 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def get_substations_codes(self):
-        subs = yield self.store.get_substations()
-        subs_codes = []
-        for sub in subs:
-            subs_codes.append(sub['code'])
-        return subs_codes
+        substations = yield self.store.get_substations()
+        substations_codes = []
+        for sub in substations:
+            substations_codes.append(sub['code'])
+        return substations_codes
