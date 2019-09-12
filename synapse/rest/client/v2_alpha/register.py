@@ -267,9 +267,7 @@ class RegisterRestServlet(RestServlet):
             if company_code is not None and company_code not in Companies.ALL_COMPANIES:
                 raise SynapseError(400, "Invalid company")
 
-        admin = False
-        if "admin" in body and body['admin'] == "True":
-            admin = True
+        admin = "admin" in body and isinstance(body['admin'], bool) and body['admin']
 
         appservice = None
         if self.auth.has_access_token(request):

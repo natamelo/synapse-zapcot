@@ -5,7 +5,7 @@ import logging
 from ._base import BaseHandler
 
 from twisted.internet import defer
-from synapse.api.errors import SynapseError
+from synapse.api.errors import (SynapseError, Codes)
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +27,14 @@ class TableHandler(BaseHandler):
         users = yield self.store.get_users_by_id_case_insensitive(user_id)
         if not users:
             raise SynapseError(
-                400, "User not found."
+                400, "User not found.", Codes.BAD_JSON
             )
 
         for code in tables:
             result = yield self.store.get_table_by_code(code)
             if not result:
                 raise SynapseError(
-                    400, "One or more invalid table!"
+                    400, "One or more invalid table!", Codes.BAD_JSON
                 )
 
         for code in tables:

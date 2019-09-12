@@ -4,6 +4,8 @@ from synapse.rest.admin._base import assert_requester_is_admin
 from synapse.api.errors import SynapseError
 from synapse.http.servlet import (RestServlet,
                                   parse_json_object_from_request)
+
+from synapse.api.errors import Codes
 from ._base import client_patterns
 from twisted.internet import defer
 
@@ -59,7 +61,7 @@ class FilterTableServlet(RestServlet):
             yield self.table_handler.associate_tables_to_user(user_id, content["tables"])
             return 200, "The tables were associated with the user!"
         else:
-            raise SynapseError(400, "Empty tables!")
+            raise SynapseError(400, "Empty tables!", Codes.BAD_JSON)
 
 
 def register_servlets(hs, http_server):
