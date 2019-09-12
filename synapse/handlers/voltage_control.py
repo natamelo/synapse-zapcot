@@ -19,6 +19,7 @@ import logging
 from ._base import BaseHandler
 from synapse.types import create_requester
 from twisted.internet import defer
+from synapse.api.constants import SolicitationStatus
 
 import calendar;
 import time;
@@ -37,7 +38,7 @@ class VoltageControlHandler(BaseHandler):
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, bar, value, userId):
         ts = calendar.timegm(time.gmtime())
-        status = "NOT_ANSWERED"
+        status = SolicitationStatus.NOT_ANSWERED
         yield self.store.create_solicitation(action=action, equipment=equipment, substation=substation, 
         bar=bar, userId=userId, ts=ts, status=status, value=value)
 
