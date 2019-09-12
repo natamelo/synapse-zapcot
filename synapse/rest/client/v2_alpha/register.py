@@ -267,6 +267,10 @@ class RegisterRestServlet(RestServlet):
             if company_code is not None and company_code not in Companies.ALL_COMPANIES:
                 raise SynapseError(400, "Invalid company")
 
+        admin = False
+        if "admin" in body and body['admin'] == "True":
+            admin = True
+
         appservice = None
         if self.auth.has_access_token(request):
             appservice = yield self.auth.get_appservice_by_req(request)
@@ -481,6 +485,7 @@ class RegisterRestServlet(RestServlet):
                 threepid=threepid,
                 address=client_addr,
                 company_code=company_code,
+                admin=admin,
             )
             # Necessary due to auth checks prior to the threepid being
             # written to the db
