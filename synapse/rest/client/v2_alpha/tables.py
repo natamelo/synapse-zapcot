@@ -55,16 +55,21 @@ class FilterTableServlet(RestServlet):
 
     @defer.inlineCallbacks
     def on_GET(self, request):
-        yield self.auth.get_user_by_req(request, allow_guest=False)
+        requester = yield self.auth.get_user_by_req(request)
+        user_company_code = requester.company_code
 
         company_code = None
         company_code_params = request.args.get(b"company_code")
         if company_code_params is not None:
             company_code = company_code_params[0].decode("ascii")
             if company_code not in Companies.ALL_COMPANIES:
-                raise SynapseError(400, "Invalid company", Codes.NOT_FOUND)
+                raise SynapseError(404, "Company not found", Codes.NOT_FOUND)
+            elif user_company_code != company_code:
+                raise SynapseError(403, "User can only access the solicitations of your company", Codes.FORBIDDEN)
+        else:
+            raise SynapseError(400, "It's necessary the param company code", Codes.INVALID_PARAM)
 
-        tables = self.table_handler.filter_tables_by_company_code(company_code)
+        tables = yield self.table_handler.filter_tables_by_company_code(company_code)
 
         return 200, tables
 

@@ -23,7 +23,7 @@ from synapse.api.errors import SynapseError
 
 class Requester(
     namedtuple(
-        "Requester", ["user", "access_token_id", "is_guest", "device_id", "app_service"]
+        "Requester", ["user", "company_code", "access_token_id", "is_guest", "device_id", "app_service"]
     )
 ):
     """
@@ -47,6 +47,7 @@ class Requester(
         """
         return {
             "user_id": self.user.to_string(),
+            "company_code": self.company_code,
             "access_token_id": self.access_token_id,
             "is_guest": self.is_guest,
             "device_id": self.device_id,
@@ -79,7 +80,7 @@ class Requester(
 
 
 def create_requester(
-    user_id, access_token_id=None, is_guest=False, device_id=None, app_service=None
+    user_id, company_code=None, access_token_id=None, is_guest=False, device_id=None, app_service=None
 ):
     """
     Create a new ``Requester`` object
@@ -97,7 +98,7 @@ def create_requester(
     """
     if not isinstance(user_id, UserID):
         user_id = UserID.from_string(user_id)
-    return Requester(user_id, access_token_id, is_guest, device_id, app_service)
+    return Requester(user_id, company_code, access_token_id, is_guest, device_id, app_service)
 
 
 def get_domain_from_id(string):
