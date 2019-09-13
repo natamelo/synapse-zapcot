@@ -55,6 +55,7 @@ from synapse.rest.client.v2_alpha import (
     tokenrefresh,
     user_directory,
     tables,
+    voltage_control_solicitation,
 )
 
 
@@ -120,6 +121,7 @@ class ClientRestResource(JsonResource):
         account_validity.register_servlets(hs, client_resource)
         relations.register_servlets(hs, client_resource)
         tables.register_servlets(hs, client_resource)
+        voltage_control_solicitation.register_servlets(hs, client_resource)
 
         # moving to /_synapse/admin
         synapse.rest.admin.register_servlets_for_client_rest_resource(

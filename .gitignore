@@ -46,4 +46,7 @@ synapse/.idea/
 zapcot-test/.idea/
 *.lst
 /zapcot-test/target
+zapcot-test/.project 
+zapcot-test/.classpath 
+zapcot-test/.settings/org.eclipse.jdt.core.prefs 
 
