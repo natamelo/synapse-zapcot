@@ -57,5 +57,5 @@ class VoltageControlHandler(BaseHandler):
         return solicitation
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id):
-        yield self.store.change_solicitation_status(new_status, id)
+    def change_solicitation_status(self, new_status, id, user_id):
+        yield self.store.change_solicitation_status(new_status, id, user_id)

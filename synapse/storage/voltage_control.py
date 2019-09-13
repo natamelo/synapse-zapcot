@@ -3,6 +3,7 @@ import logging
 from synapse.storage._base import SQLBaseStore
 from synapse.api.errors import StoreError
 from twisted.internet import defer
+from synapse.api.constants import SolicitationStatus
 
 import collections
 
@@ -65,12 +66,15 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id):
+    def change_solicitation_status(self, new_status, id, user_id):
         try:
+            updates = dict(status=new_status)
+            if new_status == SolicitationStatus.AWARE:
+                updates["response_user_id"] = user_id
             yield self._simple_update_one(
                 table="voltage_control_solicitation",
-                keyvalues={"id": id},
-                updatevalues={"status": new_status},
+                keyvalues= dict(id=id),
+                updatevalues=updates,
             )
         except Exception as e:
             logger.warning("change_solicitation_status failed: %s", e)

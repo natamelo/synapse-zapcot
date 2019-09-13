@@ -83,19 +83,19 @@ class VoltageControlStatusServlet(RestServlet):
         super(VoltageControlStatusServlet, self).__init__()
         self.store = hs.get_datastore()
         self.auth = hs.get_auth()
-        self._event_serializer = hs.get_event_client_serializer()
         self._voltage_control_handler = hs.get_voltage_control_handler()
 
     @defer.inlineCallbacks
     def on_PUT(self, request, solicitation_id):
 
         requester = yield self.auth.get_user_by_req(request)
+        user_id = requester.user.to_string()
         company_code = requester.company_code
 
         body = parse_json_object_from_request(request)
         new_status = body["status"]
         if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
-            raise SynapseError(400, "Status must be valid.", Codes.INVALID_PARAM)
+            raise SynapseError(400, "Invalid status.", Codes.INVALID_PARAM)
 
         solicitation = yield self._voltage_control_handler.get_solicitation_by_id(self=self, id=solicitation_id)
         if not solicitation:
@@ -105,7 +105,7 @@ class VoltageControlStatusServlet(RestServlet):
         creation_ts = solicitation["creation_timestamp"]
 
         if self._validate_status_change(atual_status, new_status, company_code, creation_ts):
-            yield self._voltage_control_handler.change_solicitation_status(self=self, new_status=new_status, id=solicitation_id)
+            yield self._voltage_control_handler.change_solicitation_status(self=self, new_status=new_status, id=solicitation_id, user_id=user_id)
             return (200, {"message": "Solicitation status changed."})
 
     def _validate_creation_time(self, creation_ts):
