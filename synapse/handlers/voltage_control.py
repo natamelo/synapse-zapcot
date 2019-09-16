@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 class VoltageControlHandler(BaseHandler):
 
     def __init__(self, hs):
-        super(VoltageControlHandler, self).__init__(hs)
         self.hs = hs
         self.store = hs.get_datastore()
         self.state = hs.get_state_handler()

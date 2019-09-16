@@ -202,7 +202,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/7").
                 then().
                 statusCode(400).
-                body("error", equalTo("Inconsistent status."));
+                body("error", equalTo("Inconsistent change of status."));
 
         ServiceUtil.wait(5);
 
@@ -216,7 +216,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/7").
                 then().
                 statusCode(400).
-                body("error", equalTo("Inconsistent status."));
+                body("error", equalTo("Inconsistent change of status."));
 
         ServiceUtil.wait(5);
 
@@ -244,7 +244,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/7").
                 then().
                 statusCode(400).
-                body("error", equalTo("Inconsistent status."));
+                body("error", equalTo("Inconsistent change of status."));
 
         ServiceUtil.wait(5);
 
@@ -258,7 +258,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/7").
                 then().
                 statusCode(400).
-                body("error", equalTo("Inconsistent status."));
+                body("error", equalTo("Inconsistent change of status."));
 
         ServiceUtil.wait(5);
     }
@@ -316,7 +316,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/5").
                 then().
                 statusCode(401).
-                body("soft_logout", equalTo("Not allowed for user from CTEEP"));
+                body("soft_logout", equalTo("Not allowed for users from CTEEP"));
 
         ServiceUtil.wait(5);
 
@@ -330,7 +330,7 @@ public class Test05ChangeControlSolicitationStatus {
                 put("voltage_control_solicitation/8").
                 then().
                 statusCode(401).
-                body("soft_logout", equalTo("Not allowed for user from ONS"));
+                body("soft_logout", equalTo("Not allowed for users from ONS"));
 
         ServiceUtil.wait(5);
 

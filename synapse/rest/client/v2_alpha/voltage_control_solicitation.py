@@ -67,12 +67,18 @@ class VoltageControlSolicitationServlet(RestServlet):
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        codes = yield self._voltage_control_handler.get_substation_codes(self=self)
+        codes = yield self._voltage_control_handler.get_substation_codes()
         if substation not in codes:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
-        yield self._voltage_control_handler.create_solicitation(self=self, action=action,
-        equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
+        yield self._voltage_control_handler.create_solicitation(
+            action=action,
+            equipment=equipment,
+            substation=substation,
+            bar=bar,
+            value=value,
+            userId=userId    
+        )
 
         return (201, "Voltage control solicitation created with success.")
 
@@ -97,7 +103,7 @@ class VoltageControlStatusServlet(RestServlet):
         if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
             raise SynapseError(400, "Invalid status.", Codes.INVALID_PARAM)
 
-        solicitation = yield self._voltage_control_handler.get_solicitation_by_id(self=self, id=solicitation_id)
+        solicitation = yield self._voltage_control_handler.get_solicitation_by_id(id=solicitation_id)
         if not solicitation:
             raise SynapseError(404, "Solicitation was not found.", Codes.NOT_FOUND)
 
@@ -106,7 +112,6 @@ class VoltageControlStatusServlet(RestServlet):
 
         if self._validate_status_change(atual_status, new_status, company_code, creation_ts):
             yield self._voltage_control_handler.change_solicitation_status(
-                self=self, 
                 new_status=new_status, 
                 id=solicitation_id, 
                 user_id=user_id)
@@ -121,38 +126,38 @@ class VoltageControlStatusServlet(RestServlet):
         
         if new_status == SolicitationStatus.AWARE:
             if company_code == Companies.ONS:
-                error_message = "Not allowed for user from " + company_code
+                error_message = "Not allowed for users from " + company_code
                 raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.NOT_ANSWERED:
-                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             elif not self._validate_creation_time(creation_ts):
                 raise SynapseError(400, "Solicitation expired.", Codes.LIMIT_EXCEEDED)
             else:
                 return True
         elif new_status == SolicitationStatus.ANSWERED:
             if company_code == Companies.ONS:
-                error_message = "Not allowed for user from " + company_code
+                error_message = "Not allowed for users from " + company_code
                 raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.AWARE:
-                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
                 return True
         elif new_status == SolicitationStatus.CANCELED:
             if company_code != Companies.ONS:
-                error_message = "Not allowed for user from " + company_code
+                error_message = "Not allowed for users from " + company_code
                 raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.NOT_ANSWERED:
-                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
                 return True
         elif new_status == SolicitationStatus.EXPIRED:
-            raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+            raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
         elif new_status == SolicitationStatus.RETURNED:
             if company_code == Companies.ONS:
-                error_message = "Not allowed for user from " + company_code
+                error_message = "Not allowed for users from " + company_code
                 raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.ANSWERED:
-                raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
                 return True
 
