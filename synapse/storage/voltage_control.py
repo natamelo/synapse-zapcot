@@ -66,9 +66,9 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id, user_id):
+    def change_solicitation_status(self, new_status, id, user_id, update_ts):
         try:
-            updates = dict(status=new_status)
+            updates = dict(status=new_status, update_timestamp=update_ts)
             if new_status == SolicitationStatus.AWARE:
                 updates["response_user_id"] = user_id
             yield self._simple_update_one(

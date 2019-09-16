@@ -105,7 +105,11 @@ class VoltageControlStatusServlet(RestServlet):
         creation_ts = solicitation["creation_timestamp"]
 
         if self._validate_status_change(atual_status, new_status, company_code, creation_ts):
-            yield self._voltage_control_handler.change_solicitation_status(self=self, new_status=new_status, id=solicitation_id, user_id=user_id)
+            yield self._voltage_control_handler.change_solicitation_status(
+                self=self, 
+                new_status=new_status, 
+                id=solicitation_id, 
+                user_id=user_id)
             return (200, {"message": "Solicitation status changed."})
 
     def _validate_creation_time(self, creation_ts):
@@ -117,7 +121,8 @@ class VoltageControlStatusServlet(RestServlet):
         
         if new_status == SolicitationStatus.AWARE:
             if company_code == Companies.ONS:
-                raise InvalidClientTokenError(401, "Permission denied")
+                error_message = "Not allowed for user from " + company_code
+                raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.NOT_ANSWERED:
                 raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
             elif not self._validate_creation_time(creation_ts):
@@ -126,14 +131,16 @@ class VoltageControlStatusServlet(RestServlet):
                 return True
         elif new_status == SolicitationStatus.ANSWERED:
             if company_code == Companies.ONS:
-                raise InvalidClientTokenError(401, "Permission denied")
+                error_message = "Not allowed for user from " + company_code
+                raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.AWARE:
                 raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
             else:
                 return True
         elif new_status == SolicitationStatus.CANCELED:
             if company_code != Companies.ONS:
-                raise InvalidClientTokenError(401, "Permission denied")
+                error_message = "Not allowed for user from " + company_code
+                raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.NOT_ANSWERED:
                 raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
             else:
@@ -142,7 +149,8 @@ class VoltageControlStatusServlet(RestServlet):
             raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
         elif new_status == SolicitationStatus.RETURNED:
             if company_code == Companies.ONS:
-                raise InvalidClientTokenError(401, "Permission denied")
+                error_message = "Not allowed for user from " + company_code
+                raise InvalidClientTokenError(401, error_message)
             elif atual_status != SolicitationStatus.ANSWERED:
                 raise SynapseError(400, "Inconsistent status.", Codes.INVALID_PARAM)
             else:

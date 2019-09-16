@@ -58,4 +58,5 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
-        yield self.store.change_solicitation_status(new_status, id, user_id)
+        update_ts = calendar.timegm(time.gmtime())
+        yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
