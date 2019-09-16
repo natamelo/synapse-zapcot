@@ -100,6 +100,8 @@ from synapse.streams.events import EventSources
 from synapse.util import Clock
 from synapse.util.distributor import Distributor
 
+from synapse.handlers.table import TableHandler
+
 logger = logging.getLogger(__name__)
 
 
@@ -198,6 +200,7 @@ class HomeServer(object):
         "account_validity_handler",
         "saml_handler",
         "event_client_serializer",
+        "table_handler",
     ]
 
     REQUIRED_ON_MASTER_STARTUP = ["user_directory_handler", "stats_handler"]
@@ -526,6 +529,9 @@ class HomeServer(object):
 
     def build_registration_handler(self):
         return RegistrationHandler(self)
+
+    def build_table_handler(self):
+        return TableHandler(self)
 
     def build_account_validity_handler(self):
         return AccountValidityHandler(self)

@@ -8,7 +8,6 @@ import util.DataUtil;
 import util.ServiceUtil;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 
 public class Test01CreateUserWithCompany {
@@ -38,9 +37,8 @@ public class Test01CreateUserWithCompany {
 
     @Test
     public void test01CreateValidUsers() {
-
         //Arrange
-        Map<String, Object> userTesterONS = DataUtil.buildUser("testerons", "tester123", "ONS");
+        Map<String, Object> userTesterONS = DataUtil.buildPayloadUser("testerons", "tester123", "ONS");
         String session = ServiceUtil.getSession(userTesterONS);
         userTesterONS.put("auth", ServiceUtil.getAuthObject(session));
 
@@ -58,8 +56,10 @@ public class Test01CreateUserWithCompany {
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerons"));
 
+        ServiceUtil.wait(5);
+
         //Arrange
-        Map<String, Object> userTesterCTEEP = DataUtil.buildUser("testercteep", "tester123", "CTEEP");
+        Map<String, Object> userTesterCTEEP = DataUtil.buildPayloadUser("testercteep", "tester123", "CTEEP");
         session = ServiceUtil.getSession(userTesterCTEEP);
         userTesterCTEEP.put("auth", ServiceUtil.getAuthObject(session));
 
@@ -77,8 +77,10 @@ public class Test01CreateUserWithCompany {
         //Assert
         Assert.assertThat(userId, CoreMatchers.startsWith("@testercteep"));
 
+        ServiceUtil.wait(5);
+
         //Arrange
-        Map<String, Object> userTesterCHESF = DataUtil.buildUser("testerchesf", "tester123", "CHESF");
+        Map<String, Object> userTesterCHESF = DataUtil.buildPayloadUser("testerchesf", "tester123", "CHESF");
         session = ServiceUtil.getSession(userTesterCTEEP);
         userTesterCHESF.put("auth", ServiceUtil.getAuthObject(session));
 
@@ -97,13 +99,14 @@ public class Test01CreateUserWithCompany {
         Assert.assertThat(userId, CoreMatchers.startsWith("@testerchesf"));
 
         ServiceUtil.wait(5);
+
     }
 
     @Test
     public void test02CreateUserWithInvalidCompany() {
 
         //Arrange
-        Map<String, Object> user = DataUtil.buildUser("tester", "tester123", "TORADA");
+        Map<String, Object> user = DataUtil.buildPayloadUser("tester", "tester123", "TORADA");
         String session = ServiceUtil.getSession(user);
         user.put("auth", ServiceUtil.getAuthObject(session));
 
@@ -116,6 +119,8 @@ public class Test01CreateUserWithCompany {
                     post("register").
                 then().
                     statusCode(400);
+
+        ServiceUtil.wait(5);
 
     }
 

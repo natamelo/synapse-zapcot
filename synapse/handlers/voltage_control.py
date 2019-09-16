@@ -34,7 +34,6 @@ class VoltageControlHandler(BaseHandler):
         self.hs = hs
         self.store = hs.get_datastore()
         self.state = hs.get_state_handler()
-        self.event_creation_handler = hs.get_event_creation_handler()
 
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, bar, value, userId):
@@ -44,12 +43,12 @@ class VoltageControlHandler(BaseHandler):
         bar=bar, userId=userId, ts=ts, status=status, value=value)
 
     @defer.inlineCallbacks
-    def get_substations_codes(self):
+    def get_substation_codes(self):
         substations = yield self.store.get_substations()
-        substations_codes = []
+        substation_codes = []
         for sub in substations:
-            substations_codes.append(sub['code'])
-        return substations_codes
+            substation_codes.append(sub['code'])
+        return substation_codes
 
     @defer.inlineCallbacks
     def get_solicitation_by_id(self, id):

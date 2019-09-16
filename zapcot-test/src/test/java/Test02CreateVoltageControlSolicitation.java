@@ -1,12 +1,11 @@
 import io.restassured.RestAssured;
-import org.junit.Assert;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import util.DataUtil;
 import util.ServiceUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -40,81 +39,66 @@ public class Test02CreateVoltageControlSolicitation {
     @Test
     public void test01CreateValidSolicitations() {
 
-        Map<String, Object> login = new HashMap<>();
-        login.put("type", "m.login.password");
-        login.put("password", "tester123");
-        login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
-        login.put("testerons", true);
-
-        Map<String, Object> identifier = new HashMap<>();
-        identifier.put("type", "m.id.user");
-        identifier.put("user", "testerons");
-
-        login.put("identifier", identifier);
+        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
         String access_token = RestAssured.
                     given().
-                        body(login).
+                        body(payloadLogin).
                     when().
                         post("login").
                     then().
                         statusCode(200).
                         extract().path("access_token");
 
-        Map<String, String> solicitation = new HashMap<>();
-
-        solicitation.put("action", "LIGAR");
-        solicitation.put("equipment", "CAPACITOR");
-        solicitation.put("substation", "MOS");
-        solicitation.put("bar", "FASE");
-        solicitation.put("value", "5000kV");
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "FASE", "5000kV");
 
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
                     body(equalTo("\"Voltage control solicitation created with success.\""));
 
-        solicitation.put("action", "DESLIGAR");
-        solicitation.put("equipment", "REATOR");
-        solicitation.put("substation", "ATI");
+        payloadSolicitation.put("action", "DESLIGAR");
+        payloadSolicitation.put("equipment", "REATOR");
+        payloadSolicitation.put("substation", "ATI");
 
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
                     body(equalTo("\"Voltage control solicitation created with success.\""));
         
-        solicitation.put("action", "ELEVAR");
-        solicitation.put("equipment", "SINCRONO");
-        solicitation.put("substation", "SAL");
+        payloadSolicitation.put("action", "ELEVAR");
+        payloadSolicitation.put("equipment", "SINCRONO");
+        payloadSolicitation.put("substation", "SAL");
 
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
                     body(equalTo("\"Voltage control solicitation created with success.\""));
                     
-        solicitation.put("action", "REDUZIR");
-        solicitation.put("equipment", "TAP");
-        solicitation.put("substation", "PIR");
+        payloadSolicitation.put("action", "REDUZIR");
+        payloadSolicitation.put("equipment", "TAP");
+        payloadSolicitation.put("substation", "PIR");
 
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
@@ -126,125 +110,122 @@ public class Test02CreateVoltageControlSolicitation {
     }
 
     @Test
-    public void test02CreateInvalidSolicitations() {
-        Map<String, Object> login = new HashMap<>();
-        login.put("type", "m.login.password");
-        login.put("password", "tester123");
-        login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
-        login.put("testerons", true);
-
-        Map<String, Object> identifier = new HashMap<>();
-        identifier.put("type", "m.id.user");
-        identifier.put("user", "testerons");
-
-        login.put("identifier", identifier);
+    public void test02CreateSolicitationsWithInvalidEquipment() {
+        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
         String access_token = RestAssured.
                     given().
-                        body(login).
+                        body(payloadLogin).
                     when().
                         post("login").
                     then().
                         statusCode(200).
                         extract().path("access_token");
 
-        Map<String, String> solicitation = new HashMap<>();
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
+        "FASE", "5000kV");
 
-        solicitation.put("action", "LIGAR");
-        solicitation.put("equipment", "INVALIDEQUIPMENT");
-        solicitation.put("substation", "MOS");
-        solicitation.put("bar", "FASE");
-        solicitation.put("value", "5000kV");
-
-        String error = RestAssured.
+        RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    extract().path("error");
+                    body("error", equalTo("Invalid Equipment!"));
         
-        Assert.assertThat(error, CoreMatchers.equalTo("Equipment type must be valid."));
+        ServiceUtil.wait(5);
+    }
 
-        solicitation.put("action", "INVALID ACTION");
-        solicitation.put("equipment", "CAPACITOR");
-        solicitation.put("substation", "MOS");
 
-        error = RestAssured.
+    @Test
+    public void test03CreateSolicitationsWithInvalidAction() {
+        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+
+        String access_token = RestAssured.
+                    given().
+                        body(payloadLogin).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
+
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
+        "FASE", "5000kV");
+
+        RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    extract().path("error");
-        
-        Assert.assertThat(error, CoreMatchers.equalTo("Action must be valid."));
-        
-        solicitation.put("action", "LIGAR");
-        solicitation.put("equipment", "CAPACITOR");
-        solicitation.put("substation", "INVALIDSUBSTATION");
+                    body("error", equalTo("Invalid action!"));
 
-        error = RestAssured.
+        ServiceUtil.wait(5);
+    }
+
+
+    @Test
+    public void test04CreateSolicitationsWithInvalidSubstation() {
+        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+
+        String access_token = RestAssured.
+                    given().
+                        body(payloadLogin).
+                    when().
+                        post("login").
+                    then().
+                        statusCode(200).
+                        extract().path("access_token");
+
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
+        "FASE", "5000kV");
+
+        RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    extract().path("error");
-
-        Assert.assertThat(error, CoreMatchers.equalTo("Substation code must be valid."));
+                    body("error", equalTo("Invalid substation!"));
+        
+        ServiceUtil.wait(5);
     }
 
     @Test
     public void test03CreateSolicitationsWithUnauthorizedUser() {
 
-        Map<String, Object> login = new HashMap<>();
-        login.put("type", "m.login.password");
-        login.put("password", "tester123");
-        login.put("initial_device_display_name", "http://localhost:8080/ via Firefox em Ubuntu");
-        login.put("testercteep", true);
-
-        Map<String, Object> identifier = new HashMap<>();
-        identifier.put("type", "m.id.user");
-        identifier.put("user", "testercteep");
-
-        login.put("identifier", identifier);
+        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testercteep", "tester123");;
 
         String access_token = RestAssured.
                     given().
-                        body(login).
+                        body(payloadLogin).
                     when().
                         post("login").
                     then().
                         statusCode(200).
                         extract().path("access_token");
 
-        Map<String, String> solicitation = new HashMap<>();
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "FASE", "5000kV");
 
-        solicitation.put("action", "LIGAR");
-        solicitation.put("equipment", "CAPACITOR");
-        solicitation.put("substation", "MOS");
-        solicitation.put("bar", "FASE");
-        solicitation.put("value", "5000kV");
-
-        String response = RestAssured.
+        RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
-                    body(solicitation)
+                    body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
                 then().
                     statusCode(401).
-                    extract().path("soft_logout");
-        
-        Assert.assertThat(response, CoreMatchers.equalTo("Permission denied."));
+                    body("soft_logout", equalTo("User should to belong ONS."));
 
+        ServiceUtil.wait(5);
     }
 
 }
