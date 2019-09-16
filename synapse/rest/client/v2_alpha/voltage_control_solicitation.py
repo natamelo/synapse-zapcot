@@ -20,8 +20,6 @@ from twisted.internet import defer
 from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
 from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes
 
-from synapse.api.errors import SynapseError
-
 from ._base import client_patterns
 
 from synapse.api.errors import (
@@ -38,13 +36,13 @@ class VoltageControlSolicitationServlet(RestServlet):
 
     def __init__(self, hs):
         super(VoltageControlSolicitationServlet, self).__init__()
-        self.store = hs.get_datastore()
+
+        self.hs = hs
         self.auth = hs.get_auth()
-        self._voltage_control_handler = hs.get_voltage_control_handler()
+        self.voltage_control_handler = hs.get_voltage_control_handler()
 
     @defer.inlineCallbacks
     def on_POST(self, request):
-
         requester = yield self.auth.get_user_by_req(request)
         userId = requester.user.to_string()
         company_code = requester.company_code
@@ -64,29 +62,51 @@ class VoltageControlSolicitationServlet(RestServlet):
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        codes = yield self._voltage_control_handler.get_substation_codes(self=self)
+        codes = yield self.voltage_control_handler.get_substation_codes()
         if substation not in codes:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
-        yield self._voltage_control_handler.create_solicitation(self=self, action=action,
-        equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
+        yield self.voltage_control_handler.create_solicitation(action=action,
+            equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
 
         return (201, "Voltage control solicitation created with success.")
+
+    @defer.inlineCallbacks
+    def on_GET(self, request):
+        requester = yield self.auth.get_user_by_req(request)
+        user_company_code = requester.company_code
+
+        limit = min(parse_integer(request, "limit", default=50), 100)
+        from_solicitation_id = parse_integer(request, "from_id", default=0)
+        company_code = parse_string(request, "company_code", default=None)
+
+        if company_code is not None:
+            if company_code not in Companies.ALL_COMPANIES:
+                raise SynapseError(404, "Company not found", Codes.NOT_FOUND)
+            elif user_company_code != Companies.ONS and user_company_code != company_code:
+                raise SynapseError(403, "User can only access the solicitations of your company", Codes.FORBIDDEN)
+        else:
+            raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
+        result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
+                                                                         from_id=from_solicitation_id,
+                                                                         limit=limit)
+        return 200, result
+
 
 class VoltageControlStatusServlet(RestServlet):
     PATTERNS = client_patterns("/voltage_control_solicitation/(?P<solicitation_id>[^/]*)")
 
     def __init__(self, hs):
         super(VoltageControlStatusServlet, self).__init__()
-        self.store = hs.get_datastore()
+
+        self.hs = hs
         self.auth = hs.get_auth()
-        self._event_serializer = hs.get_event_client_serializer()
-        self._voltage_control_handler = hs.get_voltage_control_handler()
+        self.event_serializer = hs.get_event_client_serializer()
+        self.voltage_control_handler = hs.get_voltage_control_handler()
 
     def on_PUT(self, request, solicitation_id):
 
         return (200, solicitation_id)
-
 
 
 def register_servlets(hs, http_server):
