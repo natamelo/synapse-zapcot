@@ -46,7 +46,7 @@ class VoltageControlStore(SQLBaseStore):
 
     @defer.inlineCallbacks
     def get_solicitations_by_params(self, company_code, from_id=0, limit=50):
-        def get_solicitations(txn):
+        def get_solicitations_by_company_code(txn):
             args = [company_code, from_id, limit]
 
             sql = (
@@ -70,8 +70,36 @@ class VoltageControlStore(SQLBaseStore):
 
             return self.cursor_to_dict(txn)
 
+        def get_all_solicitations(txn):
+            args = [from_id, limit]
+
+            sql = (
+                " SELECT "
+                " solicitation.id,"
+                " solicitation.action_code,"
+                " solicitation.equipment_code, "
+                " solicitation.substation_code, "
+                " solicitation.bar, "
+                " solicitation.request_user_id, "
+                " solicitation.creation_timestamp, "
+                " solicitation.status, "
+                " solicitation.value_ "
+                " from voltage_control_solicitation solicitation "
+                " where solicitation.id >= ? "
+                " ORDER BY solicitation.creation_timestamp DESC"
+                " LIMIT ? "
+            )
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
+
+        if company_code:
+            query_to_call = get_solicitations_by_company_code
+        else:
+            query_to_call = get_all_solicitations
+
         results = yield self.runInteraction(
-            "get_solicitations_by_params", get_solicitations
+            "get_solicitations_by_params", query_to_call
         )
 
         defer.returnValue(results)
