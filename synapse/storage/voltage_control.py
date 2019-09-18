@@ -93,7 +93,11 @@ class VoltageControlStore(SQLBaseStore):
         limit=50
     ):
 
-        order_clause = self._get_order_by_sort_params(sort_params)
+        order_clause  = self._get_order_by_sort_params(sort_params)
+        
+        expire_clause = ""
+        if exclude_expired == "true":
+            expire_clause = "and solicitation.status <> 'EXPIRED'"
 
         def get_solicitations_by_table_code(txn):
             args = [company_code, table_code, from_id, limit]
@@ -113,10 +117,10 @@ class VoltageControlStore(SQLBaseStore):
                 " substation_table table_, substation substation "
                 " where table_.substation_code = solicitation.substation_code and "
                 " substation.company_code = ? and substation.code = solicitation.substation_code "
-                " and table_.table_code = ? and solicitation.id >= ? "
+                " and table_.table_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(order_clause)
+                %(expire_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -138,10 +142,10 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.value_ "
                 " from voltage_control_solicitation solicitation, substation substation "
                 " where solicitation.substation_code = substation.code and "
-                " substation.company_code = ? and solicitation.id >= ? "
+                " substation.company_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(order_clause)
+                %(expire_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -162,9 +166,10 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.status, "
                 " solicitation.value_ "
                 " from voltage_control_solicitation solicitation "
-                " where solicitation.id >= ? "
-                " ORDER BY solicitation.creation_timestamp DESC, solicitation.substation_code ASC"
+                " where solicitation.id >= ? %s "
+                " %s "
                 " LIMIT ? "
+                %(expire_clause, order_clause)
             )
             txn.execute(sql, args)
 
