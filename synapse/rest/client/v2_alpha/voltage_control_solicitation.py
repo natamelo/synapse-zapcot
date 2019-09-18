@@ -43,6 +43,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         self.hs = hs
         self.auth = hs.get_auth()
         self.voltage_control_handler = hs.get_voltage_control_handler()
+        self.table_handler = hs.get_table_handler()
 
     @defer.inlineCallbacks
     def on_POST(self, request):
@@ -88,6 +89,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         limit = min(parse_integer(request, "limit", default=50), 100)
         from_solicitation_id = parse_integer(request, "from_id", default=0)
         company_code = parse_string(request, "company_code", default=None)
+        table_code = parse_string(request, "table_code", default=None)
 
         if company_code is not None:
             if company_code not in Companies.ALL_COMPANIES:
@@ -97,7 +99,13 @@ class VoltageControlSolicitationServlet(RestServlet):
         elif user_company_code != Companies.ONS:
             raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
 
+        if table_code is not None:
+            table = yield self.table_handler.get_table_by_company_code_and_table_code(company_code, table_code)
+            if table is None:
+                raise SynapseError(404, "Table not found", Codes.NOT_FOUND)
+
         result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
+                                                                         table_code=table_code,
                                                                          from_id=from_solicitation_id, limit=limit)
         return 200, result
 
