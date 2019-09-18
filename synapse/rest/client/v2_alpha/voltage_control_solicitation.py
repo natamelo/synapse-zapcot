@@ -28,6 +28,9 @@ from synapse.api.errors import (
     SynapseError,
 )
 
+import calendar;
+import time;
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,8 +69,14 @@ class VoltageControlSolicitationServlet(RestServlet):
         if substation not in codes:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
-        yield self.voltage_control_handler.create_solicitation(action=action,
-            equipment=equipment, substation=substation, bar=bar, value=value, userId=userId)
+        yield self.voltage_control_handler.create_solicitation(
+            action=action,
+            equipment=equipment,
+            substation=substation,
+            bar=bar,
+            value=value,
+            userId=userId
+        )
 
         return (201, "Voltage control solicitation created with success.")
 
@@ -101,13 +110,77 @@ class VoltageControlStatusServlet(RestServlet):
 
         self.hs = hs
         self.auth = hs.get_auth()
-        self.event_serializer = hs.get_event_client_serializer()
         self.voltage_control_handler = hs.get_voltage_control_handler()
 
+    @defer.inlineCallbacks
     def on_PUT(self, request, solicitation_id):
 
-        return (200, solicitation_id)
+        requester = yield self.auth.get_user_by_req(request)
+        user_id = requester.user.to_string()
+        user_company_code = requester.company_code
 
+        body = parse_json_object_from_request(request)
+        new_status = body["status"]
+        if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
+            raise SynapseError(400, "Invalid status.", Codes.INVALID_PARAM)
+
+        solicitation = yield self.voltage_control_handler.get_solicitation_by_id(id=solicitation_id)
+        if not solicitation:
+            raise SynapseError(404, "Solicitation not found.", Codes.NOT_FOUND)
+
+        current_status = solicitation["status"]
+        creation_ts = solicitation["creation_timestamp"]
+
+        if self._validate_status_change(current_status, new_status, user_company_code, creation_ts):
+            yield self.voltage_control_handler.change_solicitation_status(
+                new_status=new_status,
+                id=solicitation_id,
+                user_id=user_id)
+            return (200, {"message": "Solicitation status changed."})
+
+    def _is_valid_create_time(self, creation_ts):
+
+        result = calendar.timegm(time.gmtime()) - creation_ts
+        return result <= 300 # 300 = 5 minutes in timestamp
+
+    def _validate_status_change(self, current_status, new_status, user_company_code, creation_ts):
+
+        if new_status == SolicitationStatus.AWARE:
+            if user_company_code == Companies.ONS:
+                error_message = "Not allowed for users from " + user_company_code
+                raise InvalidClientTokenError(401, error_message)
+            elif current_status != SolicitationStatus.NOT_ANSWERED:
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
+            elif not self._is_valid_create_time(creation_ts):
+                raise SynapseError(400, "Solicitation expired.", Codes.LIMIT_EXCEEDED)
+            else:
+                return True
+        elif new_status == SolicitationStatus.ANSWERED:
+            if user_company_code == Companies.ONS:
+                error_message = "Not allowed for users from " + user_company_code
+                raise InvalidClientTokenError(401, error_message)
+            elif current_status != SolicitationStatus.AWARE:
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
+            else:
+                return True
+        elif new_status == SolicitationStatus.CANCELED:
+            if user_company_code != Companies.ONS:
+                error_message = "Not allowed for users from " + user_company_code
+                raise InvalidClientTokenError(401, error_message)
+            elif current_status != SolicitationStatus.NOT_ANSWERED:
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
+            else:
+                return True
+        elif new_status == SolicitationStatus.EXPIRED:
+            raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
+        elif new_status == SolicitationStatus.RETURNED:
+            if user_company_code == Companies.ONS:
+                error_message = "Not allowed for users from " + user_company_code
+                raise InvalidClientTokenError(401, error_message)
+            elif current_status != SolicitationStatus.ANSWERED:
+                raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
+            else:
+                return True
 
 def register_servlets(hs, http_server):
     VoltageControlSolicitationServlet(hs).register(http_server)

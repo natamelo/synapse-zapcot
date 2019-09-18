@@ -54,5 +54,9 @@ public class DataUtil {
         return payloadTables;
     }
 
-
+    public static Map<String, String> buildPayloadChangeStatus(String status) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("status", status);
+        return payload;
+    }
 }

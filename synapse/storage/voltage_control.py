@@ -3,6 +3,7 @@ import logging
 from synapse.storage._base import SQLBaseStore
 from synapse.api.errors import StoreError
 from twisted.internet import defer
+from synapse.api.constants import SolicitationStatus
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,41 @@ class VoltageControlStore(SQLBaseStore):
         except Exception as e:
             logger.warning("get_substation failed: %s", e)
             raise StoreError(500, "Problem recovering substations")
+
+    @defer.inlineCallbacks
+    def get_solicitation_by_id(self, id):
+        try:
+            result = yield self._simple_select_one(
+                "voltage_control_solicitation",
+                {"id": id},
+                retcols=("action_code", "equipment_code", "substation_code", "bar",
+                 "value_", "request_user_id", "creation_timestamp", "status"),
+                allow_none=True,
+            )
+            if result:
+                return result
+            return None
+        except Exception as e:
+            logger.warning("get_solicitation failed: %s", e)
+            raise StoreError(500, "Problem recovering solicitation")
+
+    @defer.inlineCallbacks
+    def change_solicitation_status(self, new_status, id, user_id, update_ts):
+        try:
+            updates = {
+                "status":new_status,
+                "update_timestamp":update_ts
+            }
+            if new_status == SolicitationStatus.AWARE:
+                updates["response_user_id"] = user_id
+            yield self._simple_update_one(
+                table="voltage_control_solicitation",
+                keyvalues= {"id":id},
+                updatevalues=updates,
+            )
+        except Exception as e:
+            logger.warning("change_solicitation_status failed: %s", e)
+            raise StoreError(500, "Problem on update solicitation")
 
     @defer.inlineCallbacks
     def get_solicitations_by_params(self, company_code, from_id=0, limit=50):

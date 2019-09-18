@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 class VoltageControlHandler(BaseHandler):
 
     def __init__(self, hs):
-        super(VoltageControlHandler, self).__init__(hs)
         self.hs = hs
         self.store = hs.get_datastore()
 
@@ -56,3 +55,13 @@ class VoltageControlHandler(BaseHandler):
         for sub in substations:
             substation_codes.append(sub['code'])
         return substation_codes
+
+    @defer.inlineCallbacks
+    def get_solicitation_by_id(self, id):
+        solicitation = yield self.store.get_solicitation_by_id(id=id)
+        return solicitation
+
+    @defer.inlineCallbacks
+    def change_solicitation_status(self, new_status, id, user_id):
+        update_ts = calendar.timegm(time.gmtime())
+        yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
