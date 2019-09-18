@@ -18,7 +18,7 @@ import logging
 from twisted.internet import defer
 
 from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
-from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes
+from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes, SolicitationSortParams
 
 from ._base import client_patterns
 
@@ -88,6 +88,8 @@ class VoltageControlSolicitationServlet(RestServlet):
         limit = min(parse_integer(request, "limit", default=50), 100)
         from_solicitation_id = parse_integer(request, "from_id", default=0)
         company_code = parse_string(request, "company_code", default=None)
+        sort_params = self.get_sort_params(request)
+        exclude_expired = parse_string(request, "exclude_expired", default=None)
 
         if company_code is not None:
             if company_code not in Companies.ALL_COMPANIES:
@@ -98,8 +100,22 @@ class VoltageControlSolicitationServlet(RestServlet):
             raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
 
         result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
-                                                                         from_id=from_solicitation_id, limit=limit)
+                                                                         sort_params=sort_params,
+                                                                         exclude_expired=exclude_expired,
+                                                                         from_id=from_solicitation_id,
+                                                                         limit=limit)
         return 200, result
+
+    def get_sort_params(self, request):
+        sort_string = parse_string(request, "sort", default=None)
+        if sort_string is not None:
+            sort_params = sort_string.split("+")
+            for param in sort_params:
+                if param not in SolicitationSortParams.ALL_PARAMS:
+                    raise SynapseError(400, "Invalid sort method", Codes.INVALID_PARAM)
+            return sort_params
+        else:
+            return []
 
 
 class VoltageControlStatusServlet(RestServlet):
