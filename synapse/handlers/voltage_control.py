@@ -41,10 +41,11 @@ class VoltageControlHandler(BaseHandler):
             bar=bar, userId=userId, ts=ts, status=status, value=value)
 
     @defer.inlineCallbacks
-    def filter_solicitations(self, company_code, sort_params, exclude_expired, from_id, limit):
+    def filter_solicitations(self, company_code, sort_params, exclude_expired, table_code, from_id, limit):
         result = yield self.store.get_solicitations_by_params(company_code=company_code,
                                                               sort_params=sort_params,
                                                               exclude_expired=exclude_expired,
+                                                              table_code=table_code,
                                                               from_id=from_id,
                                                               limit=limit)
         return result

@@ -32,6 +32,24 @@ public class ServiceUtil {
         return auth;
     }
 
+    public static void createSolicitation (String onsAccessToken, String action,
+                                     String equipment, String substation,
+                                     String bar, String value) {
+
+        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation(
+                action, equipment, substation, bar, value);
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + onsAccessToken).
+                    body(payloadSolicitation).
+                when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201);
+
+    }
+
     public static void wait (int seconds) {
         try {
             TimeUnit.SECONDS.sleep(seconds);
