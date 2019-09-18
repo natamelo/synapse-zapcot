@@ -125,7 +125,7 @@ public class Test06ChangeControlSolicitationStatus {
     }
 
     @Test
-    public void test03InvalidStatusChange() {
+    public void test03InconsistentStatusChange() {
 
         String access_token = ServiceUtil.doLogin("testerons", "tester123");
 
