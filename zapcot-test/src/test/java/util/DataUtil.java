@@ -34,7 +34,7 @@ public class DataUtil {
 
 
     public static Map<String, String> buildPayloadSolicitation(String action, String equipment, String substation,
-    String bar, String value) {
+                                                               String bar, String value) {
 
         Map<String, String> payload = new HashMap<>();
 
@@ -48,7 +48,7 @@ public class DataUtil {
         return payload;
     }
 
-    public static Map<String, Object> buildPayloadTables(String ... tables) {
+    public static Map<String, Object> buildPayloadTables(String... tables) {
         Map<String, Object> payloadTables = new HashMap<>();
         payloadTables.put("tables", Arrays.asList(tables));
         return payloadTables;

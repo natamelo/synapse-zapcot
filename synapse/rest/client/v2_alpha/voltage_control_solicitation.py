@@ -20,15 +20,12 @@ from twisted.internet import defer
 from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
 from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes
 
-from synapse.api.errors import SynapseError
-
 from ._base import client_patterns
 
 from synapse.api.errors import (
     Codes,
     InvalidClientTokenError,
     SynapseError,
-    UnauthorizedUserError,
 )
 
 import calendar;
@@ -42,13 +39,13 @@ class VoltageControlSolicitationServlet(RestServlet):
 
     def __init__(self, hs):
         super(VoltageControlSolicitationServlet, self).__init__()
-        self.store = hs.get_datastore()
+
+        self.hs = hs
         self.auth = hs.get_auth()
-        self._voltage_control_handler = hs.get_voltage_control_handler()
+        self.voltage_control_handler = hs.get_voltage_control_handler()
 
     @defer.inlineCallbacks
     def on_POST(self, request):
-
         requester = yield self.auth.get_user_by_req(request)
         userId = requester.user.to_string()
         company_code = requester.company_code
@@ -68,29 +65,52 @@ class VoltageControlSolicitationServlet(RestServlet):
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        codes = yield self._voltage_control_handler.get_substation_codes()
+        codes = yield self.voltage_control_handler.get_substation_codes()
         if substation not in codes:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
-        yield self._voltage_control_handler.create_solicitation(
+        yield self.voltage_control_handler.create_solicitation(
             action=action,
             equipment=equipment,
             substation=substation,
             bar=bar,
             value=value,
-            userId=userId    
+            userId=userId
         )
 
         return (201, "Voltage control solicitation created with success.")
+
+    @defer.inlineCallbacks
+    def on_GET(self, request):
+        requester = yield self.auth.get_user_by_req(request)
+        user_company_code = requester.company_code
+
+        limit = min(parse_integer(request, "limit", default=50), 100)
+        from_solicitation_id = parse_integer(request, "from_id", default=0)
+        company_code = parse_string(request, "company_code", default=None)
+
+        if company_code is not None:
+            if company_code not in Companies.ALL_COMPANIES:
+                raise SynapseError(404, "Company not found", Codes.NOT_FOUND)
+            elif user_company_code != Companies.ONS and user_company_code != company_code:
+                raise SynapseError(403, "User can only access the solicitations of your company", Codes.FORBIDDEN)
+        elif user_company_code != Companies.ONS:
+            raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
+
+        result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
+                                                                         from_id=from_solicitation_id, limit=limit)
+        return 200, result
+
 
 class VoltageControlStatusServlet(RestServlet):
     PATTERNS = client_patterns("/voltage_control_solicitation/(?P<solicitation_id>[^/]*)")
 
     def __init__(self, hs):
         super(VoltageControlStatusServlet, self).__init__()
-        self.store = hs.get_datastore()
+
+        self.hs = hs
         self.auth = hs.get_auth()
-        self._voltage_control_handler = hs.get_voltage_control_handler()
+        self.voltage_control_handler = hs.get_voltage_control_handler()
 
     @defer.inlineCallbacks
     def on_PUT(self, request, solicitation_id):
@@ -104,7 +124,7 @@ class VoltageControlStatusServlet(RestServlet):
         if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
             raise SynapseError(400, "Invalid status.", Codes.INVALID_PARAM)
 
-        solicitation = yield self._voltage_control_handler.get_solicitation_by_id(id=solicitation_id)
+        solicitation = yield self.voltage_control_handler.get_solicitation_by_id(id=solicitation_id)
         if not solicitation:
             raise SynapseError(404, "Solicitation not found.", Codes.NOT_FOUND)
 
@@ -112,19 +132,19 @@ class VoltageControlStatusServlet(RestServlet):
         creation_ts = solicitation["creation_timestamp"]
 
         if self._validate_status_change(current_status, new_status, user_company_code, creation_ts):
-            yield self._voltage_control_handler.change_solicitation_status(
-                new_status=new_status, 
-                id=solicitation_id, 
+            yield self.voltage_control_handler.change_solicitation_status(
+                new_status=new_status,
+                id=solicitation_id,
                 user_id=user_id)
             return (200, {"message": "Solicitation status changed."})
 
     def _is_valid_create_time(self, creation_ts):
-        
+
         result = calendar.timegm(time.gmtime()) - creation_ts
         return result <= 300 # 300 = 5 minutes in timestamp
 
     def _validate_status_change(self, current_status, new_status, user_company_code, creation_ts):
-        
+
         if new_status == SolicitationStatus.AWARE:
             if user_company_code == Companies.ONS:
                 error_message = "Not allowed for users from " + user_company_code
