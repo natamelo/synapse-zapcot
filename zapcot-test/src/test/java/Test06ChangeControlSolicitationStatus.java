@@ -36,16 +36,8 @@ public class Test06ChangeControlSolicitationStatus {
 
     @Test
     public void test01SolicitationStatusHappyPath() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        String access_token = ServiceUtil.doLogin("testerons", "tester123");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
         "FASE", "5000kV");
@@ -62,16 +54,7 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(5);
 
-        payloadLogin = DataUtil.buildPayloadLogin("testercteep", "tester123");
-
-        access_token = RestAssured.
-                given().
-                body(payloadLogin).
-                when().
-                post("login").
-                then().
-                statusCode(200).
-                extract().path("access_token");
+        access_token = ServiceUtil.doLogin("testercteep", "tester123");
 
         ServiceUtil.wait(5);
 
@@ -79,13 +62,13 @@ public class Test06ChangeControlSolicitationStatus {
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/5").
                 then().
-                statusCode(200).
-                body("message", equalTo("Solicitation status changed."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
 
@@ -93,29 +76,21 @@ public class Test06ChangeControlSolicitationStatus {
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/5").
                 then().
-                statusCode(200).
-                body("message", equalTo("Solicitation status changed."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
     }
 
     @Test
     public void test02SolicitationCanceled() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        String access_token = ServiceUtil.doLogin("testerons", "tester123");
         
         ServiceUtil.wait(5);        
 
@@ -151,16 +126,8 @@ public class Test06ChangeControlSolicitationStatus {
 
     @Test
     public void test03InvalidStatusChange() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        String access_token = ServiceUtil.doLogin("testerons", "tester123");
 
         ServiceUtil.wait(5);
         
@@ -179,17 +146,8 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(5);
 
-        payloadLogin = DataUtil.buildPayloadLogin("testercteep", "tester123");
-
-        access_token = RestAssured.
-                given().
-                body(payloadLogin).
-                when().
-                post("login").
-                then().
-                statusCode(200).
-                extract().path("access_token");
-
+        access_token = ServiceUtil.doLogin("testercteep", "tester123");
+        
         ServiceUtil.wait(5);
 
         Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ANSWERED");
@@ -265,16 +223,8 @@ public class Test06ChangeControlSolicitationStatus {
 
     @Test
     public void test04UnauthorizedStatusChange() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
 
-        String ons_access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        String ons_access_token = ServiceUtil.doLogin("testerons", "tester123");
 
         ServiceUtil.wait(5);
 
@@ -293,16 +243,7 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(5);
 
-        payloadLogin = DataUtil.buildPayloadLogin("testercteep", "tester123");
-
-        String cteep_access_token = RestAssured.
-                given().
-                body(payloadLogin).
-                when().
-                post("login").
-                then().
-                statusCode(200).
-                extract().path("access_token");
+        String cteep_access_token = ServiceUtil.doLogin("testercteep", "tester123");
         
         ServiceUtil.wait(5);
 
@@ -310,13 +251,13 @@ public class Test06ChangeControlSolicitationStatus {
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + cteep_access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + cteep_access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/5").
                 then().
-                statusCode(401).
-                body("soft_logout", equalTo("Not allowed for users from CTEEP"));
+                    statusCode(401).
+                    body("soft_logout", equalTo("Not allowed for users from CTEEP"));
 
         ServiceUtil.wait(5);
 
@@ -324,13 +265,13 @@ public class Test06ChangeControlSolicitationStatus {
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + ons_access_token).
-                body(payloadChangeStatus).
+                    header("Authorization", "Bearer " + ons_access_token).
+                    body(payloadChangeStatus).
                 when().
-                put("voltage_control_solicitation/8").
+                    put("voltage_control_solicitation/8").
                 then().
-                statusCode(401).
-                body("soft_logout", equalTo("Not allowed for users from ONS"));
+                    statusCode(401).
+                    body("soft_logout", equalTo("Not allowed for users from ONS"));
 
         ServiceUtil.wait(5);
 
