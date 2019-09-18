@@ -93,13 +93,7 @@ class VoltageControlStore(SQLBaseStore):
         limit=50
     ):
 
-        order_clause = ""
-        if SolicitationSortParams.SUBSTATION in sort_params and SolicitationSortParams.CREATION_TIME in sort_params:
-            order_clause = "ORDER BY solicitation.substation_code ASC, solicitation.creation_timestamp DESC"
-        elif SolicitationSortParams.SUBSTATION in sort_params:
-            order_clause = "ORDER BY solicitation.substation_code ASC"
-        elif SolicitationSortParams.CREATION_TIME in sort_params:
-            order_clause = "ORDER BY solicitation.creation_timestamp DESC"
+        order_clause = self._get_order_by_sort_params(sort_params)
 
         def get_solicitations_by_table_code(txn):
             args = [company_code, table_code, from_id, limit]
@@ -188,3 +182,36 @@ class VoltageControlStore(SQLBaseStore):
         )
 
         defer.returnValue(results)
+
+    
+    def _get_order_by_sort_params(self, sort_params):
+        order_clause = ""
+
+        order_by_status = (
+            "CASE WHEN solicitation.status = 'NOT_ANSWERED' then '1' " 
+                 "WHEN solicitation.status = 'EXPIRED' then '2' "
+                 "WHEN solicitation.status = 'AWARE' then '3' "
+                 "ELSE solicitation.status END ASC "
+        )
+        order_by_substation = "solicitation.substation_code ASC"
+        order_by_creation = "solicitation.creation_timestamp"
+
+        if (SolicitationSortParams.STATUS in sort_params and
+                SolicitationSortParams.SUBSTATION in sort_params and
+                SolicitationSortParams.CREATION_TIME in sort_params):
+            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_creation + ', ' + order_by_substation                          
+        elif (SolicitationSortParams.SUBSTATION in sort_params and
+                SolicitationSortParams.CREATION_TIME in sort_params):
+            order_clause = "ORDER BY " + order_by_creation + ', ' + order_by_substation
+        elif (SolicitationSortParams.STATUS in sort_params and
+                SolicitationSortParams.CREATION_TIME in sort_params):
+            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_creation
+        elif (SolicitationSortParams.STATUS in sort_params and
+                 SolicitationSortParams.SUBSTATION in sort_params):
+            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_substation
+        elif (SolicitationSortParams.SUBSTATION in sort_params):
+            order_clause = "ORDER BY solicitation.substation_code ASC"
+        elif (SolicitationSortParams.CREATION_TIME in sort_params):
+            order_clause = "ORDER BY solicitation.creation_timestamp DESC"
+
+        return order_clause
