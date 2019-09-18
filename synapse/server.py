@@ -313,7 +313,7 @@ class HomeServer(object):
         return RoomCreationHandler(self)
 
     def build_voltage_control_handler(self):
-        return VoltageControlHandler
+        return VoltageControlHandler(self)
 
     def build_sendmail(self):
         return sendmail

@@ -8,6 +8,18 @@ import java.util.concurrent.TimeUnit;
 
 public class ServiceUtil {
 
+    public static String doLogin (String username, String password) {
+        return RestAssured.
+                given().
+                body(DataUtil.
+                        buildPayloadLogin(username, password)).
+                when().
+                post("login").
+                then().
+                statusCode(200).
+                extract().path("access_token");
+    }
+
     public static String getSession(Map<String, Object> user) {
         return RestAssured.given().body(user).
                 when().post("register").then().extract().path("session");

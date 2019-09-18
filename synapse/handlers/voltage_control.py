@@ -33,15 +33,22 @@ class VoltageControlHandler(BaseHandler):
         super(VoltageControlHandler, self).__init__(hs)
         self.hs = hs
         self.store = hs.get_datastore()
-        self.state = hs.get_state_handler()
 
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, bar, value, userId):
         ts = calendar.timegm(time.gmtime())
         status = SolicitationStatus.NOT_ANSWERED
         yield self.store.create_solicitation(action=action, equipment=equipment, substation=substation, 
-        bar=bar, userId=userId, ts=ts, status=status, value=value)
+            bar=bar, userId=userId, ts=ts, status=status, value=value)
 
+    @defer.inlineCallbacks
+    def filter_solicitations(self, company_code, from_id, limit):
+        result = yield self.store.get_solicitations_by_params(company_code=company_code,
+                                                              from_id=from_id,
+                                                              limit=limit)
+        return result
+
+    #TODO Este método deveria estar no handler de substation
     @defer.inlineCallbacks
     def get_substation_codes(self):
         substations = yield self.store.get_substations()
