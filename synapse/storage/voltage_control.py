@@ -85,6 +85,7 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def get_solicitations_by_params(
         self,
+        substations=None,
         company_code=None,
         sort_params=None,
         exclude_expired=None,
@@ -93,11 +94,10 @@ class VoltageControlStore(SQLBaseStore):
         limit=50
     ):
 
-        order_clause  = self._get_order_by_sort_params(sort_params)
+        order_clause  = self._get_order_clause_by_sort_params(sort_params)
+        filter_clause = self.get_filter_clause(substations, exclude_expired)
         
-        expire_clause = ""
-        if exclude_expired == "true":
-            expire_clause = "and solicitation.status <> 'EXPIRED'"
+       
 
         def get_solicitations_by_table_code(txn):
             args = [company_code, table_code, from_id, limit]
@@ -120,7 +120,7 @@ class VoltageControlStore(SQLBaseStore):
                 " and table_.table_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(expire_clause, order_clause)
+                %(filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -145,7 +145,7 @@ class VoltageControlStore(SQLBaseStore):
                 " substation.company_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(expire_clause, order_clause)
+                %(filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -169,7 +169,7 @@ class VoltageControlStore(SQLBaseStore):
                 " where solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(expire_clause, order_clause)
+                %(filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -189,7 +189,7 @@ class VoltageControlStore(SQLBaseStore):
         defer.returnValue(results)
 
     
-    def _get_order_by_sort_params(self, sort_params):
+    def _get_order_clause_by_sort_params(self, sort_params):
         order_clause = ""
 
         order_by_status = (
@@ -220,3 +220,19 @@ class VoltageControlStore(SQLBaseStore):
             order_clause = "ORDER BY solicitation.creation_timestamp DESC"
 
         return order_clause
+
+    def get_filter_clause(self, substations, exclude_expired):
+
+
+        filter_clause = ""
+        
+        if exclude_expired == "true":
+            filter_clause = "and solicitation.status <> 'EXPIRED' "
+        
+        if substations:
+            if len(substations) > 1:
+                filter_clause = filter_clause + "and solicitation.substation_code IN " + str(tuple(substations))
+            elif len(substations) == 1:
+                filter_clause = filter_clause + "and solicitation.substation_code = '" + substations[0] + "'"
+        
+        return filter_clause

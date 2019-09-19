@@ -89,6 +89,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         limit = min(parse_integer(request, "limit", default=50), 100)
         from_solicitation_id = parse_integer(request, "from_id", default=0)
         company_code = parse_string(request, "company_code", default=None)
+        substations = yield self.get_substations_to_filter(request)
         sort_params = self.get_sort_params(request)
         exclude_expired = parse_string(request, "exclude_expired", default=None)
         table_code = parse_string(request, "table_code", default=None)
@@ -107,6 +108,7 @@ class VoltageControlSolicitationServlet(RestServlet):
                 raise SynapseError(404, "Table not found", Codes.NOT_FOUND)
 
         result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
+                                                                         substations=substations,
                                                                          sort_params=sort_params,
                                                                          exclude_expired=exclude_expired,
                                                                          table_code=table_code,
@@ -122,6 +124,19 @@ class VoltageControlSolicitationServlet(RestServlet):
                 if param not in SolicitationSortParams.ALL_PARAMS:
                     raise SynapseError(400, "Invalid sort method", Codes.INVALID_PARAM)
             return sort_params
+        else:
+            return []
+
+    @defer.inlineCallbacks
+    def get_substations_to_filter(self, request):
+        substations_string = parse_string(request, "substations", default=None)
+        if substations_string is not None:
+            substations_to_filter = substations_string.split("+")
+            codes = yield self.voltage_control_handler.get_substation_codes()
+            for substation_code in substations_to_filter:
+                if substation_code not in codes:
+                    raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
+            return substations_to_filter
         else:
             return []
 
