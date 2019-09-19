@@ -84,7 +84,7 @@ public class Test08SortVoltageControlSolicitation {
                 given().
                     header("Authorization", "Bearer " + onsAccessToken)
                 .when().
-                    get("voltage_control_solicitation?sort=creation_time").
+                    get("voltage_control_solicitation?sort=substation").
                 then().
                     statusCode(200).
                     body("get(1).substation_code", equalTo("ATI"));
