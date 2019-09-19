@@ -107,13 +107,15 @@ class VoltageControlSolicitationServlet(RestServlet):
             if table is None:
                 raise SynapseError(404, "Table not found", Codes.NOT_FOUND)
 
-        result = yield self.voltage_control_handler.filter_solicitations(company_code=company_code,
-                                                                         substations=substations,
-                                                                         sort_params=sort_params,
-                                                                         exclude_expired=exclude_expired,
-                                                                         table_code=table_code,
-                                                                         from_id=from_solicitation_id,
-                                                                         limit=limit)
+        result = yield self.voltage_control_handler.filter_solicitations(
+            company_code=company_code,
+            substations=substations,
+            sort_params=sort_params,
+            exclude_expired=exclude_expired,
+            table_code=table_code,
+            from_id=from_solicitation_id,
+            limit=limit
+        )
         return 200, result
 
     def get_sort_params(self, request):
