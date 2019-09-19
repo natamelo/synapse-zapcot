@@ -4,8 +4,6 @@ from synapse.storage._base import SQLBaseStore
 
 from twisted.internet import defer
 
-from canonicaljson import json
-
 logger = logging.getLogger(__name__)
 
 
@@ -56,3 +54,19 @@ class TableStore(SQLBaseStore):
             desc="get_tables_by_company_code",
         )
 
+    def get_table_by_company_code_and_table_code(self, company_code, table_code):
+        """Retrieve tables by company code.
+
+        Args:
+            company_code (str): The company code, ex: CTEEP.
+            table_code (str): The table code, ex: A1.
+        """
+
+        return self._simple_select_one(
+            table="substations_table",
+            keyvalues={"company_code": company_code,
+                       "code": table_code},
+            retcols=["code", "name"],
+            allow_none=True,
+            desc="get_table_by_company_code_and_table_code",
+        )

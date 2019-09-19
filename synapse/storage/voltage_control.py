@@ -81,7 +81,34 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem on update solicitation")
 
     @defer.inlineCallbacks
-    def get_solicitations_by_params(self, company_code, from_id=0, limit=50):
+    def get_solicitations_by_params(self, company_code=None, table_code=None, from_id=0, limit=50):
+
+        def get_solicitations_by_table_code(txn):
+            args = [company_code, table_code, from_id, limit]
+
+            sql = (
+                " SELECT "
+                " solicitation.id,"
+                " solicitation.action_code,"
+                " solicitation.equipment_code, "
+                " solicitation.substation_code, "
+                " solicitation.bar, "
+                " solicitation.request_user_id, "
+                " solicitation.creation_timestamp, "
+                " solicitation.status, "
+                " solicitation.value_ "
+                " from voltage_control_solicitation solicitation, "
+                " substation_table table_, substation substation "
+                " where table_.substation_code = solicitation.substation_code and "
+                " substation.company_code = ? and substation.code = solicitation.substation_code "
+                " and table_.table_code = ? and solicitation.id >= ? "
+                " ORDER BY solicitation.creation_timestamp DESC, solicitation.substation_code ASC"
+                " LIMIT ? "
+            )
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
+
         def get_solicitations_by_company_code(txn):
             args = [company_code, from_id, limit]
 
@@ -99,7 +126,7 @@ class VoltageControlStore(SQLBaseStore):
                 " from voltage_control_solicitation solicitation, substation substation "
                 " where solicitation.substation_code = substation.code and "
                 " substation.company_code = ? and solicitation.id >= ? "
-                " ORDER BY solicitation.creation_timestamp DESC"
+                " ORDER BY solicitation.creation_timestamp DESC, solicitation.substation_code ASC"
                 " LIMIT ? "
             )
             txn.execute(sql, args)
@@ -122,14 +149,16 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.value_ "
                 " from voltage_control_solicitation solicitation "
                 " where solicitation.id >= ? "
-                " ORDER BY solicitation.creation_timestamp DESC"
+                " ORDER BY solicitation.creation_timestamp DESC, solicitation.substation_code ASC"
                 " LIMIT ? "
             )
             txn.execute(sql, args)
 
             return self.cursor_to_dict(txn)
 
-        if company_code:
+        if table_code and company_code:
+            query_to_call = get_solicitations_by_table_code
+        elif company_code:
             query_to_call = get_solicitations_by_company_code
         else:
             query_to_call = get_all_solicitations

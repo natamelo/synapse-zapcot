@@ -14,7 +14,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
 
 
-public class Test05FilterSolicitation {
+public class Test05FilterSolicitationByCompany {
 
     private static String userIDONS;
 

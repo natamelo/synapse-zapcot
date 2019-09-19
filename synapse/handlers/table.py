@@ -44,3 +44,9 @@ class TableHandler(BaseHandler):
     def filter_tables_by_company_code(self, company_code):
         tables = yield self.store.get_tables_by_company_code(company_code)
         return tables
+
+    @defer.inlineCallbacks
+    def get_table_by_company_code_and_table_code(self, company_code, table_code):
+        table = yield self.store.get_table_by_company_code_and_table_code(company_code, table_code)
+        return table
+
