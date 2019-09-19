@@ -111,7 +111,7 @@ public class Test07FilterSolicitationByTable {
                     header("Authorization", "Bearer " + cteepAccessToken).
                 when().
                     param("company_code", "CTEEP").
-                    param("table_code", "A2").
+                    param("table_code", "A3").
                 get("voltage_control_solicitation").
                     then().
                     statusCode(200).
@@ -119,7 +119,7 @@ public class Test07FilterSolicitationByTable {
 
         ServiceUtil.wait(2);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "ATI", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "2", "10");
 
         //Act & Assert
         RestAssured.
@@ -127,11 +127,11 @@ public class Test07FilterSolicitationByTable {
                     header("Authorization", "Bearer " + cteepAccessToken).
                 when().
                     param("company_code", "CTEEP").
-                    param("table_code", "A2").
+                    param("table_code", "A3").
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("substation_code", hasItems("ATI"));
+                    body("substation_code", hasItems("SAL"));
 
         ServiceUtil.wait(2);
     }
@@ -161,7 +161,7 @@ public class Test07FilterSolicitationByTable {
                     header("Authorization", "Bearer " + cteepAccessToken).
                 when().
                     param("company_code", "CTEEP").
-                    param("table_code", "A3").
+                    param("table_code", "A4").
                     get("voltage_control_solicitation").
                 then().
                     statusCode(404).
