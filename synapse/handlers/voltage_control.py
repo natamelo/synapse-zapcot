@@ -19,7 +19,7 @@ import logging
 from ._base import BaseHandler
 from synapse.types import create_requester
 from twisted.internet import defer
-from synapse.api.constants import SolicitationStatus
+from synapse.api.constants import SolicitationStatus, SolicitationActions, EquipmentTypes
 
 import calendar;
 import time;
@@ -31,14 +31,36 @@ class VoltageControlHandler(BaseHandler):
 
     def __init__(self, hs):
         self.hs = hs
+        self.substation_handler = hs.get_substation_handler()
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, bar, value, userId):
+    def create_solicitation(self, action, equipment, substation, chaining, amount, voltage,company_code, userId):
         ts = calendar.timegm(time.gmtime())
         status = SolicitationStatus.NOT_ANSWERED
-        yield self.store.create_solicitation(action=action, equipment=equipment, substation=substation, 
-            bar=bar, userId=userId, ts=ts, status=status, value=value)
+
+        if action not in SolicitationActions.ALL_ACTIONS:
+            raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
+        if equipment not in EquipmentTypes.ALL_EQUIPMENT:
+            raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
+
+        substation_object = yield self.substation_handler. \
+            get_substation_by_company_code_and_substation_code(company_code, substation)
+
+        if substation_object is None:
+            raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
+
+        yield self.store.create_solicitation(
+            action=action,
+            equipment=equipment,
+            substation=substation, 
+            chaining=chaining,
+            amount=amount,
+            voltage=voltage,
+            userId=userId,
+            ts=ts,
+            status=status
+        )
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):

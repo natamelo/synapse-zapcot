@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class VoltageControlStore(SQLBaseStore):
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, bar, userId, ts, status, value):
+    def create_solicitation(self, action, equipment, substation, chaining, amount, voltage, userId, ts, status):
         try:
             yield self._simple_insert(
                 table="voltage_control_solicitation",
@@ -22,11 +22,12 @@ class VoltageControlStore(SQLBaseStore):
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
-                    "bar": bar,
+                    "chaining": chaining,
+                    "amount": amount,
+                    "voltage": voltage,
                     "request_user_id": userId,
                     "creation_timestamp": ts,
-                    "status": status,
-                    "value_": value,
+                    "status": status
                 }
             )
         except Exception as e:
