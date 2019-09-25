@@ -34,12 +34,9 @@ class SubstationHandler(BaseHandler):
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def get_substation_codes(self):
+    def get_substations(self):
         substations = yield self.store.get_substations()
-        substation_codes = []
-        for sub in substations:
-            substation_codes.append(sub['code'])
-        return substation_codes
+        return substations
 
     @defer.inlineCallbacks
     def get_substation_by_company_code_and_substation_code(self, company_code, substation_code):

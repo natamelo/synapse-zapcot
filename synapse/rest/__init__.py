@@ -49,6 +49,7 @@ from synapse.rest.client.v2_alpha import (
     room_keys,
     room_upgrade_rest_servlet,
     sendtodevice,
+    substations,
     sync,
     tags,
     thirdparty,
@@ -122,6 +123,7 @@ class ClientRestResource(JsonResource):
         relations.register_servlets(hs, client_resource)
         tables.register_servlets(hs, client_resource)
         voltage_control_solicitation.register_servlets(hs, client_resource)
+        substations.register_servlets(hs, client_resource)
 
         # moving to /_synapse/admin
         synapse.rest.admin.register_servlets_for_client_rest_resource(
