@@ -51,15 +51,6 @@ class VoltageControlHandler(BaseHandler):
                                                               limit=limit)
         return result
 
-    #TODO Este método deveria estar no handler de substation
-    @defer.inlineCallbacks
-    def get_substation_codes(self):
-        substations = yield self.store.get_substations()
-        substation_codes = []
-        for sub in substations:
-            substation_codes.append(sub['code'])
-        return substation_codes
-
     @defer.inlineCallbacks
     def get_solicitation_by_id(self, id):
         solicitation = yield self.store.get_solicitation_by_id(id=id)

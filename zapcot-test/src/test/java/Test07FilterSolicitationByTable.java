@@ -80,9 +80,9 @@ public class Test07FilterSolicitationByTable {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep07", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons07", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -119,7 +119,7 @@ public class Test07FilterSolicitationByTable {
 
         ServiceUtil.wait(2);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "2", "10", "CTEEP");
 
         //Act & Assert
         RestAssured.

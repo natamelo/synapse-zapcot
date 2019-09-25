@@ -34,7 +34,7 @@ public class DataUtil {
 
 
     public static Map<String, String> buildPayloadSolicitation(String action, String equipment, String substation,
-                                                               String bar, String value) {
+                                                               String bar, String value, String company_code) {
 
         Map<String, String> payload = new HashMap<>();
 
@@ -43,7 +43,7 @@ public class DataUtil {
         payload.put("substation", substation);
         payload.put("bar", bar);
         payload.put("value", value);
-
+        payload.put("company_code", company_code);
 
         return payload;
     }

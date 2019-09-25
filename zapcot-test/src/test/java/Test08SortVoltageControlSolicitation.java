@@ -1,4 +1,5 @@
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import util.DataUtil;
@@ -32,16 +33,50 @@ public class Test08SortVoltageControlSolicitation {
         }
         RestAssured.baseURI = baseHost;
 
+        // Create a CTEEP user
+        Map<String, Object> userCTEEP = DataUtil.buildPayloadUser("testercteep08", "tester123", "CTEEP");
+        String session = ServiceUtil.getSession(userCTEEP);
+        userCTEEP.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userCTEEP).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
+
+        ServiceUtil.wait(2);
+
+        // Create a ONS user
+        Map<String, Object> userONS = DataUtil.buildPayloadUser("testerons08", "tester123", "ONS");
+        session = ServiceUtil.getSession(userONS);
+        userONS.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userONS).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
+
+        ServiceUtil.wait(2);
+
     }
 
     @Test
     public void test01SortByCreationTime() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons", "tester123");
+        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
-        createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "2", "10", "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -55,7 +90,7 @@ public class Test08SortVoltageControlSolicitation {
 
         ServiceUtil.wait(5);
 
-        createSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "2", "10", "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -67,17 +102,19 @@ public class Test08SortVoltageControlSolicitation {
                     statusCode(200).
                     body("get(0).action_code", equalTo("LIGAR"));
 
+        ServiceUtil.wait(2);
+
     }
 
 
     @Test
     public void test02SortBySubstations() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons", "tester123");
+        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -94,7 +131,7 @@ public class Test08SortVoltageControlSolicitation {
     @Test
     public void test03SortByStatus() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons", "tester123");
+        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
         RestAssured.
                 given().
@@ -119,11 +156,11 @@ public class Test08SortVoltageControlSolicitation {
     @Test
     public void test04sortByStatusAndSubstation() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons", "tester123");
+        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -143,13 +180,13 @@ public class Test08SortVoltageControlSolicitation {
     @Test
     public void test05sortByStatusAndSubstationAndCreationTime() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons", "tester123");
+        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
-        createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
-        createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "1", "5", "CTEEP");
         ServiceUtil.wait(5);
 
 
@@ -157,7 +194,7 @@ public class Test08SortVoltageControlSolicitation {
                 given().
                     header("Authorization", "Bearer " + onsAccessToken)
                 .when().
-                    get("voltage_control_solicitation?sort=status+substation").
+                    get("voltage_control_solicitation?sort=status+creation_time+substation").
                 then().
                     statusCode(200).
                     body("get(0).substation_code", equalTo("ATI")).
@@ -172,21 +209,4 @@ public class Test08SortVoltageControlSolicitation {
 
     }
 
-    private void createSolicitation (String onsAccessToken, String action,
-                                     String equipment, String substation,
-                                     String bar, String value) {
-
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation(
-                action, equipment, substation, bar, value);
-
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + onsAccessToken).
-                    body(payloadSolicitation).
-                when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(201);
-
-    }
 }

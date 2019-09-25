@@ -51,7 +51,7 @@ public class Test02CreateVoltageControlSolicitation {
                         extract().path("access_token");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -123,7 +123,7 @@ public class Test02CreateVoltageControlSolicitation {
                         extract().path("access_token");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -153,7 +153,7 @@ public class Test02CreateVoltageControlSolicitation {
                         extract().path("access_token");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -183,7 +183,7 @@ public class Test02CreateVoltageControlSolicitation {
                         extract().path("access_token");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -213,7 +213,7 @@ public class Test02CreateVoltageControlSolicitation {
                         extract().path("access_token");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().

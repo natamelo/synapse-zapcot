@@ -11,13 +11,13 @@ public class ServiceUtil {
     public static String doLogin (String username, String password) {
         return RestAssured.
                 given().
-                body(DataUtil.
+                    body(DataUtil.
                         buildPayloadLogin(username, password)).
                 when().
-                post("login").
+                    post("login").
                 then().
-                statusCode(200).
-                extract().path("access_token");
+                    statusCode(200).
+                    extract().path("access_token");
     }
 
     public static String getSession(Map<String, Object> user) {
@@ -34,10 +34,10 @@ public class ServiceUtil {
 
     public static void createSolicitation (String onsAccessToken, String action,
                                      String equipment, String substation,
-                                     String bar, String value) {
+                                     String bar, String value, String company_code) {
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation(
-                action, equipment, substation, bar, value);
+                action, equipment, substation, bar, value, company_code);
 
         RestAssured.
                 given().

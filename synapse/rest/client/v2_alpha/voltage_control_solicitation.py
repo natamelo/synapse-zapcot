@@ -17,7 +17,7 @@ import logging
 
 from twisted.internet import defer
 
-from synapse.http.servlet import RestServlet, parse_integer, parse_string, parse_json_object_from_request
+from synapse.http.servlet import RestServlet, parse_list, parse_integer, parse_string, parse_json_object_from_request
 from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes, SolicitationSortParams
 
 from ._base import client_patterns
@@ -44,14 +44,15 @@ class VoltageControlSolicitationServlet(RestServlet):
         self.auth = hs.get_auth()
         self.voltage_control_handler = hs.get_voltage_control_handler()
         self.table_handler = hs.get_table_handler()
+        self.substation_handler = hs.get_substation_handler()
 
     @defer.inlineCallbacks
     def on_POST(self, request):
         requester = yield self.auth.get_user_by_req(request)
         userId = requester.user.to_string()
-        company_code = requester.company_code
+        sender_company_code = requester.company_code
 
-        if company_code != Companies.ONS:
+        if sender_company_code != Companies.ONS:
             raise InvalidClientTokenError(401, "User should to belong ONS.")
         
         body = parse_json_object_from_request(request)
@@ -60,14 +61,17 @@ class VoltageControlSolicitationServlet(RestServlet):
         substation = body['substation']
         bar = body['bar']
         value = body['value']
+        company_code = body['company_code']
         
         if action not in SolicitationActions.ALL_ACTIONS:
             raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
 
-        codes = yield self.voltage_control_handler.get_substation_codes()
-        if substation not in codes:
+        substation_object = yield self.substation_handler. \
+            get_substation_by_company_code_and_substation_code(company_code, substation)
+
+        if substation_object is None:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
         yield self.voltage_control_handler.create_solicitation(
@@ -81,6 +85,7 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         return (201, "Voltage control solicitation created with success.")
 
+    #TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks
     def on_GET(self, request):
         requester = yield self.auth.get_user_by_req(request)
@@ -88,11 +93,14 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         limit = min(parse_integer(request, "limit", default=50), 100)
         from_solicitation_id = parse_integer(request, "from_id", default=0)
+
         company_code = parse_string(request, "company_code", default=None)
-        substations = yield self.get_substations_to_filter(request)
-        sort_params = self.get_sort_params(request)
-        exclude_expired = parse_string(request, "exclude_expired", default=None)
         table_code = parse_string(request, "table_code", default=None)
+
+        substations = parse_list(request, "substations")
+        sort_params = parse_list(request, "sort")
+
+        exclude_expired = parse_string(request, "exclude_expired", default=None)
 
         if company_code is not None:
             if company_code not in Companies.ALL_COMPANIES:
@@ -107,6 +115,18 @@ class VoltageControlSolicitationServlet(RestServlet):
             if table is None:
                 raise SynapseError(404, "Table not found", Codes.NOT_FOUND)
 
+        if substations:
+            for substation_code in substations:
+                substation = yield self.substation_handler.\
+                    get_substation_by_company_code_and_substation_code(company_code, substation_code)
+                if substation is None:
+                    raise SynapseError(404, "Substation %r not found" % substation_code, Codes.NOT_FOUND)
+
+        if sort_params:
+            for param in sort_params:
+                if param not in SolicitationSortParams.ALL_PARAMS:
+                    raise SynapseError(400, "Invalid sort param", Codes.INVALID_PARAM)
+
         result = yield self.voltage_control_handler.filter_solicitations(
             company_code=company_code,
             substations=substations,
@@ -117,30 +137,6 @@ class VoltageControlSolicitationServlet(RestServlet):
             limit=limit
         )
         return 200, result
-
-    def get_sort_params(self, request):
-        sort_string = parse_string(request, "sort", default=None)
-        if sort_string is not None:
-            sort_params = sort_string.split("+")
-            for param in sort_params:
-                if param not in SolicitationSortParams.ALL_PARAMS:
-                    raise SynapseError(400, "Invalid sort method", Codes.INVALID_PARAM)
-            return sort_params
-        else:
-            return []
-
-    @defer.inlineCallbacks
-    def get_substations_to_filter(self, request):
-        substations_string = parse_string(request, "substations", default=None)
-        if substations_string is not None:
-            substations_to_filter = substations_string.split("+")
-            codes = yield self.voltage_control_handler.get_substation_codes()
-            for substation_code in substations_to_filter:
-                if substation_code not in codes:
-                    raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
-            return substations_to_filter
-        else:
-            return []
 
 
 class VoltageControlStatusServlet(RestServlet):
@@ -223,6 +219,23 @@ class VoltageControlStatusServlet(RestServlet):
             else:
                 return True
 
+
 def register_servlets(hs, http_server):
     VoltageControlSolicitationServlet(hs).register(http_server)
     VoltageControlStatusServlet(hs).register(http_server)
+
+
+def check_is_valid_params(params):
+    for param in params:
+        if param not in SolicitationSortParams.ALL_PARAMS:
+            raise SynapseError(400, "Invalid sort param", Codes.INVALID_PARAM)
+
+
+def get_sort_params(request):
+    params = parse_string(request, "sort", default=None)
+
+    if params is not None:
+        params_list = params.split("+")
+        check_is_valid_params(params)
+
+    return params_list if params else []

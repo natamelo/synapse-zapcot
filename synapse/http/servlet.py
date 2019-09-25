@@ -108,6 +108,57 @@ def parse_boolean_from_args(args, name, default=None, required=False):
             return default
 
 
+def parse_list(
+    request,
+    name,
+    default=[],
+    separator="+",
+    required=False,
+    allowed_values=None,
+):
+
+    """
+    Parse a string list parameter from the request query string.
+
+    If encoding is not None, the content of the query param will be
+    decoded to Unicode using the encoding, otherwise it will be encoded
+
+    Args:
+        request: the twisted HTTP request.
+        name (bytes|unicode): the name of the query parameter.
+        separator: the separator of the query parameter.
+        default (bytes|unicode|None): value to use if the parameter is absent,
+            defaults to None. Must be bytes if encoding is None.
+        required (bool): whether to raise a 400 SynapseError if the
+            parameter is absent, defaults to False.
+        allowed_values (list[bytes|unicode]): List of allowed values for the
+            string, or None if any value is allowed, defaults to None. Must be
+            the same type as name, if given.
+
+    Returns:
+        bytes/unicode|None: A string value or the default. Unicode if encoding
+        was given, bytes otherwise.
+
+    Raises:
+        SynapseError if the parameter is absent and required, or if the
+            parameter is present, must be one of a list of allowed values and
+            is not one of those allowed values.
+    """
+
+    params = parse_string(request=request, name=name, required=required)
+    params_list = default
+
+    if params:
+        params_list = params.split(separator)
+        if allowed_values:
+            for param in params_list:
+                if param not in allowed_values:
+                    raise SynapseError(400, "Query parameter %r is not valid." % param,
+                                       errcode=Codes.MISSING_PARAM)
+
+    return params_list
+
+
 def parse_string(
     request,
     name,

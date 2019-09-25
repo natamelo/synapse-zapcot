@@ -40,7 +40,7 @@ public class Test06ChangeControlSolicitationStatus {
         String access_token = ServiceUtil.doLogin("testerons", "tester123");
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -95,7 +95,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);        
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -132,7 +132,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);
         
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().
@@ -229,7 +229,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);
 
         Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV");
+        "FASE", "5000kV", "CTEEP");
 
         RestAssured.
                 given().

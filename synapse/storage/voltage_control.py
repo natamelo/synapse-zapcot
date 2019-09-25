@@ -34,20 +34,6 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem creating solicitation.")
 
     @defer.inlineCallbacks
-    def get_substations(self):
-        try:
-            substations = yield self._simple_select_list(
-                "substation",
-                keyvalues=None,
-                retcols=("code", "name", "company_code"),
-            )
-
-            return substations
-        except Exception as e:
-            logger.warning("get_substation failed: %s", e)
-            raise StoreError(500, "Problem recovering substations")
-
-    @defer.inlineCallbacks
     def get_solicitation_by_id(self, id):
         try:
             result = yield self._simple_select_one(
@@ -94,10 +80,8 @@ class VoltageControlStore(SQLBaseStore):
         limit=50
     ):
 
-        order_clause  = self._get_order_clause_by_sort_params(sort_params)
-        filter_clause = self.get_filter_clause(substations, exclude_expired)
-        
-       
+        order_clause = get_order_clause_by_sort_params(sort_params)
+        filter_clause = get_filter_clause(substations, exclude_expired)
 
         def get_solicitations_by_table_code(txn):
             args = [company_code, table_code, from_id, limit]
@@ -120,7 +104,7 @@ class VoltageControlStore(SQLBaseStore):
                 " and table_.table_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(filter_clause, order_clause)
+                % (filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -145,7 +129,7 @@ class VoltageControlStore(SQLBaseStore):
                 " substation.company_code = ? and solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(filter_clause, order_clause)
+                % (filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -169,7 +153,7 @@ class VoltageControlStore(SQLBaseStore):
                 " where solicitation.id >= ? %s "
                 " %s "
                 " LIMIT ? "
-                %(filter_clause, order_clause)
+                % (filter_clause, order_clause)
             )
             txn.execute(sql, args)
 
@@ -188,51 +172,42 @@ class VoltageControlStore(SQLBaseStore):
 
         defer.returnValue(results)
 
-    
-    def _get_order_clause_by_sort_params(self, sort_params):
-        order_clause = ""
 
-        order_by_status = (
-            "CASE WHEN solicitation.status = 'NOT_ANSWERED' then '1' " 
-                 "WHEN solicitation.status = 'EXPIRED' then '2' "
-                 "WHEN solicitation.status = 'AWARE' then '3' "
-                 "ELSE solicitation.status END ASC "
-        )
-        order_by_substation = "solicitation.substation_code ASC"
-        order_by_creation = "solicitation.creation_timestamp"
+def get_filter_clause(substations, exclude_expired):
 
-        if (SolicitationSortParams.STATUS in sort_params and
-                SolicitationSortParams.SUBSTATION in sort_params and
-                SolicitationSortParams.CREATION_TIME in sort_params):
-            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_creation + ', ' + order_by_substation                          
-        elif (SolicitationSortParams.SUBSTATION in sort_params and
-                SolicitationSortParams.CREATION_TIME in sort_params):
-            order_clause = "ORDER BY " + order_by_creation + ', ' + order_by_substation
-        elif (SolicitationSortParams.STATUS in sort_params and
-                SolicitationSortParams.CREATION_TIME in sort_params):
-            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_creation
-        elif (SolicitationSortParams.STATUS in sort_params and
-                 SolicitationSortParams.SUBSTATION in sort_params):
-            order_clause = "ORDER BY " + order_by_status + ', ' + order_by_substation
-        elif (SolicitationSortParams.SUBSTATION in sort_params):
-            order_clause = "ORDER BY solicitation.substation_code ASC"
-        elif (SolicitationSortParams.CREATION_TIME in sort_params):
-            order_clause = "ORDER BY solicitation.creation_timestamp DESC"
+    filter_clause = ""
 
-        return order_clause
+    if exclude_expired == "true":
+        filter_clause = "and solicitation.status <> 'EXPIRED' "
 
-    def get_filter_clause(self, substations, exclude_expired):
+    if substations:
+        if len(substations) > 1:
+            filter_clause = filter_clause + "and solicitation.substation_code IN " + str(tuple(substations))
+        elif len(substations) == 1:
+            filter_clause = filter_clause + "and solicitation.substation_code = '" + substations[0] + "'"
+
+    return filter_clause
 
 
-        filter_clause = ""
-        
-        if exclude_expired == "true":
-            filter_clause = "and solicitation.status <> 'EXPIRED' "
-        
-        if substations:
-            if len(substations) > 1:
-                filter_clause = filter_clause + "and solicitation.substation_code IN " + str(tuple(substations))
-            elif len(substations) == 1:
-                filter_clause = filter_clause + "and solicitation.substation_code = '" + substations[0] + "'"
-        
-        return filter_clause
+def get_order_clause_by_sort_params(sort_params):
+
+    order_by_status = (
+        "CASE WHEN solicitation.status = 'NOT_ANSWERED' then '1' "
+        "WHEN solicitation.status = 'EXPIRED' then '2' "
+        "WHEN solicitation.status = 'AWARE' then '3' "
+        "ELSE solicitation.status END ASC "
+    )
+
+    order_clause = "ORDER BY "
+
+    if not sort_params or SolicitationSortParams.STATUS in sort_params:
+        order_clause += order_by_status + ", "
+    if sort_params and SolicitationSortParams.CREATION_TIME in sort_params:
+        order_clause += "solicitation.creation_timestamp DESC, "
+    if sort_params and SolicitationSortParams.SUBSTATION in sort_params:
+        order_clause += "solicitation.substation_code ASC, "
+
+    order_clause = order_clause[0:-2]
+
+    return order_clause
+

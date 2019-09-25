@@ -75,33 +75,15 @@ public class Test05FilterSolicitationByCompany {
 
     }
 
-    private void createSolicitation (String onsAccessToken, String action,
-                                     String equipment, String substation,
-                                     String bar, String value) {
-
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation(
-                action, equipment, substation, bar, value);
-
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + onsAccessToken).
-                    body(payloadSolicitation).
-                when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(201);
-
-    }
-
     @Test
     public void test01FilterWithValidCompanyCodeByUserCteep() {
         //Arrange
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
         ServiceUtil.wait(1);
-        createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -131,9 +113,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
         ServiceUtil.wait(1);
-        createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -182,10 +164,10 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        createSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "1", "5");
+        ServiceUtil.createSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "1", "5", "CTEEP");
         ServiceUtil.wait(1);
 
-        createSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "10");
+        ServiceUtil.createSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "10", "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
