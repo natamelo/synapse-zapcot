@@ -18,18 +18,8 @@ import logging
 from twisted.internet import defer
 
 from synapse.http.servlet import RestServlet, parse_list, parse_integer, parse_string, parse_json_object_from_request
-from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes, SolicitationSortParams
 
 from ._base import client_patterns
-
-from synapse.api.errors import (
-    Codes,
-    InvalidClientTokenError,
-    SynapseError,
-)
-
-import calendar;
-import time;
 
 logger = logging.getLogger(__name__)
 
