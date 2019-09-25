@@ -36,8 +36,6 @@ class SubstationHandler(BaseHandler):
     @defer.inlineCallbacks
     def get_substations(self):
         substations = yield self.store.get_substations()
-        for substation in substations:
-            del substation["company_code"]
         return substations
 
     @defer.inlineCallbacks
