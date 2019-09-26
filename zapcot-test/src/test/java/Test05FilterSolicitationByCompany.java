@@ -6,10 +6,8 @@ import util.DataUtil;
 import util.ServiceUtil;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
 
@@ -81,9 +79,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -98,10 +96,10 @@ public class Test05FilterSolicitationByCompany {
                     body("action_code", hasItems("LIGAR", "DESLIGAR")).
                     body("equipment_code", hasItems("REATOR", "CAPACITOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
-                    body("bar", hasItems("1", "2")).
+                    body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
                     body("status", hasItems("NOT_ANSWERED")).
-                    body("value_", hasItems("5" , "10"));
+                    body("voltage", hasItems("500kV" , "140kV"));
 
         ServiceUtil.wait(2);
 
@@ -113,9 +111,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -164,10 +162,10 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "1", "5", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "10", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -182,10 +180,10 @@ public class Test05FilterSolicitationByCompany {
                     body("action_code", hasItems("ELEVAR", "REDUZIR")).
                     body("equipment_code", hasItems("SINCRONO", "TAP")).
                     body("substation_code", hasItems("MIR", "PIR")).
-                    body("bar", hasItems("1", "2")).
+                    body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
                     body("status", hasItems("NOT_ANSWERED")).
-                    body("value_", hasItems("5" , "10"));
+                    body("voltage", hasItems("500kV" , "140kV"));
 
         ServiceUtil.wait(2);
 
@@ -200,10 +198,10 @@ public class Test05FilterSolicitationByCompany {
                     body("action_code", hasItems("ELEVAR", "REDUZIR")).
                     body("equipment_code", hasItems("SINCRONO", "TAP")).
                     body("substation_code", hasItems("MIR", "PIR")).
-                    body("bar", hasItems("1", "2")).
+                    body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
                     body("status", hasItems("NOT_ANSWERED")).
-                    body("value_", hasItems("5" , "10"));
+                    body("voltage", hasItems("500kV" , "140kV"));
 
         ServiceUtil.wait(2);
 

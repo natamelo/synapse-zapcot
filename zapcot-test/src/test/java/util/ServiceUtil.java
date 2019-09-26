@@ -34,10 +34,10 @@ public class ServiceUtil {
 
     public static void createSolicitation (String onsAccessToken, String action,
                                      String equipment, String substation,
-                                     String bar, String value, String company_code) {
+                                     String amount, String voltage, Boolean chaining, String company_code) {
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation(
-                action, equipment, substation, bar, value, company_code);
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation(
+                action, equipment, substation, amount, voltage, chaining, company_code);
 
         RestAssured.
                 given().

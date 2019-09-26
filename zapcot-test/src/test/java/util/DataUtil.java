@@ -33,16 +33,17 @@ public class DataUtil {
     }
 
 
-    public static Map<String, String> buildPayloadSolicitation(String action, String equipment, String substation,
-                                                               String bar, String value, String company_code) {
+    public static Map<String, Object> buildPayloadSolicitation(String action, String equipment, String substation,
+                                                               String amount, String voltage, Boolean chaining, String company_code) {
 
-        Map<String, String> payload = new HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
 
         payload.put("action", action);
         payload.put("equipment", equipment);
         payload.put("substation", substation);
-        payload.put("bar", bar);
-        payload.put("value", value);
+        payload.put("amount", amount);
+        payload.put("voltage", voltage);
+        payload.put("chaining", chaining);
         payload.put("company_code", company_code);
 
         return payload;

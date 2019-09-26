@@ -1,5 +1,5 @@
 import io.restassured.RestAssured;
-
+import io.restassured.http.ContentType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -34,24 +34,52 @@ public class Test02CreateVoltageControlSolicitation {
         }
         RestAssured.baseURI = baseHost;
 
+        // Create a ONS user
+        Map<String, Object> userONS = DataUtil.buildPayloadUser("testerons02", "tester123", "ONS");
+        String session = ServiceUtil.getSession(userONS);
+        userONS.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userONS).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
+
+        ServiceUtil.wait(5);
+
+
+        // Create a CTEEP user
+        Map<String, Object> userCTEEP = DataUtil.buildPayloadUser("testercteep02", "tester123", "CTEEP");
+        session = ServiceUtil.getSession(userCTEEP);
+        userCTEEP.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userCTEEP).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
+
+        ServiceUtil.wait(5);
+
     }
 
     @Test
     public void test01CreateValidSolicitations() {
 
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        ServiceUtil.wait(2);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -61,7 +89,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
 
         payloadSolicitation.put("action", "DESLIGAR");
         payloadSolicitation.put("equipment", "REATOR");
@@ -75,7 +103,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
         
         payloadSolicitation.put("action", "ELEVAR");
         payloadSolicitation.put("equipment", "SINCRONO");
@@ -89,7 +117,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
                     
         payloadSolicitation.put("action", "REDUZIR");
         payloadSolicitation.put("equipment", "TAP");
@@ -103,7 +131,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
                     
 
         ServiceUtil.wait(5);
@@ -111,20 +139,14 @@ public class Test02CreateVoltageControlSolicitation {
 
     @Test
     public void test02CreateSolicitationsWithInvalidEquipment() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+        
+        String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        ServiceUtil.wait(2);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
-        "FASE", "5000kV", "CTEEP");
-
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
+        "5", "500kV", true, "CTEEP");
+        
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
@@ -141,19 +163,12 @@ public class Test02CreateVoltageControlSolicitation {
 
     @Test
     public void test03CreateSolicitationsWithInvalidAction() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        ServiceUtil.wait(2);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -171,19 +186,12 @@ public class Test02CreateVoltageControlSolicitation {
 
     @Test
     public void test04CreateSolicitationsWithInvalidSubstation() {
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        ServiceUtil.wait(2);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -199,21 +207,14 @@ public class Test02CreateVoltageControlSolicitation {
     }
 
     @Test
-    public void test03CreateSolicitationsWithUnauthorizedUser() {
+    public void test05CreateSolicitationsWithUnauthorizedUser() {
 
-        Map<String, Object> payloadLogin = DataUtil.buildPayloadLogin("testercteep", "tester123");;
+        String access_token = ServiceUtil.doLogin("testercteep02", "tester123");
 
-        String access_token = RestAssured.
-                    given().
-                        body(payloadLogin).
-                    when().
-                        post("login").
-                    then().
-                        statusCode(200).
-                        extract().path("access_token");
+        ServiceUtil.wait(2);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
