@@ -21,6 +21,12 @@ from synapse.types import create_requester
 from twisted.internet import defer
 from synapse.api.constants import SolicitationStatus, SolicitationActions, EquipmentTypes
 
+from synapse.api.errors import (
+    Codes,
+    SynapseError,
+)
+
+
 import calendar;
 import time;
 
@@ -43,7 +49,9 @@ class VoltageControlHandler(BaseHandler):
             raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
         if equipment not in EquipmentTypes.ALL_EQUIPMENT:
             raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
-
+        if equipment == EquipmentTypes.REATOR:
+            check_reactor_params(action, amount, chaining)
+            
         substation_object = yield self.substation_handler. \
             get_substation_by_company_code_and_substation_code(company_code, substation)
 
@@ -64,13 +72,15 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
-        result = yield self.store.get_solicitations_by_params(company_code=company_code,
-                                                              substations=substations,
-                                                              sort_params=sort_params,
-                                                              exclude_expired=exclude_expired,
-                                                              table_code=table_code,
-                                                              from_id=from_id,
-                                                              limit=limit)
+        result = yield self.store.get_solicitations_by_params(
+            company_code=company_code,
+            substations=substations,
+            sort_params=sort_params,
+            exclude_expired=exclude_expired,
+            table_code=table_code,
+            from_id=from_id,
+            limit=limit
+        )
         return result
 
     @defer.inlineCallbacks
@@ -82,3 +92,11 @@ class VoltageControlHandler(BaseHandler):
     def change_solicitation_status(self, new_status, id, user_id):
         update_ts = calendar.timegm(time.gmtime())
         yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
+
+def check_reactor_params(action, amount, chaining):
+    if action != SolicitationActions.LIGAR and action != SolicitationActions.DESLIGAR:
+        raise SynapseError(400, "Invalid action for equipment type 'Reator'.", Codes.INVALID_PARAM)
+    if float(amount) < 0:
+        raise SynapseError(400, "Invalid amount value for equipment type 'Reator'.", Codes.INVALID_PARAM)
+    if type(chaining) != bool:
+        raise SynapseError(400, "Invalid chaining for equipment type 'Reator'.", Codes.INVALID_PARAM)

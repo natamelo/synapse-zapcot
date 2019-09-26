@@ -40,8 +40,8 @@ class VoltageControlStore(SQLBaseStore):
             result = yield self._simple_select_one(
                 "voltage_control_solicitation",
                 {"id": id},
-                retcols=("action_code", "equipment_code", "substation_code", "bar",
-                 "value_", "request_user_id", "creation_timestamp", "status"),
+                retcols=("action_code", "equipment_code", "substation_code", "amount",
+                 "voltage", "request_user_id", "creation_timestamp", "status"),
                 allow_none=True,
             )
             if result:
@@ -93,11 +93,11 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.action_code,"
                 " solicitation.equipment_code, "
                 " solicitation.substation_code, "
-                " solicitation.bar, "
+                " solicitation.amount, "
                 " solicitation.request_user_id, "
                 " solicitation.creation_timestamp, "
                 " solicitation.status, "
-                " solicitation.value_ "
+                " solicitation.voltage "
                 " from voltage_control_solicitation solicitation, "
                 " substation_table table_, substation substation "
                 " where table_.substation_code = solicitation.substation_code and "
@@ -120,11 +120,11 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.action_code,"
                 " solicitation.equipment_code, "
                 " solicitation.substation_code, "
-                " solicitation.bar, "
+                " solicitation.amount, "
                 " solicitation.request_user_id, "
                 " solicitation.creation_timestamp, "
                 " solicitation.status, "
-                " solicitation.value_ "
+                " solicitation.voltage "
                 " from voltage_control_solicitation solicitation, substation substation "
                 " where solicitation.substation_code = substation.code and "
                 " substation.company_code = ? and solicitation.id >= ? %s "
@@ -145,11 +145,11 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.action_code,"
                 " solicitation.equipment_code, "
                 " solicitation.substation_code, "
-                " solicitation.bar, "
+                " solicitation.amount, "
                 " solicitation.request_user_id, "
                 " solicitation.creation_timestamp, "
                 " solicitation.status, "
-                " solicitation.value_ "
+                " solicitation.voltage "
                 " from voltage_control_solicitation solicitation "
                 " where solicitation.id >= ? %s "
                 " %s "
