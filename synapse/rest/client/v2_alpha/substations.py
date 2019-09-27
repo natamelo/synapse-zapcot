@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Copyright 2016 OpenMarket Ltd
-# Copyright 2018 New Vector Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,30 +15,33 @@
 
 import logging
 
-from ._base import BaseHandler
-from synapse.types import create_requester
 from twisted.internet import defer
-from synapse.api.constants import SolicitationStatus
 
-import calendar;
-import time;
+from synapse.http.servlet import RestServlet, parse_list, parse_integer, parse_string, parse_json_object_from_request
+
+from ._base import client_patterns
 
 logger = logging.getLogger(__name__)
 
 
-class SubstationHandler(BaseHandler):
+class SubstationServlet(RestServlet):
+    PATTERNS = client_patterns("/substations$")
 
     def __init__(self, hs):
+        super(SubstationServlet, self).__init__()
+
         self.hs = hs
-        self.store = hs.get_datastore()
+        self.auth = hs.get_auth()
+        self.substation_handler = hs.get_substation_handler()
 
     @defer.inlineCallbacks
-    def get_substations(self):
-        substations = yield self.store.get_substations()
-        return substations
+    def on_GET(self, request):
+        requester = yield self.auth.get_user_by_req(request)
 
-    @defer.inlineCallbacks
-    def get_substation_by_company_code_and_substation_code(self, company_code, substation_code):
-        solicitation = yield self.store.get_substation_by_company_code_and_substation_code(
-            company_code, substation_code)
-        return solicitation
+        substations = yield self.substation_handler.get_substations()
+        return(200, substations)
+
+
+
+def register_servlets(hs, http_server):
+    SubstationServlet(hs).register(http_server)

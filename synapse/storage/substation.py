@@ -15,7 +15,7 @@ class SubstationStore(SQLBaseStore):
             substations = yield self._simple_select_list(
                 "substation",
                 keyvalues=None,
-                retcols=("code", "name", "company_code"),
+                retcols=("code", "name"),
             )
 
             return substations
