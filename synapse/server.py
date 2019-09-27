@@ -80,6 +80,7 @@ from synapse.handlers.sync import SyncHandler
 from synapse.handlers.typing import TypingHandler
 from synapse.handlers.user_directory import UserDirectoryHandler
 from synapse.handlers.voltage_control import VoltageControlHandler
+from synapse.handlers.substation import SubstationHandler
 from synapse.http.client import InsecureInterceptableContextFactory, SimpleHttpClient
 from synapse.http.matrixfederationclient import MatrixFederationHttpClient
 from synapse.notifier import Notifier
@@ -201,6 +202,7 @@ class HomeServer(object):
         "saml_handler",
         "event_client_serializer",
         "table_handler",
+        "substation_handler",
     ]
 
     REQUIRED_ON_MASTER_STARTUP = ["user_directory_handler", "stats_handler"]
@@ -314,6 +316,9 @@ class HomeServer(object):
 
     def build_voltage_control_handler(self):
         return VoltageControlHandler(self)
+
+    def build_substation_handler(self):
+        return SubstationHandler(self)
 
     def build_sendmail(self):
         return sendmail

@@ -179,3 +179,12 @@ class EquipmentTypes(object):
     SINCRONO = "SINCRONO"
     TAP = "TAP"
     ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TAP]
+
+class SolicitationSortParams(object):
+    """The possible params to sort voltage control solicitations.
+    """
+
+    CREATION_TIME = "creation_time"
+    STATUS = "status"
+    SUBSTATION = "substation"
+    ALL_PARAMS = [CREATION_TIME, STATUS, SUBSTATION]

@@ -62,6 +62,7 @@ from .stream import StreamStore
 from .tags import TagsStore
 from .transactions import TransactionStore
 from .voltage_control import VoltageControlStore
+from .substation import SubstationStore
 from .user_directory import UserDirectoryStore
 from .util.id_generators import ChainedIdGenerator, IdGenerator, StreamIdGenerator
 
@@ -109,6 +110,7 @@ class DataStore(
     RelationsStore,
     TableStore,
     VoltageControlStore,
+    SubstationStore,
 ):
     def __init__(self, db_conn, hs):
         self.hs = hs

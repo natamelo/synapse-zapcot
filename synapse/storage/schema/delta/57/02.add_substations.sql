@@ -7,3 +7,4 @@ INSERT INTO substation (code, name, company_code) VALUES ('MIR', 'Mirassol II', 
 INSERT INTO substation (code, name, company_code) VALUES ('ATI', 'Atibaia II', 'CTEEP');
 INSERT INTO substation (code, name, company_code) VALUES ('MOS', 'Mosque', 'CTEEP');
 INSERT INTO substation (code, name, company_code) VALUES ('SAL', 'Salto', 'CTEEP');
+INSERT INTO substation (code, name, company_code) VALUES ('TES', 'Teste', 'CTEEP');
