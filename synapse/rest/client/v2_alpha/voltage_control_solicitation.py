@@ -49,7 +49,7 @@ class VoltageControlSolicitationServlet(RestServlet):
     @defer.inlineCallbacks
     def on_POST(self, request):
         requester = yield self.auth.get_user_by_req(request)
-        userId = requester.user.to_string()
+        user_id = requester.user.to_string()
         sender_company_code = requester.company_code
 
         if sender_company_code != Companies.ONS:
@@ -61,7 +61,7 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         yield self.voltage_control_handler.create_solicitations(
             solicitations=solicitations,
-            userId=userId
+            user_id=user_id
         )
 
         return (201, {"message": "Voltage control solicitations created with success."})

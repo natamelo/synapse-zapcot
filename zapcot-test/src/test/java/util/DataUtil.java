@@ -34,10 +34,10 @@ public class DataUtil {
 
 
     public static Map<String, Object> buildPayloadSingleSolicitation(String action, String equipment, String substation,
-                                                               String amount, String voltage, Boolean chaining, String company_code) {
+                                                               String amount, String voltage, Boolean staggered, String company_code) {
 
         Map<String, Object> single_solicitation = buildSingleSolicitation(action, equipment, substation, 
-                                                                        amount,voltage, chaining, company_code);
+                                                                        amount,voltage, staggered, company_code);
 
         List<Map<String, Object>> solicitations = new ArrayList<>();
         solicitations.add(single_solicitation);
@@ -62,7 +62,7 @@ public class DataUtil {
     }
 
     public static Map<String, Object> buildSingleSolicitation(String action, String equipment, String substation,
-                                                            String amount, String voltage, Boolean chaining, String company_code) {
+                                                            String amount, String voltage, Boolean staggered, String company_code) {
 
         Map<String, Object> single_solicitation = new HashMap<>();
 
@@ -71,7 +71,7 @@ public class DataUtil {
         single_solicitation.put("substation", substation);
         single_solicitation.put("amount", amount);
         single_solicitation.put("voltage", voltage);
-        single_solicitation.put("chaining", chaining);
+        single_solicitation.put("staggered", staggered);
         single_solicitation.put("company_code", company_code);
 
         return single_solicitation;

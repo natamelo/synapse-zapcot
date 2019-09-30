@@ -41,7 +41,7 @@ class VoltageControlHandler(BaseHandler):
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def create_solicitations(self, solicitations, userId):
+    def create_solicitations(self, solicitations, user_id):
         status = SolicitationStatus.NOT_ANSWERED
 
         for solicitation in solicitations:
@@ -60,10 +60,10 @@ class VoltageControlHandler(BaseHandler):
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
                 substation=solicitation["substation"], 
-                chaining=solicitation["chaining"],
+                staggered=solicitation["staggered"],
                 amount=solicitation["amount"],
                 voltage=solicitation["voltage"],
-                userId=userId,
+                user_id=user_id,
                 ts=ts,
                 status=status
             )
@@ -100,13 +100,13 @@ def check_solicitation_params(solicitation):
         check_reactor_params(
             solicitation["action"],
             solicitation["amount"],
-            solicitation["chaining"]
+            solicitation["staggered"]
         )
 
-def check_reactor_params(action, amount, chaining):
+def check_reactor_params(action, amount, staggered):
     if action != SolicitationActions.LIGAR and action != SolicitationActions.DESLIGAR:
         raise SynapseError(400, "Invalid action for equipment type 'Reator'.", Codes.INVALID_PARAM)
     if float(amount) < 0:
         raise SynapseError(400, "Invalid amount value for equipment type 'Reator'.", Codes.INVALID_PARAM)
-    if type(chaining) != bool:
-        raise SynapseError(400, "Invalid chaining for equipment type 'Reator'.", Codes.INVALID_PARAM)
+    if type(staggered) != bool:
+        raise SynapseError(400, "Invalid staggered for equipment type 'Reator'.", Codes.INVALID_PARAM)
