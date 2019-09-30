@@ -134,6 +134,22 @@ public class Test07FilterSolicitationByTable {
                     body("substation_code", hasItems("SAL"));
 
         ServiceUtil.wait(2);
+
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "", true, "CTEEP");
+
+        //Act & Assert
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + cteepAccessToken).
+                when().
+                    param("company_code", "CTEEP").
+                    param("table_code", "A3").
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("substation_code", hasItems("SAL"));
+
+        ServiceUtil.wait(2);
     }
 
     @Test
