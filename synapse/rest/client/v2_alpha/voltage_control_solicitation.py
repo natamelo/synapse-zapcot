@@ -56,27 +56,15 @@ class VoltageControlSolicitationServlet(RestServlet):
             raise InvalidClientTokenError(401, "User should to belong ONS.")
         
         body = parse_json_object_from_request(request)
-        action = body['action']
-        equipment = body['equipment']
-        substation = body['substation']
-        chaining = body['chaining']
-        amount = body['amount']
-        voltage = body['voltage']
-        company_code = body['company_code']
+        solicitations = body['solicitations']
     
 
-        yield self.voltage_control_handler.create_solicitation(
-            action=action,
-            equipment=equipment,
-            substation=substation,
-            chaining=chaining,
-            amount=amount,
-            voltage=voltage,
-            company_code=company_code,
+        yield self.voltage_control_handler.create_solicitations(
+            solicitations=solicitations,
             userId=userId
         )
 
-        return (201, {"message": "Voltage control solicitation created with success."})
+        return (201, {"message": "Voltage control solicitations created with success."})
 
     #TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks

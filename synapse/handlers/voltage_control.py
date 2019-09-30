@@ -41,34 +41,32 @@ class VoltageControlHandler(BaseHandler):
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, chaining, amount, voltage,company_code, userId):
-        ts = calendar.timegm(time.gmtime())
+    def create_solicitations(self, solicitations, userId):
         status = SolicitationStatus.NOT_ANSWERED
 
-        if action not in SolicitationActions.ALL_ACTIONS:
-            raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
-        if equipment not in EquipmentTypes.ALL_EQUIPMENT:
-            raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
-        if equipment == EquipmentTypes.REATOR:
-            check_reactor_params(action, amount, chaining)
-            
-        substation_object = yield self.substation_handler. \
-            get_substation_by_company_code_and_substation_code(company_code, substation)
+        for solicitation in solicitations:
+            yield check_solicitation_params(solicitation)
+            substation_object = yield self.substation_handler. \
+                get_substation_by_company_code_and_substation_code(
+                    solicitation["company_code"], 
+                    solicitation["substation"]
+                )
+            if substation_object is None:
+                raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
-        if substation_object is None:
-            raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
-
-        yield self.store.create_solicitation(
-            action=action,
-            equipment=equipment,
-            substation=substation, 
-            chaining=chaining,
-            amount=amount,
-            voltage=voltage,
-            userId=userId,
-            ts=ts,
-            status=status
-        )
+        for solicitation in solicitations:
+            ts = calendar.timegm(time.gmtime())
+            yield self.store.create_solicitation(
+                action=solicitation["action"],
+                equipment=solicitation["equipment"],
+                substation=solicitation["substation"], 
+                chaining=solicitation["chaining"],
+                amount=solicitation["amount"],
+                voltage=solicitation["voltage"],
+                userId=userId,
+                ts=ts,
+                status=status
+            )
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
@@ -92,6 +90,18 @@ class VoltageControlHandler(BaseHandler):
     def change_solicitation_status(self, new_status, id, user_id):
         update_ts = calendar.timegm(time.gmtime())
         yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
+
+def check_solicitation_params(solicitation):
+    if solicitation["action"] not in SolicitationActions.ALL_ACTIONS:
+        raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
+    if solicitation["equipment"] not in EquipmentTypes.ALL_EQUIPMENT:
+        raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
+    if solicitation["equipment"] == EquipmentTypes.REATOR:
+        check_reactor_params(
+            solicitation["action"],
+            solicitation["amount"],
+            solicitation["chaining"]
+        )
 
 def check_reactor_params(action, amount, chaining):
     if action != SolicitationActions.LIGAR and action != SolicitationActions.DESLIGAR:
