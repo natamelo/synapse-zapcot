@@ -79,9 +79,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -111,9 +111,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -162,10 +162,10 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert

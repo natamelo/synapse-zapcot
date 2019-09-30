@@ -6,6 +6,8 @@ import org.junit.Test;
 import util.DataUtil;
 import util.ServiceUtil;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -78,7 +80,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -89,7 +91,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
 
         payloadSolicitation.put("action", "DESLIGAR");
         payloadSolicitation.put("equipment", "REATOR");
@@ -103,7 +105,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
         
         payloadSolicitation.put("action", "ELEVAR");
         payloadSolicitation.put("equipment", "SINCRONO");
@@ -117,7 +119,7 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
                     
         payloadSolicitation.put("action", "REDUZIR");
         payloadSolicitation.put("equipment", "TAP");
@@ -131,20 +133,20 @@ public class Test02CreateVoltageControlSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
                     
 
         ServiceUtil.wait(5);
     }
 
     @Test
-    public void test02CreateSolicitationsWithInvalidEquipment() {
+    public void test02createSingleSolicitationsWithInvalidEquipment() {
         
         String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
         "5", "500kV", true, "CTEEP");
         
         RestAssured.
@@ -162,12 +164,12 @@ public class Test02CreateVoltageControlSolicitation {
 
 
     @Test
-    public void test03CreateSolicitationsWithInvalidAction() {
+    public void test03createSingleSolicitationsWithInvalidAction() {
         String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -185,12 +187,12 @@ public class Test02CreateVoltageControlSolicitation {
 
 
     @Test
-    public void test04CreateSolicitationsWithInvalidSubstation() {
+    public void test04createSingleSolicitationsWithInvalidSubstation() {
         String access_token = ServiceUtil.doLogin("testerons02", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -207,13 +209,13 @@ public class Test02CreateVoltageControlSolicitation {
     }
 
     @Test
-    public void test05CreateSolicitationsWithUnauthorizedUser() {
+    public void test05createSingleSolicitationsWithUnauthorizedUser() {
 
         String access_token = ServiceUtil.doLogin("testercteep02", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -227,6 +229,33 @@ public class Test02CreateVoltageControlSolicitation {
                     body("soft_logout", equalTo("User should to belong ONS."));
 
         ServiceUtil.wait(5);
+    }
+
+    public void test06CreateMultipleSolicitations() {
+
+        String access_token = ServiceUtil.doLogin("testerons02", "tester123");
+        
+        Map<String, Object> solicitation1 = DataUtil.buildSingleSolicitation("LIGAR", "REATOR", "MOS", 
+        "5", "50", true, "CTEEP");
+        Map<String, Object> solicitation2 = DataUtil.buildSingleSolicitation("DESLIGAR", "CAPACITOR", "ATI", 
+        "5", "500kV", true, "CTEEP");
+        Map<String, Object> solicitation3 = DataUtil.buildSingleSolicitation("ELEVAR", "CAPACITOR", "ATI", 
+        "5", "500kV", true, "CTEEP");
+
+        List<Map<String, Object>> solicitations = new ArrayList<>();
+        solicitations.add(solicitation1);
+        solicitations.add(solicitation2);
+        solicitations.add(solicitation3);
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(solicitations).
+                when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
     }
 
 }

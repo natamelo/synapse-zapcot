@@ -33,18 +33,18 @@ public class DataUtil {
     }
 
 
-    public static Map<String, Object> buildPayloadSolicitation(String action, String equipment, String substation,
+    public static Map<String, Object> buildPayloadSingleSolicitation(String action, String equipment, String substation,
                                                                String amount, String voltage, Boolean chaining, String company_code) {
+
+        Map<String, Object> single_solicitation = buildSingleSolicitation(action, equipment, substation, 
+                                                                        amount,voltage, chaining, company_code);
+
+        List<Map<String, Object>> solicitations = new ArrayList<>();
+        solicitations.add(single_solicitation);
 
         Map<String, Object> payload = new HashMap<>();
 
-        payload.put("action", action);
-        payload.put("equipment", equipment);
-        payload.put("substation", substation);
-        payload.put("amount", amount);
-        payload.put("voltage", voltage);
-        payload.put("chaining", chaining);
-        payload.put("company_code", company_code);
+        payload.put("solicitations", solicitations);
 
         return payload;
     }
@@ -59,5 +59,21 @@ public class DataUtil {
         Map<String, String> payload = new HashMap<>();
         payload.put("status", status);
         return payload;
+    }
+
+    public static Map<String, Object> buildSingleSolicitation(String action, String equipment, String substation,
+                                                            String amount, String voltage, Boolean chaining, String company_code) {
+
+        Map<String, Object> single_solicitation = new HashMap<>();
+
+        single_solicitation.put("action", action);
+        single_solicitation.put("equipment", equipment);
+        single_solicitation.put("substation", substation);
+        single_solicitation.put("amount", amount);
+        single_solicitation.put("voltage", voltage);
+        single_solicitation.put("chaining", chaining);
+        single_solicitation.put("company_code", company_code);
+
+        return single_solicitation;
     }
 }

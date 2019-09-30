@@ -74,9 +74,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -90,7 +90,7 @@ public class Test08SortVoltageControlSolicitation {
 
         ServiceUtil.wait(5);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -112,9 +112,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -158,9 +158,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -182,11 +182,11 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
 
