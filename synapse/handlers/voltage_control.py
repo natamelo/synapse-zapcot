@@ -56,13 +56,18 @@ class VoltageControlHandler(BaseHandler):
 
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
+            
+            voltage = None
+            if "voltage" in solicitation:
+                voltage = solicitation["voltage"]
+            
             yield self.store.create_solicitation(
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
                 substation=solicitation["substation"], 
                 staggered=solicitation["staggered"],
                 amount=solicitation["amount"],
-                voltage=solicitation["voltage"],
+                voltage=voltage,
                 user_id=user_id,
                 ts=ts,
                 status=status
@@ -96,17 +101,31 @@ def check_solicitation_params(solicitation):
         raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
     if solicitation["equipment"] not in EquipmentTypes.ALL_EQUIPMENT:
         raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
+    
     if solicitation["equipment"] == EquipmentTypes.REATOR:
-        check_reactor_params(
+        if "voltage"not in solicitation:
+            raise SynapseError(400, "Voltage value must be informed for 'REATOR'.", Codes.INVALID_PARAM)
+        check_reactor_or_capacitor_params(
             solicitation["action"],
             solicitation["amount"],
-            solicitation["staggered"]
+            solicitation["staggered"],
+            solicitation["equipment"]
+        )
+    elif solicitation["equipment"] == EquipmentTypes.CAPACITOR:
+        if "voltage" in solicitation:
+            raise SynapseError(400, "Voltage value cannot be saved for 'CAPACITOR'.", Codes.INVALID_PARAM)
+        check_reactor_or_capacitor_params(
+            solicitation["action"],
+            solicitation["amount"],
+            solicitation["staggered"],
+            solicitation["equipment"]
         )
 
-def check_reactor_params(action, amount, staggered):
+
+def check_reactor_or_capacitor_params(action, amount, staggered, equipment):
     if action != SolicitationActions.LIGAR and action != SolicitationActions.DESLIGAR:
-        raise SynapseError(400, "Invalid action for equipment type 'Reator'.", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid action for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
     if float(amount) < 0:
-        raise SynapseError(400, "Invalid amount value for equipment type 'Reator'.", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid amount value for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
     if type(staggered) != bool:
-        raise SynapseError(400, "Invalid staggered for equipment type 'Reator'.", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid staggered for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
