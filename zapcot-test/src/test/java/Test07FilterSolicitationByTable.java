@@ -80,9 +80,9 @@ public class Test07FilterSolicitationByTable {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep07", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons07", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "1", "5", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "10", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "10", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -98,10 +98,10 @@ public class Test07FilterSolicitationByTable {
                     body("action_code", hasItems("LIGAR", "DESLIGAR")).
                     body("equipment_code", hasItems("REATOR", "CAPACITOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
-                    body("bar", hasItems("1", "2")).
+                    body("amount", hasItems("5", "10")).
                     body("request_user_id", hasItems(userIDONS)).
                     body("status", hasItems("NOT_ANSWERED")).
-                    body("value_", hasItems("5" , "10"));
+                    body("voltage", hasItems("500kV" , "140kV"));
 
         ServiceUtil.wait(2);
 
@@ -119,7 +119,23 @@ public class Test07FilterSolicitationByTable {
 
         ServiceUtil.wait(2);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "2", "10", "CTEEP");
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "500kV", true, "CTEEP");
+
+        //Act & Assert
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + cteepAccessToken).
+                when().
+                    param("company_code", "CTEEP").
+                    param("table_code", "A3").
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("substation_code", hasItems("SAL"));
+
+        ServiceUtil.wait(2);
+
+        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "", true, "CTEEP");
 
         //Act & Assert
         RestAssured.
@@ -168,8 +184,6 @@ public class Test07FilterSolicitationByTable {
                     body("error", equalTo("Table not found"));
 
         ServiceUtil.wait(2);
-
-
 
     }
 

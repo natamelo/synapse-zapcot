@@ -1,4 +1,5 @@
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import util.DataUtil;
@@ -32,15 +33,49 @@ public class Test06ChangeControlSolicitationStatus {
         }
         RestAssured.baseURI = baseHost;
 
+        // Create a ONS user
+        Map<String, Object> userONS = DataUtil.buildPayloadUser("testerons06", "tester123", "ONS");
+        String session = ServiceUtil.getSession(userONS);
+        userONS.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+                given().
+                    contentType(ContentType.JSON).
+                    body(userONS).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
+
+        ServiceUtil.wait(2);
+
+        // Create a CTEEP user
+        Map<String, Object> userCTEEP = DataUtil.buildPayloadUser("testercteep06", "tester123", "CTEEP");
+        session = ServiceUtil.getSession(userCTEEP);
+        userCTEEP.put("auth", ServiceUtil.getAuthObject(session));
+
+        RestAssured.
+            given().
+                contentType(ContentType.JSON).
+                body(userCTEEP).
+            when().
+                post("register").
+            then().
+                statusCode(200).
+                extract().path("user_id");
+
+        ServiceUtil.wait(2);
+
     }
 
     @Test
     public void test01SolicitationStatusHappyPath() {
 
-        String access_token = ServiceUtil.doLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -50,11 +85,11 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
 
         ServiceUtil.wait(5);
 
-        access_token = ServiceUtil.doLogin("testercteep", "tester123");
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
 
         ServiceUtil.wait(5);
 
@@ -65,7 +100,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/2").
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
@@ -79,7 +114,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/2").
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
@@ -90,12 +125,12 @@ public class Test06ChangeControlSolicitationStatus {
     @Test
     public void test02SolicitationCanceled() {
 
-        String access_token = ServiceUtil.doLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
         
         ServiceUtil.wait(5);        
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -105,7 +140,7 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
 
         ServiceUtil.wait(5);
 
@@ -116,7 +151,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/6").
+                put("voltage_control_solicitation/3").
                 then().
                 statusCode(200).
                 body("message", equalTo("Solicitation status changed."));
@@ -127,12 +162,12 @@ public class Test06ChangeControlSolicitationStatus {
     @Test
     public void test03InconsistentStatusChange() {
 
-        String access_token = ServiceUtil.doLogin("testerons", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
 
         ServiceUtil.wait(5);
         
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -142,11 +177,11 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
 
-        ServiceUtil.wait(5);
+        ServiceUtil.wait(20);
 
-        access_token = ServiceUtil.doLogin("testercteep", "tester123");
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
         
         ServiceUtil.wait(5);
 
@@ -157,7 +192,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/7").
+                put("voltage_control_solicitation/4").
                 then().
                 statusCode(400).
                 body("error", equalTo("Inconsistent change of status."));
@@ -171,7 +206,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/7").
+                put("voltage_control_solicitation/4").
                 then().
                 statusCode(400).
                 body("error", equalTo("Inconsistent change of status."));
@@ -185,7 +220,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/7").
+                put("voltage_control_solicitation/4").
                 then().
                 statusCode(200).
                 body("message", equalTo("Solicitation status changed."));
@@ -199,7 +234,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/7").
+                put("voltage_control_solicitation/4").
                 then().
                 statusCode(400).
                 body("error", equalTo("Inconsistent change of status."));
@@ -213,7 +248,7 @@ public class Test06ChangeControlSolicitationStatus {
                 header("Authorization", "Bearer " + access_token).
                 body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/7").
+                put("voltage_control_solicitation/4").
                 then().
                 statusCode(400).
                 body("error", equalTo("Inconsistent change of status."));
@@ -224,12 +259,12 @@ public class Test06ChangeControlSolicitationStatus {
     @Test
     public void test04UnauthorizedStatusChange() {
 
-        String ons_access_token = ServiceUtil.doLogin("testerons", "tester123");
+        String ons_access_token = ServiceUtil.doLogin("testerons06", "tester123");
 
         ServiceUtil.wait(5);
 
-        Map<String, String> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "FASE", "5000kV", "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -239,11 +274,11 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body(equalTo("\"Voltage control solicitation created with success.\""));
+                    body("message", equalTo("Voltage control solicitation created with success."));
 
-        ServiceUtil.wait(5);
+        ServiceUtil.wait(20);
 
-        String cteep_access_token = ServiceUtil.doLogin("testercteep", "tester123");
+        String cteep_access_token = ServiceUtil.doLogin("testercteep06", "tester123");
         
         ServiceUtil.wait(5);
 
@@ -254,7 +289,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + cteep_access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/5").
+                    put("voltage_control_solicitation/2").
                 then().
                     statusCode(401).
                     body("soft_logout", equalTo("Not allowed for users from CTEEP"));
@@ -268,7 +303,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + ons_access_token).
                     body(payloadChangeStatus).
                 when().
-                    put("voltage_control_solicitation/8").
+                    put("voltage_control_solicitation/5").
                 then().
                     statusCode(401).
                     body("soft_logout", equalTo("Not allowed for users from ONS"));

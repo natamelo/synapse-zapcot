@@ -59,31 +59,24 @@ class VoltageControlSolicitationServlet(RestServlet):
         action = body['action']
         equipment = body['equipment']
         substation = body['substation']
-        bar = body['bar']
-        value = body['value']
+        chaining = body['chaining']
+        amount = body['amount']
+        voltage = body['voltage']
         company_code = body['company_code']
-        
-        if action not in SolicitationActions.ALL_ACTIONS:
-            raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
-        if equipment not in EquipmentTypes.ALL_EQUIPMENT:
-            raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
-
-        substation_object = yield self.substation_handler. \
-            get_substation_by_company_code_and_substation_code(company_code, substation)
-
-        if substation_object is None:
-            raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
+    
 
         yield self.voltage_control_handler.create_solicitation(
             action=action,
             equipment=equipment,
             substation=substation,
-            bar=bar,
-            value=value,
+            chaining=chaining,
+            amount=amount,
+            voltage=voltage,
+            company_code=company_code,
             userId=userId
         )
 
-        return (201, "Voltage control solicitation created with success.")
+        return (201, {"message": "Voltage control solicitation created with success."})
 
     #TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks
