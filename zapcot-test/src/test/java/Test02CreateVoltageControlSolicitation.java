@@ -81,7 +81,7 @@ public class Test02CreateVoltageControlSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -170,7 +170,7 @@ public class Test02CreateVoltageControlSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("INVALID ACTION", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -193,7 +193,7 @@ public class Test02CreateVoltageControlSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -216,7 +216,7 @@ public class Test02CreateVoltageControlSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -238,9 +238,9 @@ public class Test02CreateVoltageControlSolicitation {
         Map<String, Object> solicitation1 = DataUtil.buildSingleSolicitation("LIGAR", "REATOR", "MOS", 
         "5", "50", true, "CTEEP");
         Map<String, Object> solicitation2 = DataUtil.buildSingleSolicitation("DESLIGAR", "CAPACITOR", "ATI", 
-        "5", "500kV", true, "CTEEP");
-        Map<String, Object> solicitation3 = DataUtil.buildSingleSolicitation("ELEVAR", "CAPACITOR", "ATI", 
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
+        Map<String, Object> solicitation3 = DataUtil.buildSingleSolicitation("LIGAR", "CAPACITOR", "ATI", 
+        "5", "", true, "CTEEP");
 
         List<Map<String, Object>> solicitations = new ArrayList<>();
         solicitations.add(solicitation1);

@@ -76,7 +76,7 @@ public class Test08SortVoltageControlSolicitation {
 
         ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "5", "", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -90,7 +90,7 @@ public class Test08SortVoltageControlSolicitation {
 
         ServiceUtil.wait(5);
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "5", "", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.

@@ -81,7 +81,7 @@ public class Test05FilterSolicitationByCompany {
 
         ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -98,8 +98,7 @@ public class Test05FilterSolicitationByCompany {
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED")).
-                    body("voltage", hasItems("500kV" , "140kV"));
+                    body("status", hasItems("NOT_ANSWERED"));
 
         ServiceUtil.wait(2);
 
@@ -113,7 +112,7 @@ public class Test05FilterSolicitationByCompany {
 
         ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
