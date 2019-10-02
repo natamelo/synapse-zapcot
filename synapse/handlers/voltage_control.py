@@ -45,14 +45,9 @@ class VoltageControlHandler(BaseHandler):
         status = SolicitationStatus.NOT_ANSWERED
 
         for solicitation in solicitations:
+            yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
-            substation_object = yield self.substation_handler. \
-                get_substation_by_company_code_and_substation_code(
-                    solicitation["company_code"], 
-                    solicitation["substation"]
-                )
-            if substation_object is None:
-                raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
+            
 
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
@@ -95,6 +90,17 @@ class VoltageControlHandler(BaseHandler):
     def change_solicitation_status(self, new_status, id, user_id):
         update_ts = calendar.timegm(time.gmtime())
         yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
+
+    @defer.inlineCallbacks
+    def check_substation(self, company_code, substation):
+        substation_object = yield self.substation_handler. \
+            get_substation_by_company_code_and_substation_code(
+                company_code, 
+                substation
+            )
+        if substation_object is None:
+            raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
+
 
 def check_solicitation_params(solicitation):
     if solicitation["action"] not in SolicitationActions.ALL_ACTIONS:
