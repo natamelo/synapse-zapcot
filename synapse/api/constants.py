@@ -177,8 +177,8 @@ class EquipmentTypes(object):
     CAPACITOR = "CAPACITOR"
     REATOR = "REATOR"
     SINCRONO = "SINCRONO"
-    TAP = "TAP"
-    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TAP]
+    TRANSFORMADOR = "TRANSFORMADOR"
+    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TRANSFORMADOR]
 
 class VoltageTransformerLevels(object):
     """The voltage levels for Voltage Transformer.

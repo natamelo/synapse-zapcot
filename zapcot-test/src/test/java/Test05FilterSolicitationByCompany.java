@@ -164,7 +164,7 @@ public class Test05FilterSolicitationByCompany {
         ServiceUtil.createSingleSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TRANSFORMADOR", "PIR", "2", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -177,7 +177,7 @@ public class Test05FilterSolicitationByCompany {
                 then().
                     statusCode(200).
                     body("action_code", hasItems("ELEVAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TAP")).
+                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
@@ -195,7 +195,7 @@ public class Test05FilterSolicitationByCompany {
                 then().
                     statusCode(200).
                     body("action_code", hasItems("ELEVAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TAP")).
+                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).

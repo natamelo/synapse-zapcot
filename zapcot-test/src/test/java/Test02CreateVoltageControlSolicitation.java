@@ -122,7 +122,7 @@ public class Test02CreateVoltageControlSolicitation {
                     body("message", equalTo("Voltage control solicitations created with success."));
                     
         payloadSolicitation.put("action", "REDUZIR");
-        payloadSolicitation.put("equipment", "TAP");
+        payloadSolicitation.put("equipment", "TRANSFORMADOR");
         payloadSolicitation.put("substation", "PIR");
 
         RestAssured.
