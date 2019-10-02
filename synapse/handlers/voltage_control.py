@@ -109,7 +109,7 @@ def check_solicitation_params(solicitation):
         raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
     
     if solicitation["equipment"] == EquipmentTypes.REATOR:
-        if "voltage"not in solicitation:
+        if "voltage" not in solicitation or solicitation["voltage"] == "":
             raise SynapseError(400, "Voltage value must be informed for 'REATOR'.", Codes.INVALID_PARAM)
         check_reactor_or_capacitor_params(
             solicitation["action"],
@@ -118,7 +118,7 @@ def check_solicitation_params(solicitation):
             solicitation["equipment"]
         )
     elif solicitation["equipment"] == EquipmentTypes.CAPACITOR:
-        if "voltage" in solicitation:
+        if "voltage" in solicitation and solicitation["voltage"] != "":
             raise SynapseError(400, "Voltage value cannot be saved for 'CAPACITOR'.", Codes.INVALID_PARAM)
         check_reactor_or_capacitor_params(
             solicitation["action"],
