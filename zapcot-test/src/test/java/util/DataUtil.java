@@ -71,8 +71,11 @@ public class DataUtil {
         single_solicitation.put("substation", substation);
         single_solicitation.put("amount", amount);
         single_solicitation.put("voltage", voltage);
-        single_solicitation.put("staggered", staggered);
         single_solicitation.put("company_code", company_code);
+
+        if (staggered != null) {
+            single_solicitation.put("staggered", staggered);
+        }
 
         return single_solicitation;
     }
