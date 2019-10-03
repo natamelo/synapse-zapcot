@@ -161,7 +161,7 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "140kV", null, "CTEEP");
         ServiceUtil.wait(1);
 
         ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TRANSFORMADOR", "PIR", "2", "500kV", null, "CTEEP");
