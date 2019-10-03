@@ -144,12 +144,12 @@ def check_reactor_or_capacitor_params(action, amount, staggered, equipment):
 
 def check_transform_params(solicitation):
     if "voltage" not in solicitation or solicitation["voltage"] == "":
-        raise SynapseError(400, "Voltage value must be informed for 'REATOR'.", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Voltage value must be informed for 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
     if "staggered" in solicitation and solicitation["staggered"] != "":
         raise SynapseError(400, "Staggered value cannot be saved for 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
     if solicitation["action"] != SolicitationActions.ELEVAR and solicitation["action"] != SolicitationActions.REDUZIR:
-        raise SynapseError(400, "Invalid action for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid action for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
     if int(solicitation["amount"]) < 0:
-        raise SynapseError(400, "Invalid amount value for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid amount value for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
     if solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
-        raise SynapseError(400, "Invalid voltage value for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
+        raise SynapseError(400, "Invalid voltage value for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
