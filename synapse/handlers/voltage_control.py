@@ -19,7 +19,7 @@ import logging
 from ._base import BaseHandler
 from synapse.types import create_requester
 from twisted.internet import defer
-from synapse.api.constants import SolicitationStatus, SolicitationActions, EquipmentTypes
+from synapse.api.constants import SolicitationStatus, SolicitationActions, EquipmentTypes, VoltageTransformerLevels
 
 from synapse.api.errors import (
     Codes,
@@ -55,12 +55,15 @@ class VoltageControlHandler(BaseHandler):
             voltage = None
             if "voltage" in solicitation:
                 voltage = solicitation["voltage"]
+            staggered = None
+            if "staggered" in solicitation:
+                staggered = solicitation["staggered"]
             
             yield self.store.create_solicitation(
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
                 substation=solicitation["substation"], 
-                staggered=solicitation["staggered"],
+                staggered=staggered,
                 amount=solicitation["amount"],
                 voltage=voltage,
                 user_id=user_id,
@@ -126,12 +129,27 @@ def check_solicitation_params(solicitation):
             solicitation["staggered"],
             solicitation["equipment"]
         )
+    elif solicitation["equipment"] == EquipmentTypes.TRANSFORMADOR:
+        check_transform_params(solicitation)
+
 
 
 def check_reactor_or_capacitor_params(action, amount, staggered, equipment):
     if action != SolicitationActions.LIGAR and action != SolicitationActions.DESLIGAR:
         raise SynapseError(400, "Invalid action for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
-    if float(amount) < 0:
+    if int(amount) < 0:
         raise SynapseError(400, "Invalid amount value for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
     if type(staggered) != bool:
         raise SynapseError(400, "Invalid staggered for equipment type '%s'." % (equipment), Codes.INVALID_PARAM)
+
+def check_transform_params(solicitation):
+    if "voltage" not in solicitation or solicitation["voltage"] == "":
+        raise SynapseError(400, "Voltage value must be informed for 'REATOR'.", Codes.INVALID_PARAM)
+    if "staggered" in solicitation and solicitation["staggered"] != "":
+        raise SynapseError(400, "Staggered value cannot be saved for 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
+    if solicitation["action"] != SolicitationActions.ELEVAR and solicitation["action"] != SolicitationActions.REDUZIR:
+        raise SynapseError(400, "Invalid action for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
+    if int(solicitation["amount"]) < 0:
+        raise SynapseError(400, "Invalid amount value for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
+    if solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
+        raise SynapseError(400, "Invalid voltage value for equipment type 'TRANSFORMADOR'", Codes.INVALID_PARAM)
