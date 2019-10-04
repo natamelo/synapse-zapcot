@@ -32,12 +32,12 @@ public class ServiceUtil {
         return auth;
     }
 
-    public static void createSolicitation (String onsAccessToken, String action,
+    public static void createSingleSolicitation (String onsAccessToken, String action,
                                      String equipment, String substation,
-                                     String amount, String voltage, Boolean chaining, String company_code) {
+                                     String amount, String voltage, Boolean staggered, String company_code) {
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation(
-                action, equipment, substation, amount, voltage, chaining, company_code);
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation(
+                action, equipment, substation, amount, voltage, staggered, company_code);
 
         RestAssured.
                 given().
@@ -58,10 +58,4 @@ public class ServiceUtil {
         }
 
     }
-
-
-
-
-
-
 }

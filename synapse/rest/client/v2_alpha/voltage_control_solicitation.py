@@ -49,34 +49,22 @@ class VoltageControlSolicitationServlet(RestServlet):
     @defer.inlineCallbacks
     def on_POST(self, request):
         requester = yield self.auth.get_user_by_req(request)
-        userId = requester.user.to_string()
+        user_id = requester.user.to_string()
         sender_company_code = requester.company_code
 
         if sender_company_code != Companies.ONS:
             raise InvalidClientTokenError(401, "User should to belong ONS.")
         
         body = parse_json_object_from_request(request)
-        action = body['action']
-        equipment = body['equipment']
-        substation = body['substation']
-        chaining = body['chaining']
-        amount = body['amount']
-        voltage = body['voltage']
-        company_code = body['company_code']
+        solicitations = body['solicitations']
     
 
-        yield self.voltage_control_handler.create_solicitation(
-            action=action,
-            equipment=equipment,
-            substation=substation,
-            chaining=chaining,
-            amount=amount,
-            voltage=voltage,
-            company_code=company_code,
-            userId=userId
+        yield self.voltage_control_handler.create_solicitations(
+            solicitations=solicitations,
+            user_id=user_id
         )
 
-        return (201, {"message": "Voltage control solicitation created with success."})
+        return (201, {"message": "Voltage control solicitations created with success."})
 
     #TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks

@@ -74,7 +74,7 @@ public class Test06ChangeControlSolicitationStatus {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -85,7 +85,7 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
 
         ServiceUtil.wait(5);
 
@@ -129,7 +129,7 @@ public class Test06ChangeControlSolicitationStatus {
         
         ServiceUtil.wait(5);        
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -140,7 +140,7 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
 
         ServiceUtil.wait(5);
 
@@ -166,7 +166,7 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(5);
         
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -177,7 +177,7 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
 
         ServiceUtil.wait(20);
 
@@ -263,7 +263,7 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(5);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
         "5", "500kV", true, "CTEEP");
 
         RestAssured.
@@ -274,7 +274,7 @@ public class Test06ChangeControlSolicitationStatus {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(201).
-                    body("message", equalTo("Voltage control solicitation created with success."));
+                    body("message", equalTo("Voltage control solicitations created with success."));
 
         ServiceUtil.wait(20);
 

@@ -80,9 +80,9 @@ public class Test07FilterSolicitationByTable {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep07", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons07", "tester123");
 
-        ServiceUtil.createSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "10", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "10", "140kV", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -119,7 +119,7 @@ public class Test07FilterSolicitationByTable {
 
         ServiceUtil.wait(2);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "500kV", true, "CTEEP");
 
         //Act & Assert
         RestAssured.
@@ -135,7 +135,7 @@ public class Test07FilterSolicitationByTable {
 
         ServiceUtil.wait(2);
 
-        ServiceUtil.createSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "SAL", "5", "", true, "CTEEP");
 
         //Act & Assert
         RestAssured.
