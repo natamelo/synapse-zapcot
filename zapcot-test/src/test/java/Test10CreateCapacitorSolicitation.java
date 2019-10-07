@@ -98,22 +98,7 @@ public class Test10CreateCapacitorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
-        
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + access_token).
-                    body(payloadSolicitation)
-                .when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(400).
-                    body("error", equalTo("Voltage value cannot be saved for 'CAPACITOR'."));
-        
-        ServiceUtil.wait(5);
-
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.
