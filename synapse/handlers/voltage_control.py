@@ -51,21 +51,14 @@ class VoltageControlHandler(BaseHandler):
 
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
-            
-            voltage = None
-            if "voltage" in solicitation:
-                voltage = solicitation["voltage"]
-            staggered = None
-            if "staggered" in solicitation:
-                staggered = solicitation["staggered"]
 
             yield self.store.create_solicitation(
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
                 substation=solicitation["substation"], 
-                staggered=staggered,
+                staggered=solicitation["staggered"],
                 amount=solicitation["amount"],
-                voltage=voltage,
+                voltage=solicitation["voltage"],
                 user_id=user_id,
                 ts=ts,
                 status=status
@@ -119,12 +112,8 @@ def check_solicitation_params(solicitation):
             check_transform_params(solicitation)
 
 def check_reactor_params(solicitation):
-    if "voltage" not in solicitation or solicitation["voltage"] == "":
-        raise SynapseError(
-            400,
-            "Voltage value must be informed for 'REATOR'.",
-            Codes.INVALID_PARAM
-        )
+    if "voltage" not in solicitation:
+        solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
@@ -141,12 +130,7 @@ def check_reactor_params(solicitation):
     )
 
 def check_capacitor_params(solicitation):
-    if "voltage" in solicitation and solicitation["voltage"] != "":
-        raise SynapseError(
-            400,
-            "Voltage value cannot be saved for 'CAPACITOR'.",
-            Codes.INVALID_PARAM
-        )
+    solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
@@ -161,18 +145,32 @@ def check_capacitor_params(solicitation):
         staggered=solicitation["staggered"],
         equipment_type=solicitation["equipment"]
     )
-    
+
 def check_transform_params(solicitation):
+    solicitation["staggered"] = None
+    check_action_type(
+        action=solicitation["action"],
+        possible_actions=[SolicitationActions.ELEVAR, SolicitationActions.REDUZIR],
+        equipment_type=solicitation["equipment"]
+    )
+    check_amount(
+        amount=solicitation["amount"],
+        min_value=0,
+        equipment_type=solicitation["equipment"]
+    )
+    
     if "voltage" not in solicitation or solicitation["voltage"] == "":
-        raise SynapseError(400, "Voltage value must be informed for 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
-    if "staggered" in solicitation and solicitation["staggered"] != "":
-        raise SynapseError(400, "Staggered value cannot be saved for 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
-    if solicitation["action"] != SolicitationActions.ELEVAR and solicitation["action"] != SolicitationActions.REDUZIR:
-        raise SynapseError(400, "Invalid action for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
-    if int(solicitation["amount"]) < 0:
-        raise SynapseError(400, "Invalid amount value for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
-    if solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
-        raise SynapseError(400, "Invalid voltage value for equipment type 'TRANSFORMADOR'.", Codes.INVALID_PARAM)
+        raise SynapseError(
+            400, 
+            "Voltage value must be informed for 'TRANSFORMADOR'.", 
+            Codes.INVALID_PARAM
+        )
+    elif solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
+        raise SynapseError(
+            400, 
+            "Invalid voltage value for equipment type 'TRANSFORMADOR'.",
+            Codes.INVALID_PARAM
+        )
 
 def check_action_type(action, possible_actions, equipment_type):
     if action not in possible_actions:
