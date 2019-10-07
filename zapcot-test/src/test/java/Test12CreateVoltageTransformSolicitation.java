@@ -143,22 +143,6 @@ public class Test12CreateVoltageTransformSolicitation {
                     body("error", equalTo("Invalid amount value for equipment type 'TRANSFORMADOR'."));
         
         ServiceUtil.wait(5);
-
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "TRANSFORMADOR", "MOS",
-        "5", "500kV", true, "CTEEP");
-
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + access_token).
-                    body(payloadSolicitation)
-                .when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(400).
-                    body("error", equalTo("Staggered value cannot be saved for 'TRANSFORMADOR'."));
-        
-        ServiceUtil.wait(5);
-
     }
 
 }
