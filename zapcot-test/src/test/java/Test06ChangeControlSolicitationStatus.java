@@ -75,7 +75,7 @@ public class Test06ChangeControlSolicitationStatus {
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -130,7 +130,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);        
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -167,7 +167,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);
         
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -264,7 +264,7 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(5);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "500kV", true, "CTEEP");
+        "5", "", true, "CTEEP");
 
         RestAssured.
                 given().
