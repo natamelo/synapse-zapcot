@@ -57,14 +57,12 @@ class VoltageControlSolicitationServlet(RestServlet):
         
         body = parse_json_object_from_request(request)
         solicitations = body['solicitations']
-    
 
         yield self.voltage_control_handler.create_solicitations(
             solicitations=solicitations,
             user_id=user_id
         )
-
-        return (201, {"message": "Voltage control solicitations created with success."})
+        return 201, {"message": "Voltage control solicitations created with success."}
 
     #TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks

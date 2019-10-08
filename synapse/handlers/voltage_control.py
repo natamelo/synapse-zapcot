@@ -52,7 +52,6 @@ class VoltageControlHandler(BaseHandler):
         for solicitation in solicitations:
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
-            
 
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
