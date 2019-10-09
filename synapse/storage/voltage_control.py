@@ -13,36 +13,6 @@ logger = logging.getLogger(__name__)
 class VoltageControlStore(SQLBaseStore):
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status):
-        try:
-            next_id = self._voltage_list_id_gen.get_next()
-            yield self._simple_insert(
-                table="voltage_control_solicitation",
-                values={
-                    "id": next_id,
-                    "action_code": action,
-                    "equipment_code": equipment,
-                    "substation_code": substation,
-                    "staggered": staggered,
-                    "amount": amount,
-                    "voltage": voltage
-                }
-            )
-
-            yield self._simple_insert(
-                table="solicitation_event",
-                values={
-                    "user_id": user_id,
-                    "status": status,
-                    "time_stamp": ts,
-                    "voltage_control_id": next_id,
-                }
-            )
-        except Exception as e:
-            logger.warning("create_solicitation failed: %s", e)
-            raise StoreError(500, "Problem creating solicitation.")
-
-    @defer.inlineCallbacks
     def get_solicitation_by_id(self, id):
         try:
             result = yield self._simple_select_one(
@@ -60,7 +30,7 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, solicitation_id, user_id, ts):
+    def create_solicitation_event(self, solicitation_id, user_id, new_status, ts):
         try:
 
             self.get_solicitation_by_id(solicitation_id)
@@ -71,7 +41,7 @@ class VoltageControlStore(SQLBaseStore):
                     "user_id": user_id,
                     "status": new_status,
                     "time_stamp": ts,
-                    "voltage_control_id": solicitation_id,
+                    "solicitation_id": solicitation_id,
                 }
             )
 
@@ -79,13 +49,55 @@ class VoltageControlStore(SQLBaseStore):
             logger.warning("change_solicitation_status failed: %s", e)
             raise StoreError(500, "Problem on update solicitation")
 
+    @defer.inlineCallbacks
+    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status):
+        try:
+            next_id = self._voltage_list_id_gen.get_next()
+            yield self._simple_insert(
+                table="voltage_control_solicitation",
+                values={
+                    "id": next_id,
+                    "action_code": action,
+                    "equipment_code": equipment,
+                    "substation_code": substation,
+                    "staggered": staggered,
+                    "amount": amount,
+                    "voltage": voltage
+                }
+            )
+
+            self.create_solicitation_event(next_id, user_id, status, ts)
+
+        except Exception as e:
+            logger.warning("create_solicitation failed: %s", e)
+            raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
     def get_events_by_solicitation_id(self, solicitation_id):
-        return self._simple_select_list(
-            table="solicitation_event",
-            keyvalues={"voltage_control_id": solicitation_id},
-            retcols=("user_id", "status", "time_stamp"),
-            desc="get_users_in_group",
+
+        def get_events_by_solicitation_id_(txn):
+            args = [solicitation_id]
+
+            sql = (
+                " SELECT "
+                " event.user_id,"
+                " event.status,"
+                " event.time_stamp "
+                " from solicitation_event event "
+                " where event.solicitation_id = ? order by"
+                " CASE WHEN event.status = 'NOT_ANSWERED' then '1' "
+                "      WHEN event.status = 'EXPIRED' then '2' "
+                "      WHEN event.status = 'AWARE' then '3' "
+                "      ELSE event.status END ASC "
+            )
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
+
+        results = yield self.runInteraction(
+            "get_events_by_solicitation_id", get_events_by_solicitation_id_
         )
+        return defer.returnValue(results)
 
     @defer.inlineCallbacks
     def get_solicitations_by_params(

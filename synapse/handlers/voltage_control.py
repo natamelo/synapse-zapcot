@@ -88,8 +88,8 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
-        update_ts = calendar.timegm(time.gmtime())
-        yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
+        ts = calendar.timegm(time.gmtime())
+        yield self.store.create_solicitation_event(id, user_id, new_status, ts)
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):
@@ -117,6 +117,7 @@ def check_solicitation_params(solicitation):
     elif solicitation["equipment"] == EquipmentTypes.SINCRONO:
         check_synchronous_params(solicitation)
 
+
 def check_reactor_params(solicitation):
     if "voltage" not in solicitation:
         solicitation["voltage"] = None
@@ -135,6 +136,7 @@ def check_reactor_params(solicitation):
         equipment_type=solicitation["equipment"]
     )
 
+
 def check_capacitor_params(solicitation):
     solicitation["voltage"] = None
     check_action_type(
@@ -151,6 +153,7 @@ def check_capacitor_params(solicitation):
         staggered=solicitation["staggered"],
         equipment_type=solicitation["equipment"]
     )
+
 
 def check_transform_params(solicitation):
     solicitation["staggered"] = None
@@ -178,6 +181,7 @@ def check_transform_params(solicitation):
             Codes.INVALID_PARAM
         )
 
+
 def check_synchronous_params(solicitation):
     solicitation["staggered"] = None
     if "voltage" not in solicitation:
@@ -204,6 +208,7 @@ def check_synchronous_params(solicitation):
         )
         solicitation["amount"] = None
 
+
 def check_action_type(action, possible_actions, equipment_type):
     if action not in possible_actions:
         raise SynapseError(
@@ -211,6 +216,7 @@ def check_action_type(action, possible_actions, equipment_type):
             "Invalid action for equipment type '%s'." % (equipment_type),
             Codes.INVALID_PARAM
         )
+
 
 def check_amount(amount, min_value, equipment_type):
     try:
@@ -226,6 +232,8 @@ def check_amount(amount, min_value, equipment_type):
             "Invalid amount value for equipment type '%s'." % (equipment_type),
             Codes.INVALID_PARAM
         )
+
+
 def check_staggered(staggered, equipment_type):
     if type(staggered) != bool:
         raise SynapseError(

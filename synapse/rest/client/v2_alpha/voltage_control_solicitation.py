@@ -148,7 +148,7 @@ class VoltageControlStatusServlet(RestServlet):
         creation_ts = solicitation["creation_timestamp"]
 
         if self._validate_status_change(current_status, new_status, user_company_code, creation_ts):
-            yield self.voltage_control_handler.change_solicitation_status(
+            yield self.voltage_control_handler.create_solicitation_event(
                 new_status=new_status,
                 id=solicitation_id,
                 user_id=user_id)
