@@ -145,7 +145,7 @@ class SolicitationStatus(object):
     EXPIRED = "EXPIRED"
     RETURNED = "RETURNED"
     ALL_SOLICITATION_TYPES = [NOT_ANSWERED, AWARE, ANSWERED,
-    CANCELED, EXPIRED, RETURNED]
+                              CANCELED, EXPIRED, RETURNED]
 
 
 class Companies(object):
@@ -163,14 +163,21 @@ class Companies(object):
 class SolicitationActions(object):
     """The possible actions.
     """
-    LIGAR = "LIGAR"
-    DESLIGAR = "DESLIGAR"
-    ELEVAR = "ELEVAR"
-    REDUZIR = "REDUZIR"
-    MAXIMIZAR = "MAXIMIZAR"
-    AJUSTAR = "AJUSTAR"
-    ZERAR = "ZERAR"
-    ALL_ACTIONS = [LIGAR, DESLIGAR, ELEVAR, REDUZIR, MAXIMIZAR, AJUSTAR, ZERAR]
+    # Ligar
+    TURN_ON = "TURN_ON"
+    # Desligar
+    TURN_OFF = "TURN_OFF"
+    # Elevar
+    RISE = "RISE"
+    # Reduzir
+    REDUCE = "REDUCE"
+    # Maximar
+    MAXIMIZE = "MAXIMIZE"
+    # Ajustar
+    ADJUST = "ADJUST"
+    # Zerar
+    RESET = "RESET"
+    ALL_ACTIONS = [TURN_ON, TURN_OFF, RISE, REDUCE, MAXIMIZE, ADJUST, RESET]
 
 
 class EquipmentTypes(object):
@@ -178,10 +185,11 @@ class EquipmentTypes(object):
     """
 
     CAPACITOR = "CAPACITOR"
-    REATOR = "REATOR"
-    SINCRONO = "SINCRONO"
-    TRANSFORMADOR = "TRANSFORMADOR"
-    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TRANSFORMADOR]
+    REACTOR = "REACTOR"
+    SYNCHRONOUS = "SYNCHRONOUS"
+    TRANSFORMER = "TRANSFORMER"
+    ALL_EQUIPMENT = [CAPACITOR, REACTOR, SYNCHRONOUS, TRANSFORMER]
+
 
 class VoltageTransformerLevels(object):
     """The voltage levels for Voltage Transformer.
@@ -192,6 +200,7 @@ class VoltageTransformerLevels(object):
     _138kV = "138kV"
     _88kV  = "88kV"
     ALL_ALLOWED_LEVELS = [_500kV, _440kV, _230kV, _138kV, _88kV]
+
 
 class SolicitationSortParams(object):
     """The possible params to sort voltage control solicitations.

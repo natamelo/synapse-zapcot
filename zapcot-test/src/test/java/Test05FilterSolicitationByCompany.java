@@ -79,10 +79,10 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(1);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "2", "", true, "CTEEP");
-        ServiceUtil.wait(2);
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.wait(3);
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "CAPACITOR", "PIR", "2", "", true, "CTEEP");
+        ServiceUtil.wait(3);
 
         //Act & Assert
         RestAssured.
@@ -93,14 +93,14 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("LIGAR", "DESLIGAR")).
-                    body("equipment_code", hasItems("REATOR", "CAPACITOR")).
+                    body("action_code", hasItems("TURN_ON", "DESLIGAR")).
+                    body("equipment_code", hasItems("REACTOR", "CAPACITOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
                     body("status", hasItems("NOT_ANSWERED"));
 
-        ServiceUtil.wait(2);
+        ServiceUtil.wait(3);
 
     }
 
@@ -110,9 +110,9 @@ public class Test05FilterSolicitationByCompany {
         String cteepAccessToken = ServiceUtil.doLogin("testercteep05", "tester123");
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "MIR", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(1);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "PIR", "5", "", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "CAPACITOR", "PIR", "5", "", true, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -161,11 +161,11 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "ZERAR", "SINCRONO", "MIR", "5", "", null, "CTEEP");
-        ServiceUtil.wait(1);
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "RESET", "SYNCHRONOUS", "MIR", "5", "", null, "CTEEP");
+        ServiceUtil.wait(3);
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TRANSFORMADOR", "PIR", "2", "500kV", null, "CTEEP");
-        ServiceUtil.wait(2);
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUCE", "TRANSFORMER", "PIR", "2", "500kV", null, "CTEEP");
+        ServiceUtil.wait(3);
 
         //Act & Assert
         RestAssured.
@@ -176,14 +176,14 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("ZERAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
+                    body("action_code", hasItems("RESET", "REDUCE")).
+                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMER")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED"));
+                    body("events.status", hasItems("NOT_ANSWERED"));
 
-        ServiceUtil.wait(2);
+        ServiceUtil.wait(3);
 
         //Act & Assert
         RestAssured.
@@ -193,14 +193,14 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("ZERAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
+                    body("action_code", hasItems("RESET", "REDUCE")).
+                    body("equipment_code", hasItems("SYNCHRONOUS", "TRANSFORMER")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED"));
+                    body("events.status", hasItems("NOT_ANSWERED"));
 
-        ServiceUtil.wait(2);
+        ServiceUtil.wait(3);
 
         //Act & Assert
         RestAssured.
@@ -213,7 +213,7 @@ public class Test05FilterSolicitationByCompany {
                     statusCode(200).
                     body("$", equalTo(Collections.emptyList()));
 
-        ServiceUtil.wait(2);
+        ServiceUtil.wait(3);
 
     }
 

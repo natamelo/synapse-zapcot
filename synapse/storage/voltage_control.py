@@ -88,7 +88,7 @@ class VoltageControlStore(SQLBaseStore):
                 " CASE WHEN event.status = 'NOT_ANSWERED' then '1' "
                 "      WHEN event.status = 'EXPIRED' then '2' "
                 "      WHEN event.status = 'AWARE' then '3' "
-                "      ELSE event.status END ASC "
+                "      ELSE event.status END DESC "
             )
             txn.execute(sql, args)
 

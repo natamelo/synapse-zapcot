@@ -108,13 +108,13 @@ def check_solicitation_params(solicitation):
     if solicitation["equipment"] not in EquipmentTypes.ALL_EQUIPMENT:
         raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
     
-    if solicitation["equipment"] == EquipmentTypes.REATOR:
+    if solicitation["equipment"] == EquipmentTypes.REACTOR:
         check_reactor_params(solicitation)
     elif solicitation["equipment"] == EquipmentTypes.CAPACITOR:
         check_capacitor_params(solicitation)
-    elif solicitation["equipment"] == EquipmentTypes.TRANSFORMADOR:
+    elif solicitation["equipment"] == EquipmentTypes.TRANSFORMER:
         check_transform_params(solicitation)
-    elif solicitation["equipment"] == EquipmentTypes.SINCRONO:
+    elif solicitation["equipment"] == EquipmentTypes.SYNCHRONOUS:
         check_synchronous_params(solicitation)
 
 
