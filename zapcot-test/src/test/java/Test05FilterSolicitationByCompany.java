@@ -93,12 +93,12 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("TURN_ON", "DESLIGAR")).
+                    body("action_code", hasItems("TURN_ON", "TURN_OFF")).
                     body("equipment_code", hasItems("REACTOR", "CAPACITOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
-                    body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED"));
+                    body("events.user_id", hasItems(userIDONS)).
+                    body("events.status", hasItems("NOT_ANSWERED"));
 
         ServiceUtil.wait(3);
 
@@ -111,7 +111,7 @@ public class Test05FilterSolicitationByCompany {
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
         ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "MIR", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(1);
+        ServiceUtil.wait(2);
         ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "CAPACITOR", "PIR", "5", "", true, "CTEEP");
         ServiceUtil.wait(2);
 
@@ -177,10 +177,10 @@ public class Test05FilterSolicitationByCompany {
                 then().
                     statusCode(200).
                     body("action_code", hasItems("RESET", "REDUCE")).
-                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMER")).
+                    body("equipment_code", hasItems("SYNCHRONOUS", "TRANSFORMER")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
-                    body("request_user_id", hasItems(userIDONS)).
+                    body("status.user_id", hasItems(userIDONS)).
                     body("events.status", hasItems("NOT_ANSWERED"));
 
         ServiceUtil.wait(3);

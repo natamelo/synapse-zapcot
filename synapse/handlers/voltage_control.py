@@ -123,7 +123,7 @@ def check_reactor_params(solicitation):
         solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
+        possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -141,7 +141,7 @@ def check_capacitor_params(solicitation):
     solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
+        possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -159,7 +159,7 @@ def check_transform_params(solicitation):
     solicitation["staggered"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.ELEVAR, SolicitationActions.REDUZIR],
+        possible_actions=[SolicitationActions.RISE, SolicitationActions.RISE],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -187,7 +187,7 @@ def check_synchronous_params(solicitation):
     if "voltage" not in solicitation:
         solicitation["voltage"] = None
 
-    if solicitation["action"] == SolicitationActions.AJUSTAR:
+    if solicitation["action"] == SolicitationActions.ADJUST:
         if "amount" not in solicitation or solicitation["amount"] == "":
             raise  SynapseError(
                 400,
@@ -203,7 +203,7 @@ def check_synchronous_params(solicitation):
     else:
         check_action_type(
             action=solicitation["action"],
-            possible_actions=[SolicitationActions.MAXIMIZAR, SolicitationActions.ZERAR],
+            possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET],
             equipment_type=solicitation["equipment"]
         )
         solicitation["amount"] = None
