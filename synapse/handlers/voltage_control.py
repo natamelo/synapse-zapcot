@@ -159,7 +159,7 @@ def check_transform_params(solicitation):
     solicitation["staggered"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.RISE, SolicitationActions.RISE],
+        possible_actions=[SolicitationActions.RISE, SolicitationActions.REDUCE],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -171,13 +171,13 @@ def check_transform_params(solicitation):
     if "voltage" not in solicitation or solicitation["voltage"] == "":
         raise SynapseError(
             400,
-            "Voltage value must be informed for 'TRANSFORMADOR'.",
+            "Voltage value must be informed for 'TRANSFORMER'.",
             Codes.INVALID_PARAM
         )
     elif solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
         raise SynapseError(
             400,
-            "Invalid voltage value for equipment type 'TRANSFORMADOR'.",
+            "Invalid voltage value for equipment type 'TRANSFORMER'.",
             Codes.INVALID_PARAM
         )
 
@@ -191,7 +191,7 @@ def check_synchronous_params(solicitation):
         if "amount" not in solicitation or solicitation["amount"] == "":
             raise  SynapseError(
                 400,
-                "Amount must be informed for action 'AJUSTAR' on equipment type 'SINCRONO'",
+                "Amount must be informed for action 'ADJUST' on equipment type 'SYNCHRONOUS'",
                 Codes.INVALID_PARAM
             )
         else:
