@@ -59,7 +59,7 @@ public class Test10CreateCapacitorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -74,7 +74,7 @@ public class Test10CreateCapacitorSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation.put("action", "DESLIGAR");
+        payloadSolicitation.put("action", "TURN_OFF");
         payloadSolicitation.put("equipment", "CAPACITOR");
         payloadSolicitation.put("substation", "ATI");
 
@@ -98,7 +98,7 @@ public class Test10CreateCapacitorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RISE", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -113,7 +113,7 @@ public class Test10CreateCapacitorSolicitation {
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
         "-5", "", true, "CTEEP");
 
         RestAssured.

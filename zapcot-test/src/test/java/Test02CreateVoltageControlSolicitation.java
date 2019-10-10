@@ -192,7 +192,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "INVALID SUBSTATION",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -215,7 +215,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.

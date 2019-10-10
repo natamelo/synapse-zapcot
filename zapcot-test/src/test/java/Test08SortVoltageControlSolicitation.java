@@ -74,23 +74,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "TES", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "TES", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "CAPACITOR", "TES", "5", "", true, "CTEEP");
-        ServiceUtil.wait(5);
-
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + onsAccessToken)
-                .when().
-                    get("voltage_control_solicitation?sort=creation_time").
-                then().
-                    statusCode(200).
-                    body("get(0).action_code", equalTo("DESLIGAR"));
-
-        ServiceUtil.wait(5);
-
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "CAPACITOR", "TES", "5", "", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "CAPACITOR", "TES", "5", "", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -100,7 +86,21 @@ public class Test08SortVoltageControlSolicitation {
                     get("voltage_control_solicitation?sort=creation_time").
                 then().
                     statusCode(200).
-                    body("get(0).action_code", equalTo("LIGAR"));
+                    body("get(0).action_code", equalTo("TURN_OFF"));
+
+        ServiceUtil.wait(5);
+
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "CAPACITOR", "TES", "5", "", true, "CTEEP");
+        ServiceUtil.wait(5);
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + onsAccessToken)
+                .when().
+                    get("voltage_control_solicitation?sort=creation_time").
+                then().
+                    statusCode(200).
+                    body("get(0).action_code", equalTo("TURN_ON"));
 
         ServiceUtil.wait(2);
 
@@ -112,9 +112,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -158,9 +158,9 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
         RestAssured.
@@ -182,11 +182,11 @@ public class Test08SortVoltageControlSolicitation {
 
         String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "LIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "DESLIGAR", "REATOR", "ATI", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
         ServiceUtil.wait(5);
 
 
@@ -198,13 +198,13 @@ public class Test08SortVoltageControlSolicitation {
                 then().
                     statusCode(200).
                     body("get(0).substation_code", equalTo("ATI")).
-                    body("get(0).action_code", equalTo("DESLIGAR")).
+                    body("get(0).action_code", equalTo("TURN_OFF")).
                     body("get(0).status", equalTo("NOT_ANSWERED")).
                     body("get(1).substation_code", equalTo("ATI")).
-                    body("get(1).action_code", equalTo("DESLIGAR")).
+                    body("get(1).action_code", equalTo("TURN_OFF")).
                     body("get(1).status", equalTo("NOT_ANSWERED")).
                     body("get(2).substation_code", equalTo("ATI")).
-                    body("get(2).action_code", equalTo("LIGAR")).
+                    body("get(2).action_code", equalTo("TURN_ON")).
                     body("get(2).status", equalTo("NOT_ANSWERED"));
 
     }

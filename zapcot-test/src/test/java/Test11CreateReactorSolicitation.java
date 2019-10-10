@@ -60,7 +60,7 @@ public class Test11CreateReactorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "REATOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "5", "550kV", true, "CTEEP");
 
         RestAssured.
@@ -75,8 +75,8 @@ public class Test11CreateReactorSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation.put("action", "DESLIGAR");
-        payloadSolicitation.put("equipment", "REATOR");
+        payloadSolicitation.put("action", "TURN_OFF");
+        payloadSolicitation.put("equipment", "REACTOR");
         payloadSolicitation.put("substation", "ATI");
 
         RestAssured.
@@ -99,7 +99,7 @@ public class Test11CreateReactorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "REATOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RISE", "REACTOR", "MOS",
         "5", "550kV", true, "CTEEP");
 
         RestAssured.
@@ -110,11 +110,11 @@ public class Test11CreateReactorSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid action for equipment type 'REATOR'."));
+                    body("error", equalTo("Invalid action for equipment type 'REACTOR'."));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "REATOR", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "-5", "550kV", true, "CTEEP");
 
         RestAssured.
@@ -125,7 +125,7 @@ public class Test11CreateReactorSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid amount value for equipment type 'REATOR'."));
+                    body("error", equalTo("Invalid amount value for equipment type 'REACTOR'."));
         
         ServiceUtil.wait(5);
 

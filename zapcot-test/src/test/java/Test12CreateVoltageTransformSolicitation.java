@@ -60,7 +60,7 @@ public class Test12CreateVoltageTransformSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "TRANSFORMADOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RISE", "TRANSFORMER", "MOS",
         "5", "500kV", null, "CTEEP");
 
         RestAssured.
@@ -75,8 +75,8 @@ public class Test12CreateVoltageTransformSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation.put("action", "REDUZIR");
-        payloadSolicitation.put("equipment", "TRANSFORMADOR");
+        payloadSolicitation.put("action", "REDUCE");
+        payloadSolicitation.put("equipment", "TRANSFORMER");
         payloadSolicitation.put("substation", "ATI");
 
         RestAssured.
@@ -99,7 +99,7 @@ public class Test12CreateVoltageTransformSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("REDUZIR", "TRANSFORMADOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("REDUCE", "TRANSFORMER", "MOS",
         "5", "", null, "CTEEP");
         
         RestAssured.
@@ -110,11 +110,11 @@ public class Test12CreateVoltageTransformSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Voltage value must be informed for 'TRANSFORMADOR'."));
+                    body("error", equalTo("Voltage value must be informed for 'TRANSFORMER'."));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "TRANSFORMADOR", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "TRANSFORMER", "MOS",
         "5", "500kV", null, "CTEEP");
 
         RestAssured.
@@ -125,11 +125,11 @@ public class Test12CreateVoltageTransformSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid action for equipment type 'TRANSFORMADOR'."));
+                    body("error", equalTo("Invalid action for equipment type 'TRANSFORMER'."));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "TRANSFORMADOR", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RISE", "TRANSFORMER", "MOS",
         "-5", "500kV", null, "CTEEP");
 
         RestAssured.
@@ -140,7 +140,7 @@ public class Test12CreateVoltageTransformSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid amount value for equipment type 'TRANSFORMADOR'."));
+                    body("error", equalTo("Invalid amount value for equipment type 'TRANSFORMER'."));
         
         ServiceUtil.wait(5);
     }
