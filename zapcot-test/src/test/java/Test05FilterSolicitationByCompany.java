@@ -161,10 +161,10 @@ public class Test05FilterSolicitationByCompany {
         //Arrange
         String onsAccessToken = ServiceUtil.doLogin("testerons05", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "ELEVAR", "SINCRONO", "MIR", "5", "500kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "ZERAR", "SINCRONO", "MIR", "5", "", null, "CTEEP");
         ServiceUtil.wait(1);
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TAP", "PIR", "2", "140kV", true, "CTEEP");
+        ServiceUtil.createSingleSolicitation(onsAccessToken, "REDUZIR", "TRANSFORMADOR", "PIR", "2", "500kV", null, "CTEEP");
         ServiceUtil.wait(2);
 
         //Act & Assert
@@ -176,13 +176,12 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("ELEVAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TAP")).
+                    body("action_code", hasItems("ZERAR", "REDUZIR")).
+                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED")).
-                    body("voltage", hasItems("500kV" , "140kV"));
+                    body("status", hasItems("NOT_ANSWERED"));
 
         ServiceUtil.wait(2);
 
@@ -194,13 +193,12 @@ public class Test05FilterSolicitationByCompany {
                     get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("action_code", hasItems("ELEVAR", "REDUZIR")).
-                    body("equipment_code", hasItems("SINCRONO", "TAP")).
+                    body("action_code", hasItems("ZERAR", "REDUZIR")).
+                    body("equipment_code", hasItems("SINCRONO", "TRANSFORMADOR")).
                     body("substation_code", hasItems("MIR", "PIR")).
                     body("amount", hasItems("5", "2")).
                     body("request_user_id", hasItems(userIDONS)).
-                    body("status", hasItems("NOT_ANSWERED")).
-                    body("voltage", hasItems("500kV" , "140kV"));
+                    body("status", hasItems("NOT_ANSWERED"));
 
         ServiceUtil.wait(2);
 

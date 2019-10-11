@@ -167,7 +167,10 @@ class SolicitationActions(object):
     DESLIGAR = "DESLIGAR"
     ELEVAR = "ELEVAR"
     REDUZIR = "REDUZIR"
-    ALL_ACTIONS = [LIGAR, DESLIGAR, ELEVAR, REDUZIR]
+    MAXIMIZAR = "MAXIMIZAR"
+    AJUSTAR = "AJUSTAR"
+    ZERAR = "ZERAR"
+    ALL_ACTIONS = [LIGAR, DESLIGAR, ELEVAR, REDUZIR, MAXIMIZAR, AJUSTAR, ZERAR]
 
 
 class EquipmentTypes(object):
@@ -177,8 +180,18 @@ class EquipmentTypes(object):
     CAPACITOR = "CAPACITOR"
     REATOR = "REATOR"
     SINCRONO = "SINCRONO"
-    TAP = "TAP"
-    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TAP]
+    TRANSFORMADOR = "TRANSFORMADOR"
+    ALL_EQUIPMENT = [CAPACITOR, REATOR, SINCRONO, TRANSFORMADOR]
+
+class VoltageTransformerLevels(object):
+    """The voltage levels for Voltage Transformer.
+    """
+    _500kV = "500kV"
+    _440kV = "440kV"
+    _230kV = "230kV"
+    _138kV = "138kV"
+    _88kV  = "88kV"
+    ALL_ALLOWED_LEVELS = [_500kV, _440kV, _230kV, _138kV, _88kV]
 
 class SolicitationSortParams(object):
     """The possible params to sort voltage control solicitations.

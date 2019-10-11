@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 
-public class Test10CreateCapacitorSolicitation {
+public class Test13CreateVoltageSynchronousSolicitation {
 
     @BeforeClass
     public static void setup() {
@@ -35,7 +35,7 @@ public class Test10CreateCapacitorSolicitation {
         RestAssured.baseURI = baseHost;
 
         // Create a ONS user
-        Map<String, Object> userONS = DataUtil.buildPayloadUser("testerons10", "tester123", "ONS");
+        Map<String, Object> userONS = DataUtil.buildPayloadUser("testerons13", "tester123", "ONS");
         String session = ServiceUtil.getSession(userONS);
         userONS.put("auth", ServiceUtil.getAuthObject(session));
 
@@ -50,17 +50,18 @@ public class Test10CreateCapacitorSolicitation {
                     extract().path("user_id");
 
         ServiceUtil.wait(5);
+
     }
 
     @Test
-    public void test01CreateValidSolicitationsWithCapacitor() {
+    public void test01CreateValidSolicitationsWithSynchronous() {
 
-        String access_token = ServiceUtil.doLogin("testerons10", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons12", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("MAXIMIZAR", "SINCRONO", "MOS",
+        "5", "", null, "CTEEP");
 
         RestAssured.
                 given().
@@ -74,9 +75,23 @@ public class Test10CreateCapacitorSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation.put("action", "DESLIGAR");
-        payloadSolicitation.put("equipment", "CAPACITOR");
-        payloadSolicitation.put("substation", "ATI");
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ZERAR", "SINCRONO", "MOS",
+        "", "", null, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(2);
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        "5", "", null, "CTEEP");
 
         RestAssured.
                 given().
@@ -94,12 +109,27 @@ public class Test10CreateCapacitorSolicitation {
     @Test
     public void test02createInvalidSolicitationWithCapacitor() {
         
-        String access_token = ServiceUtil.doLogin("testerons10", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons12", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        "", "", null, "CTEEP");
+        
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(400).
+                    body("error", equalTo("Amount must be informed for action 'AJUSTAR' on equipment type 'SINCRONO'"));
+        
+        ServiceUtil.wait(5);
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "SINCRONO", "MOS",
+        "", "", null, "CTEEP");
 
         RestAssured.
                 given().
@@ -109,12 +139,12 @@ public class Test10CreateCapacitorSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid action for equipment type 'CAPACITOR'."));
+                    body("error", equalTo("Invalid action for equipment type 'SINCRONO'."));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "-5", "", true, "CTEEP");
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        "-5", "", null, "CTEEP");
 
         RestAssured.
                 given().
@@ -124,10 +154,9 @@ public class Test10CreateCapacitorSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid amount value for equipment type 'CAPACITOR'."));
+                    body("error", equalTo("Invalid amount value for equipment type 'SINCRONO'."));
         
         ServiceUtil.wait(5);
-
     }
 
 }

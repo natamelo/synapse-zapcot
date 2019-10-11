@@ -99,22 +99,7 @@ public class Test11CreateReactorSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "REATOR", "MOS",
-        "5", "", true, "CTEEP");
-        
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + access_token).
-                    body(payloadSolicitation)
-                .when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(400).
-                    body("error", equalTo("Voltage value must be informed for 'REATOR'."));
-        
-        ServiceUtil.wait(5);
-
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "REATOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ELEVAR", "REATOR", "MOS",
         "5", "550kV", true, "CTEEP");
 
         RestAssured.
