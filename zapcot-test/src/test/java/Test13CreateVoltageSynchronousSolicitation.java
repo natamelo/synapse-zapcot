@@ -56,11 +56,11 @@ public class Test13CreateVoltageSynchronousSolicitation {
     @Test
     public void test01CreateValidSolicitationsWithSynchronous() {
 
-        String access_token = ServiceUtil.doLogin("testerons12", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons13", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("MAXIMIZAR", "SINCRONO", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("MAXIMIZE", "SYNCHRONOUS", "MOS",
         "5", "", null, "CTEEP");
 
         RestAssured.
@@ -75,7 +75,7 @@ public class Test13CreateVoltageSynchronousSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ZERAR", "SINCRONO", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RESET", "SYNCHRONOUS", "MOS",
         "", "", null, "CTEEP");
 
         RestAssured.
@@ -90,7 +90,7 @@ public class Test13CreateVoltageSynchronousSolicitation {
 
         ServiceUtil.wait(2);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ADJUST", "SYNCHRONOUS", "MOS",
         "5", "", null, "CTEEP");
 
         RestAssured.
@@ -109,11 +109,11 @@ public class Test13CreateVoltageSynchronousSolicitation {
     @Test
     public void test02createInvalidSolicitationWithCapacitor() {
         
-        String access_token = ServiceUtil.doLogin("testerons12", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons13", "tester123");
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ADJUST", "SYNCHRONOUS", "MOS",
         "", "", null, "CTEEP");
         
         RestAssured.
@@ -124,11 +124,11 @@ public class Test13CreateVoltageSynchronousSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Amount must be informed for action 'AJUSTAR' on equipment type 'SINCRONO'"));
+                    body("error", equalTo("Amount must be informed for action 'ADJUST' on equipment type 'SYNCHRONOUS'"));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "SINCRONO", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "SYNCHRONOUS", "MOS",
         "", "", null, "CTEEP");
 
         RestAssured.
@@ -139,11 +139,11 @@ public class Test13CreateVoltageSynchronousSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid action for equipment type 'SINCRONO'."));
+                    body("error", equalTo("Invalid action for equipment type 'SYNCHRONOUS'."));
         
         ServiceUtil.wait(5);
 
-        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("AJUSTAR", "SINCRONO", "MOS",
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ADJUST", "SYNCHRONOUS", "MOS",
         "-5", "", null, "CTEEP");
 
         RestAssured.
@@ -154,7 +154,7 @@ public class Test13CreateVoltageSynchronousSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Invalid amount value for equipment type 'SINCRONO'."));
+                    body("error", equalTo("Invalid amount value for equipment type 'SYNCHRONOUS'."));
         
         ServiceUtil.wait(5);
     }

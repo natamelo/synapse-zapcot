@@ -52,7 +52,6 @@ class VoltageControlHandler(BaseHandler):
         for solicitation in solicitations:
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
-            
 
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
@@ -89,8 +88,8 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
-        update_ts = calendar.timegm(time.gmtime())
-        yield self.store.change_solicitation_status(new_status, id, user_id, update_ts)
+        ts = calendar.timegm(time.gmtime())
+        yield self.store.create_solicitation_event(id, user_id, new_status, ts)
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):
@@ -109,21 +108,22 @@ def check_solicitation_params(solicitation):
     if solicitation["equipment"] not in EquipmentTypes.ALL_EQUIPMENT:
         raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
     
-    if solicitation["equipment"] == EquipmentTypes.REATOR:
+    if solicitation["equipment"] == EquipmentTypes.REACTOR:
         check_reactor_params(solicitation)
     elif solicitation["equipment"] == EquipmentTypes.CAPACITOR:
         check_capacitor_params(solicitation)
-    elif solicitation["equipment"] == EquipmentTypes.TRANSFORMADOR:
+    elif solicitation["equipment"] == EquipmentTypes.TRANSFORMER:
         check_transform_params(solicitation)
-    elif solicitation["equipment"] == EquipmentTypes.SINCRONO:
+    elif solicitation["equipment"] == EquipmentTypes.SYNCHRONOUS:
         check_synchronous_params(solicitation)
+
 
 def check_reactor_params(solicitation):
     if "voltage" not in solicitation:
         solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
+        possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -135,12 +135,13 @@ def check_reactor_params(solicitation):
         staggered=solicitation["staggered"],
         equipment_type=solicitation["equipment"]
     )
+
 
 def check_capacitor_params(solicitation):
     solicitation["voltage"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.LIGAR, SolicitationActions.DESLIGAR],
+        possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -153,11 +154,12 @@ def check_capacitor_params(solicitation):
         equipment_type=solicitation["equipment"]
     )
 
+
 def check_transform_params(solicitation):
     solicitation["staggered"] = None
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.ELEVAR, SolicitationActions.REDUZIR],
+        possible_actions=[SolicitationActions.RISE, SolicitationActions.REDUCE],
         equipment_type=solicitation["equipment"]
     )
     check_amount(
@@ -169,26 +171,27 @@ def check_transform_params(solicitation):
     if "voltage" not in solicitation or solicitation["voltage"] == "":
         raise SynapseError(
             400,
-            "Voltage value must be informed for 'TRANSFORMADOR'.",
+            "Voltage value must be informed for 'TRANSFORMER'.",
             Codes.INVALID_PARAM
         )
     elif solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
         raise SynapseError(
             400,
-            "Invalid voltage value for equipment type 'TRANSFORMADOR'.",
+            "Invalid voltage value for equipment type 'TRANSFORMER'.",
             Codes.INVALID_PARAM
         )
+
 
 def check_synchronous_params(solicitation):
     solicitation["staggered"] = None
     if "voltage" not in solicitation:
         solicitation["voltage"] = None
 
-    if solicitation["action"] == SolicitationActions.AJUSTAR:
+    if solicitation["action"] == SolicitationActions.ADJUST:
         if "amount" not in solicitation or solicitation["amount"] == "":
             raise  SynapseError(
                 400,
-                "Amount must be informed for action 'AJUSTAR' on equipment type 'SINCRONO'",
+                "Amount must be informed for action 'ADJUST' on equipment type 'SYNCHRONOUS'",
                 Codes.INVALID_PARAM
             )
         else:
@@ -200,10 +203,11 @@ def check_synchronous_params(solicitation):
     else:
         check_action_type(
             action=solicitation["action"],
-            possible_actions=[SolicitationActions.MAXIMIZAR, SolicitationActions.ZERAR],
+            possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET],
             equipment_type=solicitation["equipment"]
         )
         solicitation["amount"] = None
+
 
 def check_action_type(action, possible_actions, equipment_type):
     if action not in possible_actions:
@@ -212,6 +216,7 @@ def check_action_type(action, possible_actions, equipment_type):
             "Invalid action for equipment type '%s'." % (equipment_type),
             Codes.INVALID_PARAM
         )
+
 
 def check_amount(amount, min_value, equipment_type):
     try:
@@ -227,6 +232,8 @@ def check_amount(amount, min_value, equipment_type):
             "Invalid amount value for equipment type '%s'." % (equipment_type),
             Codes.INVALID_PARAM
         )
+
+
 def check_staggered(staggered, equipment_type):
     if type(staggered) != bool:
         raise SynapseError(

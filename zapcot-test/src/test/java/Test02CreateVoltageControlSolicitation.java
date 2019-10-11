@@ -80,7 +80,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -93,8 +93,8 @@ public class Test02CreateVoltageControlSolicitation {
                     statusCode(201).
                     body("message", equalTo("Voltage control solicitations created with success."));
 
-        payloadSolicitation.put("action", "DESLIGAR");
-        payloadSolicitation.put("equipment", "REATOR");
+        payloadSolicitation.put("action", "TURN_OFF");
+        payloadSolicitation.put("equipment", "REACTOR");
         payloadSolicitation.put("substation", "ATI");
 
         RestAssured.
@@ -107,8 +107,8 @@ public class Test02CreateVoltageControlSolicitation {
                     statusCode(201).
                     body("message", equalTo("Voltage control solicitations created with success."));
         
-        payloadSolicitation.put("action", "ELEVAR");
-        payloadSolicitation.put("equipment", "SINCRONO");
+        payloadSolicitation.put("action", "RISE");
+        payloadSolicitation.put("equipment", "SYNCHRONOUS");
         payloadSolicitation.put("substation", "SAL");
 
         RestAssured.
@@ -121,8 +121,8 @@ public class Test02CreateVoltageControlSolicitation {
                     statusCode(201).
                     body("message", equalTo("Voltage control solicitations created with success."));
                     
-        payloadSolicitation.put("action", "REDUZIR");
-        payloadSolicitation.put("equipment", "TRANSFORMADOR");
+        payloadSolicitation.put("action", "REDUCE");
+        payloadSolicitation.put("equipment", "TRANSFORMER");
         payloadSolicitation.put("substation", "PIR");
 
         RestAssured.
@@ -146,7 +146,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "INVALIDEQUIPMENT", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "INVALIDEQUIPMENT", "MOS",
         "5", "500kV", true, "CTEEP");
         
         RestAssured.
@@ -192,7 +192,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "INVALID SUBSTATION",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "INVALID SUBSTATION",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -215,7 +215,7 @@ public class Test02CreateVoltageControlSolicitation {
 
         ServiceUtil.wait(2);
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
         "5", "", true, "CTEEP");
 
         RestAssured.
@@ -235,11 +235,11 @@ public class Test02CreateVoltageControlSolicitation {
 
         String access_token = ServiceUtil.doLogin("testerons02", "tester123");
         
-        Map<String, Object> solicitation1 = DataUtil.buildSingleSolicitation("LIGAR", "REATOR", "MOS", 
+        Map<String, Object> solicitation1 = DataUtil.buildSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "5", "50", true, "CTEEP");
-        Map<String, Object> solicitation2 = DataUtil.buildSingleSolicitation("DESLIGAR", "CAPACITOR", "ATI", 
+        Map<String, Object> solicitation2 = DataUtil.buildSingleSolicitation("TURN_OFF", "CAPACITOR", "ATI",
         "5", "", true, "CTEEP");
-        Map<String, Object> solicitation3 = DataUtil.buildSingleSolicitation("LIGAR", "CAPACITOR", "ATI", 
+        Map<String, Object> solicitation3 = DataUtil.buildSingleSolicitation("TURN_ON", "CAPACITOR", "ATI",
         "5", "", true, "CTEEP");
 
         List<Map<String, Object>> solicitations = new ArrayList<>();
