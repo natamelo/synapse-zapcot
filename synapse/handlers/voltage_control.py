@@ -47,9 +47,10 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def create_solicitations(self, solicitations, user_id):
-        status = SolicitationStatus.NOT_ANSWERED
+        status = SolicitationStatus.NEW
 
         for solicitation in solicitations:
+            treat_solicitation(solicitation)
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
 
@@ -102,6 +103,11 @@ class VoltageControlHandler(BaseHandler):
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
 
+def treat_solicitation(solicitation):
+    if "voltage" not in solicitation:
+        solicitation["voltage"] = None
+
+
 def check_solicitation_params(solicitation):
     if solicitation["action"] not in SolicitationActions.ALL_ACTIONS:
         raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
@@ -119,20 +125,26 @@ def check_solicitation_params(solicitation):
 
 
 def check_reactor_params(solicitation):
-    if "voltage" not in solicitation:
-        solicitation["voltage"] = None
+
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
         equipment_type=solicitation["equipment"]
     )
+
     check_amount(
         amount=solicitation["amount"],
-        min_value=0,
+        min_value=1,
         equipment_type=solicitation["equipment"]
     )
+
     check_staggered(
         staggered=solicitation["staggered"],
+        equipment_type=solicitation["equipment"]
+    )
+
+    check_voltage(
+        voltage=solicitation["voltage"],
         equipment_type=solicitation["equipment"]
     )
 
@@ -223,13 +235,13 @@ def check_amount(amount, min_value, equipment_type):
         if int(amount) < min_value:
             raise SynapseError(
                 400,
-                "Invalid amount value for equipment type '%s'." % (equipment_type),
+                "Invalid amount value for equipment type '%s'." % equipment_type,
                 Codes.INVALID_PARAM
             )
     except Exception as e:
         raise SynapseError(
             400,
-            "Invalid amount value for equipment type '%s'." % (equipment_type),
+            "Invalid amount value for equipment type '%s'." % equipment_type,
             Codes.INVALID_PARAM
         )
 
@@ -238,6 +250,19 @@ def check_staggered(staggered, equipment_type):
     if type(staggered) != bool:
         raise SynapseError(
             400,
-            "Invalid staggered for equipment type '%s'." % (equipment_type),
+            "Invalid staggered for equipment type '%s'." % equipment_type,
+            Codes.INVALID_PARAM
+        )
+
+
+def check_voltage(voltage, equipment_type):
+
+    if equipment_type == EquipmentTypes.REACTOR and voltage is None:
+        return
+
+    if voltage not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
+        raise SynapseError(
+            400,
+            "Invalid voltage value for equipment type '%s'." % equipment_type,
             Codes.INVALID_PARAM
         )

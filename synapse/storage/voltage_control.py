@@ -85,9 +85,9 @@ class VoltageControlStore(SQLBaseStore):
                 " event.time_stamp "
                 " from solicitation_event event "
                 " where event.solicitation_id = ? order by"
-                " CASE WHEN event.status = 'NOT_ANSWERED' then '1' "
-                "      WHEN event.status = 'EXPIRED' then '2' "
-                "      WHEN event.status = 'AWARE' then '3' "
+                " CASE WHEN event.status = 'NEW' then '1' "
+                "      WHEN event.status = 'LATE' then '2' "
+                "      WHEN event.status = 'ACCEPTED' then '3' "
                 "      ELSE event.status END DESC "
             )
             txn.execute(sql, args)
@@ -202,7 +202,7 @@ def get_filter_clause(substations, exclude_expired):
     filter_clause = ""
 
     #if exclude_expired == "true":
-    #    filter_clause = "and solicitation.status <> 'EXPIRED' "
+    #    filter_clause = "and solicitation.status <> 'LATE' "
 
     if substations:
         if len(substations) > 1:
@@ -216,9 +216,9 @@ def get_filter_clause(substations, exclude_expired):
 def get_order_clause_by_sort_params(sort_params):
 
     order_by_status = (
-        "CASE WHEN solicitation.status = 'NOT_ANSWERED' then '1' "
-        "WHEN solicitation.status = 'EXPIRED' then '2' "
-        "WHEN solicitation.status = 'AWARE' then '3' "
+        "CASE WHEN solicitation.status = 'NEW' then '1' "
+        "WHEN solicitation.status = 'LATE' then '2' "
+        "WHEN solicitation.status = 'ACCEPTED' then '3' "
         "ELSE solicitation.status END ASC "
     )
 
