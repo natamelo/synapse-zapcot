@@ -115,7 +115,7 @@ public class Test11CreateReactorSolicitation {
         ServiceUtil.wait(5);
 
         payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
-        "-5", "500kV", true, "CTEEP");
+        "0", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
