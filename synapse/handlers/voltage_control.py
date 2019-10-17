@@ -107,6 +107,12 @@ def treat_solicitation_data(solicitation):
     if "voltage" not in solicitation:
         solicitation["voltage"] = None
 
+    if solicitation["equipment"] == EquipmentTypes.SYNCHRONOUS:
+        solicitation["staggered"] = None
+
+        if solicitation["action"] != SolicitationActions.ADJUST:
+            solicitation["amount"] = None
+
 
 def check_solicitation_params(solicitation):
     if solicitation["action"] not in SolicitationActions.ALL_ACTIONS:
@@ -202,30 +208,19 @@ def check_transform_params(solicitation):
 
 
 def check_synchronous_params(solicitation):
-    solicitation["staggered"] = None
-    if "voltage" not in solicitation:
-        solicitation["voltage"] = None
 
     if solicitation["action"] == SolicitationActions.ADJUST:
-        if "amount" not in solicitation or solicitation["amount"] == "":
-            raise  SynapseError(
-                400,
-                "Amount must be informed for action 'ADJUST' on equipment type 'SYNCHRONOUS'",
-                Codes.INVALID_PARAM
-            )
-        else:
-            check_amount(
-                amount=solicitation["amount"],
-                min_value=0,
-                equipment_type=solicitation["equipment"]
-            )
+        check_amount(
+            amount=solicitation["amount"],
+            min_value=1,
+            equipment_type=solicitation["equipment"])
     else:
         check_action_type(
             action=solicitation["action"],
-            possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET],
+            possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET,
+                              SolicitationActions.REDUCE],
             equipment_type=solicitation["equipment"]
         )
-        solicitation["amount"] = None
 
 
 def check_action_type(action, possible_actions, equipment_type):
