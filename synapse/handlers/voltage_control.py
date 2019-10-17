@@ -113,6 +113,9 @@ def treat_solicitation_data(solicitation):
         if solicitation["action"] != SolicitationActions.ADJUST:
             solicitation["amount"] = None
 
+    if solicitation["equipment"] == EquipmentTypes.TRANSFORMER:
+        solicitation["staggered"] = None
+
 
 def check_solicitation_params(solicitation):
     if solicitation["action"] not in SolicitationActions.ALL_ACTIONS:
@@ -181,46 +184,50 @@ def check_capacitor_params(solicitation):
 
 
 def check_transform_params(solicitation):
-    solicitation["staggered"] = None
+
     check_action_type(
         action=solicitation["action"],
-        possible_actions=[SolicitationActions.RISE, SolicitationActions.REDUCE],
-        equipment_type=solicitation["equipment"]
-    )
-    check_amount(
-        amount=solicitation["amount"],
-        min_value=0,
+        possible_actions=[SolicitationActions.RISE, SolicitationActions.REDUCE,
+                          SolicitationActions.ADJUST_FOR_TAPE, SolicitationActions.ADJUST],
         equipment_type=solicitation["equipment"]
     )
 
-    if "voltage" not in solicitation or solicitation["voltage"] == "":
-        raise SynapseError(
-            400,
-            "Voltage value must be informed for 'TRANSFORMER'.",
-            Codes.INVALID_PARAM
+    check_voltage(
+        voltage=solicitation["voltage"],
+        equipment_type=solicitation["equipment"]
+    )
+
+    if solicitation["action"] == SolicitationActions.ADJUST_FOR_TAPE:
+        check_amount(
+            amount=solicitation["amount"],
+            min_value=-100000,
+            equipment_type=solicitation["equipment"]
         )
-    elif solicitation["voltage"] not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
-        raise SynapseError(
-            400,
-            "Invalid voltage value for equipment type 'TRANSFORMER'.",
-            Codes.INVALID_PARAM
+
+    if solicitation["action"] == SolicitationActions.RISE or \
+            solicitation["action"] == SolicitationActions.REDUCE or \
+            solicitation["action"] == SolicitationActions.ADJUST:
+        check_amount(
+            amount=solicitation["amount"],
+            min_value=1,
+            equipment_type=solicitation["equipment"]
         )
 
 
 def check_synchronous_params(solicitation):
+
+    check_action_type(
+        action=solicitation["action"],
+        possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET,
+                          SolicitationActions.REDUCE, SolicitationActions.ADJUST],
+        equipment_type=solicitation["equipment"]
+    )
 
     if solicitation["action"] == SolicitationActions.ADJUST:
         check_amount(
             amount=solicitation["amount"],
             min_value=1,
             equipment_type=solicitation["equipment"])
-    else:
-        check_action_type(
-            action=solicitation["action"],
-            possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET,
-                              SolicitationActions.REDUCE],
-            equipment_type=solicitation["equipment"]
-        )
 
 
 def check_action_type(action, possible_actions, equipment_type):
