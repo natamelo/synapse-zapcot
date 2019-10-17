@@ -60,7 +60,7 @@ public class Test10CreateCapacitorSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        "5", null, true, "CTEEP");
 
         RestAssured.
                 given().
