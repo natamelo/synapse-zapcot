@@ -17,7 +17,6 @@
 import logging
 
 from ._base import BaseHandler
-from synapse.types import create_requester
 from twisted.internet import defer
 from synapse.api.constants import (
     SolicitationStatus,
@@ -32,8 +31,8 @@ from synapse.api.errors import (
 )
 
 
-import calendar;
-import time;
+import calendar
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +42,7 @@ class VoltageControlHandler(BaseHandler):
     def __init__(self, hs):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
+        self.profiler_handler = hs.get_profile_handler()
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
@@ -70,16 +70,22 @@ class VoltageControlHandler(BaseHandler):
             )
 
     @defer.inlineCallbacks
+    def add_creators_to_solicitations(self, solicitations):
+        for solicitation in solicitations:
+            creator_id = solicitation['events'][0]['user_id']
+            creator_profile = yield self.profiler_handler.get_profile(creator_id)
+            solicitation['created_by'] = creator_profile
+
+    @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
         result = yield self.store.get_solicitations_by_params(
             company_code=company_code,
             substations=substations,
-            sort_params=sort_params,
-            exclude_expired=exclude_expired,
             table_code=table_code,
             from_id=from_id,
             limit=limit
         )
+        yield self.add_creators_to_solicitations(result)
         return result
 
     @defer.inlineCallbacks
