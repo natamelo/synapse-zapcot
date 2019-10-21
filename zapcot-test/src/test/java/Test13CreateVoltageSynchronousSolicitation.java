@@ -104,6 +104,22 @@ public class Test13CreateVoltageSynchronousSolicitation {
                     body("message", equalTo("Voltage control solicitations created with success."));
 
         ServiceUtil.wait(2);
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("MINIMIZE", "SYNCHRONOUS", "MOS",
+                "5", "", null, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(2);
+
     }
 
     @Test

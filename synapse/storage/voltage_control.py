@@ -21,6 +21,7 @@ class VoltageControlStore(SQLBaseStore):
                 allow_none=True,
             )
             if result:
+                result['events'] = yield self.get_events_by_solicitation_id(id)
                 return result
             return None
         except Exception as e:

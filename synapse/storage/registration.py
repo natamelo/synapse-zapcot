@@ -282,6 +282,18 @@ class RegistrationWorkerStore(SQLBaseStore):
 
         return res if res else False
 
+    @defer.inlineCallbacks
+    def get_company_code(self, user_id):
+        res = yield self._simple_select_one_onecol(
+            table="users",
+            keyvalues={"name": user_id},
+            retcol="company_code",
+            allow_none=True,
+            desc="get_company_code",
+        )
+
+        return res
+
     def _query_for_auth(self, txn, token):
         sql = (
             "SELECT users.name, users.is_guest, users.company_code, access_tokens.id as token_id,"

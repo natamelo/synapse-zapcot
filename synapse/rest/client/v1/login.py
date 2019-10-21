@@ -273,6 +273,8 @@ class LoginRestServlet(RestServlet):
         if callback is not None:
             yield callback(result)
 
+        result['company_code'] = yield self.registration_handler.get_company_code(user_id)
+
         return result
 
     @defer.inlineCallbacks
@@ -284,6 +286,7 @@ class LoginRestServlet(RestServlet):
         )
 
         result = yield self._register_device_with_callback(user_id, login_submission)
+
         return result
 
     @defer.inlineCallbacks
@@ -321,6 +324,7 @@ class LoginRestServlet(RestServlet):
         result = yield self._register_device_with_callback(
             registered_user_id, login_submission
         )
+
         return result
 
 
