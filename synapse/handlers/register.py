@@ -818,3 +818,8 @@ class RegistrationHandler(BaseHandler):
             )
         else:
             logger.info("bind_msisdn not specified: not binding msisdn")
+
+    @defer.inlineCallbacks
+    def get_company_code(self, user_id):
+        res = yield self.store.get_company_code(user_id)
+        return res
