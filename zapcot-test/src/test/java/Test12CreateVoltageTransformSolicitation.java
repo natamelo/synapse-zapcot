@@ -89,7 +89,37 @@ public class Test12CreateVoltageTransformSolicitation {
                     statusCode(201).
                     body("message", equalTo("Voltage control solicitations created with success."));
 
-        ServiceUtil.wait(2);
+        ServiceUtil.wait(5);
+
+        payloadSolicitation.put("action", "ADJUST");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+        payloadSolicitation.put("action", "ADJUST_FOR_TAPE");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+
     }
 
     @Test
@@ -110,7 +140,7 @@ public class Test12CreateVoltageTransformSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Voltage value must be informed for 'TRANSFORMER'."));
+                    body("error", equalTo("Invalid voltage value for equipment type 'TRANSFORMER'."));
         
         ServiceUtil.wait(5);
 
@@ -143,6 +173,22 @@ public class Test12CreateVoltageTransformSolicitation {
                     body("error", equalTo("Invalid amount value for equipment type 'TRANSFORMER'."));
         
         ServiceUtil.wait(5);
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ADJUST", "TRANSFORMER", "MOS",
+                "-5", "500kV", null, "CTEEP");
+
+        RestAssured.
+                given().
+                header("Authorization", "Bearer " + access_token).
+                body(payloadSolicitation)
+                .when().
+                post("voltage_control_solicitation").
+                then().
+                statusCode(400).
+                body("error", equalTo("Invalid amount value for equipment type 'TRANSFORMER'."));
+
+        ServiceUtil.wait(5);
+
     }
 
 }

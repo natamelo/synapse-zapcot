@@ -124,7 +124,7 @@ public class Test13CreateVoltageSynchronousSolicitation {
                     post("voltage_control_solicitation").
                 then().
                     statusCode(400).
-                    body("error", equalTo("Amount must be informed for action 'ADJUST' on equipment type 'SYNCHRONOUS'"));
+                    body("error", equalTo("Invalid amount value for equipment type 'SYNCHRONOUS'."));
         
         ServiceUtil.wait(5);
 

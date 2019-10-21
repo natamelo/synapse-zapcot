@@ -138,14 +138,17 @@ class SolicitationStatus(object):
     """The possible status.
     """
 
-    NOT_ANSWERED = "NOT_ANSWERED"
-    AWARE = "AWARE"
-    ANSWERED = "ANSWERED"
+    NEW = "NEW"
+    ACCEPTED = "ACCEPTED"
+    EXECUTED = "EXECUTED"
     CANCELED = "CANCELED"
-    EXPIRED = "EXPIRED"
-    RETURNED = "RETURNED"
-    ALL_SOLICITATION_TYPES = [NOT_ANSWERED, AWARE, ANSWERED,
-                              CANCELED, EXPIRED, RETURNED]
+    LATE = "LATE"
+    CONTESTED = "CONTESTED"
+    BLOCKED = "BLOCKED"
+    REQUIRED = "REQUIRED"
+    ALL_SOLICITATION_TYPES = [NEW, ACCEPTED, EXECUTED,
+                              CANCELED, LATE, CONTESTED,
+                              BLOCKED, REQUIRED]
 
 
 class Companies(object):
@@ -175,9 +178,11 @@ class SolicitationActions(object):
     MAXIMIZE = "MAXIMIZE"
     # Ajustar
     ADJUST = "ADJUST"
+    # Ajustar Tape
+    ADJUST_FOR_TAPE = "ADJUST_FOR_TAPE"
     # Zerar
     RESET = "RESET"
-    ALL_ACTIONS = [TURN_ON, TURN_OFF, RISE, REDUCE, MAXIMIZE, ADJUST, RESET]
+    ALL_ACTIONS = [TURN_ON, TURN_OFF, RISE, REDUCE, MAXIMIZE, ADJUST, RESET, ADJUST_FOR_TAPE]
 
 
 class EquipmentTypes(object):
@@ -198,7 +203,7 @@ class VoltageTransformerLevels(object):
     _440kV = "440kV"
     _230kV = "230kV"
     _138kV = "138kV"
-    _88kV  = "88kV"
+    _88kV = "88kV"
     ALL_ALLOWED_LEVELS = [_500kV, _440kV, _230kV, _138kV, _88kV]
 
 

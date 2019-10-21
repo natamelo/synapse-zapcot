@@ -61,7 +61,7 @@ public class Test11CreateReactorSolicitation {
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
-        "5", "550kV", true, "CTEEP");
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -93,14 +93,14 @@ public class Test11CreateReactorSolicitation {
     }
 
     @Test
-    public void test02createInvalidSolicitationWithCapacitor() {
+    public void test02createInvalidSolicitationWithReactor() {
         
         String access_token = ServiceUtil.doLogin("testerons11", "tester123");
 
         ServiceUtil.wait(2);
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("RISE", "REACTOR", "MOS",
-        "5", "550kV", true, "CTEEP");
+        "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -115,7 +115,7 @@ public class Test11CreateReactorSolicitation {
         ServiceUtil.wait(5);
 
         payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
-        "-5", "550kV", true, "CTEEP");
+        "0", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -127,6 +127,21 @@ public class Test11CreateReactorSolicitation {
                     statusCode(400).
                     body("error", equalTo("Invalid amount value for equipment type 'REACTOR'."));
         
+        ServiceUtil.wait(5);
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "10", "10", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(400).
+                    body("error", equalTo("Invalid voltage value for equipment type 'REACTOR'."));
+
         ServiceUtil.wait(5);
 
     }
