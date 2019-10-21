@@ -3,8 +3,6 @@ import logging
 from synapse.storage._base import SQLBaseStore
 from synapse.api.errors import StoreError
 from twisted.internet import defer
-from synapse.api.constants import SolicitationStatus
-
 from synapse.api.constants import SolicitationSortParams
 
 logger = logging.getLogger(__name__)
@@ -104,8 +102,6 @@ class VoltageControlStore(SQLBaseStore):
         self,
         substations=None,
         company_code=None,
-        sort_params=None,
-        exclude_expired=None,
         table_code=None,
         from_id=0,
         limit=50
@@ -113,7 +109,7 @@ class VoltageControlStore(SQLBaseStore):
 
         #Refazer ordenação e filtro baseado nos eventos de solicitação
         #order_clause = get_order_clause_by_sort_params(sort_params)
-        filter_clause = get_filter_clause(substations, exclude_expired)
+        filter_clause = get_filter_clause(substations, False)
 
         def get_solicitations_by_table_code(txn):
             args = [company_code, table_code, from_id, limit]
@@ -168,6 +164,7 @@ class VoltageControlStore(SQLBaseStore):
                 " solicitation.action_code,"
                 " solicitation.equipment_code, "
                 " solicitation.substation_code, "
+                " solicitation.staggered, "
                 " solicitation.amount, "
                 " solicitation.voltage "
                 " from voltage_control_solicitation solicitation "
@@ -179,12 +176,13 @@ class VoltageControlStore(SQLBaseStore):
 
             return self.cursor_to_dict(txn)
 
-        if table_code and company_code:
-            query_to_call = get_solicitations_by_table_code
-        elif company_code:
-            query_to_call = get_solicitations_by_company_code
-        else:
-            query_to_call = get_all_solicitations
+        #if table_code and company_code:
+        #    query_to_call = get_solicitations_by_table_code
+        #elif company_code:
+        #    query_to_call = get_solicitations_by_company_code
+        #else:
+
+        query_to_call = get_all_solicitations
 
         results = yield self.runInteraction(
             "get_solicitations_by_params", query_to_call
