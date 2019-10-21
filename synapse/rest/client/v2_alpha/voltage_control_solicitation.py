@@ -144,15 +144,17 @@ class VoltageControlStatusServlet(RestServlet):
         if not solicitation:
             raise SynapseError(404, "Solicitation not found.", Codes.NOT_FOUND)
 
-        current_status = solicitation["status"]
-        creation_ts = solicitation["creation_timestamp"]
+        last_event_index = 0
+        first_event_index = -1
+        current_status = solicitation["events"][last_event_index]["status"]
+        creation_ts = solicitation["events"][first_event_index]["time_stamp"]
 
         if self._validate_status_change(current_status, new_status, user_company_code, creation_ts):
-            yield self.voltage_control_handler.create_solicitation_event(
+            yield self.voltage_control_handler.change_solicitation_status(
                 new_status=new_status,
                 id=solicitation_id,
                 user_id=user_id)
-            return (200, {"message": "Solicitation status changed."})
+            return 200, {"message": "Solicitation status changed."}
 
     def _is_valid_create_time(self, creation_ts):
 

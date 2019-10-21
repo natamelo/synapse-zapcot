@@ -174,15 +174,17 @@ class SolicitationActions(object):
     RISE = "RISE"
     # Reduzir
     REDUCE = "REDUCE"
-    # Maximar
+    # Maximizar
     MAXIMIZE = "MAXIMIZE"
+    # Minimizar
+    MINIMIZE = "MINIMIZE"
     # Ajustar
     ADJUST = "ADJUST"
     # Ajustar Tape
     ADJUST_FOR_TAPE = "ADJUST_FOR_TAPE"
     # Zerar
     RESET = "RESET"
-    ALL_ACTIONS = [TURN_ON, TURN_OFF, RISE, REDUCE, MAXIMIZE, ADJUST, RESET, ADJUST_FOR_TAPE]
+    ALL_ACTIONS = [TURN_ON, TURN_OFF, RISE, REDUCE, MINIMIZE, MAXIMIZE, ADJUST, RESET, ADJUST_FOR_TAPE]
 
 
 class EquipmentTypes(object):

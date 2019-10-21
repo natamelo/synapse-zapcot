@@ -219,7 +219,7 @@ def check_synchronous_params(solicitation):
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET,
-                          SolicitationActions.REDUCE, SolicitationActions.ADJUST],
+                          SolicitationActions.MINIMIZE, SolicitationActions.ADJUST],
         equipment_type=solicitation["equipment"]
     )
 
