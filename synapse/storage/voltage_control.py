@@ -36,7 +36,7 @@ class VoltageControlStore(SQLBaseStore):
 
             self.get_solicitation_by_id(solicitation_id)
 
-            yield self._simple_insert(
+            event = yield self._simple_insert(
                 table="solicitation_event",
                 values={
                     "user_id": user_id,
@@ -45,6 +45,8 @@ class VoltageControlStore(SQLBaseStore):
                     "solicitation_id": solicitation_id,
                 }
             )
+
+            return event
 
         except Exception as e:
             logger.warning("change_solicitation_status failed: %s", e)
@@ -67,11 +69,30 @@ class VoltageControlStore(SQLBaseStore):
                 }
             )
 
-            self.create_solicitation_event(next_id, user_id, status, ts)
+            yield self.create_solicitation_event(next_id, user_id, status, ts)
+
+            #solicitation['events'] = [event]
+
+            return next_id
 
         except Exception as e:
             logger.warning("create_solicitation failed: %s", e)
             raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
+    def associate_solicitation_to_room(self, solicitation_id, room_id):
+        try:
+            yield self._simple_insert(
+                table="solicitation_room",
+                values={
+                    "solicitation_id": solicitation_id,
+                    "room_id": room_id,
+                }
+            )
+
+        except Exception as e:
+            logger.warning("associate solicitation to room failed: %s", e)
+            raise StoreError(500, "Problem associating solicitation.")
 
     @defer.inlineCallbacks
     def get_events_by_solicitation_id(self, solicitation_id):

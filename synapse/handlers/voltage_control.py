@@ -43,10 +43,11 @@ class VoltageControlHandler(BaseHandler):
     def __init__(self, hs):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
+        self._room_creation_handler = hs.get_room_creation_handler()
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def create_solicitations(self, solicitations, user_id):
+    def create_solicitations(self, requester, solicitations, user_id):
         status = SolicitationStatus.NEW
 
         for solicitation in solicitations:
@@ -57,7 +58,7 @@ class VoltageControlHandler(BaseHandler):
         for solicitation in solicitations:
             ts = calendar.timegm(time.gmtime())
 
-            yield self.store.create_solicitation(
+            solicitation_id = yield self.store.create_solicitation(
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
                 substation=solicitation["substation"], 
@@ -68,6 +69,11 @@ class VoltageControlHandler(BaseHandler):
                 ts=ts,
                 status=status
             )
+
+            room_name = "%s - %s - %s" % (solicitation["equipment"], solicitation["substation"], ts)
+            room_id = yield self._room_creation_handler.create_room_by_name(requester, room_name)
+
+            yield self.store.associate_solicitation_to_room(solicitation_id, room_id)
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):

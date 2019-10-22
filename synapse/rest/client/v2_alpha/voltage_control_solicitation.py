@@ -59,6 +59,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         solicitations = body['solicitations']
 
         yield self.voltage_control_handler.create_solicitations(
+            requester=requester,
             solicitations=solicitations,
             user_id=user_id
         )

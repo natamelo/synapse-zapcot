@@ -8,4 +8,6 @@ CREATE TABLE voltage_control_solicitation ( id INTEGER PRIMARY KEY, action_code 
 
 CREATE TABLE solicitation_event (user_id TEXT, status TEXT, time_stamp TEXT, solicitation_id INTEGER, FOREIGN KEY(solicitation_id) REFERENCES voltage_control_solicitation(id));
 
+CREATE TABLE solicitation_room (solicitation_id INTEGER, room_id TEXT, FOREIGN KEY(solicitation_id) REFERENCES voltage_control_solicitation(id), FOREIGN KEY(room_id) REFERENCES rooms(room_id));
+
 ALTER TABLE users ADD company_code TEXT;
