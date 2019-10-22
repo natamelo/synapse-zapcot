@@ -30,7 +30,6 @@ from synapse.api.errors import (
     SynapseError,
 )
 
-
 import calendar
 import time
 
@@ -60,7 +59,7 @@ class VoltageControlHandler(BaseHandler):
             yield self.store.create_solicitation(
                 action=solicitation["action"],
                 equipment=solicitation["equipment"],
-                substation=solicitation["substation"], 
+                substation=solicitation["substation"],
                 staggered=solicitation["staggered"],
                 amount=solicitation["amount"],
                 voltage=solicitation["voltage"],
@@ -102,9 +101,9 @@ class VoltageControlHandler(BaseHandler):
     def check_substation(self, company_code, substation):
         substation_object = yield self.substation_handler. \
             get_substation_by_company_code_and_substation_code(
-                company_code, 
-                substation
-            )
+            company_code,
+            substation
+        )
         if substation_object is None:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
@@ -128,7 +127,7 @@ def check_solicitation_params(solicitation):
         raise SynapseError(400, "Invalid action!", Codes.INVALID_PARAM)
     if solicitation["equipment"] not in EquipmentTypes.ALL_EQUIPMENT:
         raise SynapseError(400, "Invalid Equipment!", Codes.INVALID_PARAM)
-    
+
     if solicitation["equipment"] == EquipmentTypes.REACTOR:
         check_reactor_params(solicitation)
     elif solicitation["equipment"] == EquipmentTypes.CAPACITOR:
@@ -140,7 +139,6 @@ def check_solicitation_params(solicitation):
 
 
 def check_reactor_params(solicitation):
-
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
@@ -165,7 +163,6 @@ def check_reactor_params(solicitation):
 
 
 def check_capacitor_params(solicitation):
-
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.TURN_ON, SolicitationActions.TURN_OFF],
@@ -190,7 +187,6 @@ def check_capacitor_params(solicitation):
 
 
 def check_transform_params(solicitation):
-
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.RISE, SolicitationActions.REDUCE,
@@ -211,8 +207,8 @@ def check_transform_params(solicitation):
         )
 
     if solicitation["action"] == SolicitationActions.RISE or \
-            solicitation["action"] == SolicitationActions.REDUCE or \
-            solicitation["action"] == SolicitationActions.ADJUST:
+        solicitation["action"] == SolicitationActions.REDUCE or \
+        solicitation["action"] == SolicitationActions.ADJUST:
         check_amount(
             amount=solicitation["amount"],
             min_value=1,
@@ -221,7 +217,6 @@ def check_transform_params(solicitation):
 
 
 def check_synchronous_params(solicitation):
-
     check_action_type(
         action=solicitation["action"],
         possible_actions=[SolicitationActions.MAXIMIZE, SolicitationActions.RESET,
@@ -271,7 +266,6 @@ def check_staggered(staggered, equipment_type):
 
 
 def check_voltage(voltage, equipment_type):
-
     is_optional = equipment_type == EquipmentTypes.REACTOR or \
                   equipment_type == EquipmentTypes.CAPACITOR
 

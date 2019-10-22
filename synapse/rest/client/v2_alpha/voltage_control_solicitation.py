@@ -18,7 +18,8 @@ import logging
 from twisted.internet import defer
 
 from synapse.http.servlet import RestServlet, parse_list, parse_integer, parse_string, parse_json_object_from_request
-from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes, SolicitationSortParams
+from synapse.api.constants import SolicitationStatus, SolicitationActions, Companies, EquipmentTypes, \
+    SolicitationSortParams
 
 from ._base import client_patterns
 
@@ -28,8 +29,8 @@ from synapse.api.errors import (
     SynapseError,
 )
 
-import calendar;
-import time;
+import calendar
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         if sender_company_code != Companies.ONS:
             raise InvalidClientTokenError(401, "User should to belong ONS.")
-        
+
         body = parse_json_object_from_request(request)
         solicitations = body['solicitations']
 
@@ -64,7 +65,7 @@ class VoltageControlSolicitationServlet(RestServlet):
         )
         return 201, {"message": "Voltage control solicitations created with success."}
 
-    #TODO Resolver prolema de encoding no parm de ordenação "+"
+    # TODO Resolver prolema de encoding no parm de ordenação "+"
     @defer.inlineCallbacks
     def on_GET(self, request):
         requester = yield self.auth.get_user_by_req(request)
@@ -96,7 +97,7 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         if substations:
             for substation_code in substations:
-                substation = yield self.substation_handler.\
+                substation = yield self.substation_handler. \
                     get_substation_by_company_code_and_substation_code(company_code, substation_code)
                 if substation is None:
                     raise SynapseError(404, "Substation %r not found" % substation_code, Codes.NOT_FOUND)
@@ -159,7 +160,7 @@ class VoltageControlStatusServlet(RestServlet):
     def _is_valid_create_time(self, creation_ts):
 
         result = calendar.timegm(time.gmtime()) - creation_ts
-        return result <= 300 # 300 = 5 minutes in timestamp
+        return result <= 300  # 300 = 5 minutes in timestamp
 
     def _validate_status_change(self, current_status, new_status, user_company_code, creation_ts):
 
@@ -182,10 +183,11 @@ class VoltageControlStatusServlet(RestServlet):
             else:
                 return True
         elif new_status == SolicitationStatus.CANCELED:
+            allowed_transitions = [SolicitationStatus.NEW, SolicitationStatus.CONTESTED, SolicitationStatus.BLOCKED]
             if user_company_code != Companies.ONS:
                 error_message = "Not allowed for users from " + user_company_code
                 raise InvalidClientTokenError(401, error_message)
-            elif current_status != SolicitationStatus.NEW:
+            elif current_status not in allowed_transitions:
                 raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
                 return True

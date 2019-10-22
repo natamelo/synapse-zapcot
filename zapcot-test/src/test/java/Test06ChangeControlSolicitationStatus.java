@@ -74,7 +74,7 @@ public class Test06ChangeControlSolicitationStatus {
     }
 
     @Test
-    public void test01ChangeStatusTOcancelled() {
+    public void test01ChangeStatusToCancelled() {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
         int atualSoliciatationId = START_SOLICITATION_ID + 1;
