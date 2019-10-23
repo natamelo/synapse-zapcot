@@ -54,6 +54,9 @@ class VoltageControlHandler(BaseHandler):
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
 
+        #Enquanto não tem as permissões, recupera todos os usuários.
+        users = yield self.store.get_users()
+
         for solicitation in solicitations:
             solicitation_created = yield self.create_solicitation(solicitation, user_id)
 
@@ -62,7 +65,8 @@ class VoltageControlHandler(BaseHandler):
             token = yield self.store.create_solicitation_updated_event(EventTypes.CreateSolicitation,
                                                                        solicitation_created['id'],
                                                                        user_id, solicitation)
-            self.notifier.on_new_event("solicitations_key", token)
+
+            self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
     @defer.inlineCallbacks
     def create_solicitation(self, solicitation, user_id):
@@ -122,7 +126,11 @@ class VoltageControlHandler(BaseHandler):
         token = yield self.store.create_solicitation_updated_event(
             EventTypes.ChangeSolicitationStatus, id, user_id, {"status": new_status}
         )
-        self.notifier.on_new_event("solicitations_key", token)
+
+        #Enquanto não tem as permissões, recupera todos os usuários.
+        users = yield self.store.get_users()
+
+        self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):

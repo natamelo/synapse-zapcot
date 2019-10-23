@@ -446,7 +446,7 @@ class GroupCreateServlet(RestServlet):
         localpart = content.pop("localpart")
         group_id = GroupID(localpart, self.server_name).to_string()
 
-        result = yield self.groups_handler.create_group(
+        result = yield self.groups_handler.create_ngroup(
             group_id, requester_user_id, content
         )
 
