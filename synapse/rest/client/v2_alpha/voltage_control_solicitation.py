@@ -174,10 +174,11 @@ class VoltageControlStatusServlet(RestServlet):
             else:
                 return True
         elif new_status == SolicitationStatus.EXECUTED:
+            allowed_transitions = [SolicitationStatus.ACCEPTED, SolicitationStatus.LATE]
             if user_company_code == Companies.ONS:
                 error_message = "Not allowed for users from " + user_company_code
                 raise InvalidClientTokenError(401, error_message)
-            elif current_status != SolicitationStatus.ACCEPTED:
+            elif current_status not in allowed_transitions:
                 raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
                 return True
