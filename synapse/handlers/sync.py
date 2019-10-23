@@ -1014,7 +1014,7 @@ class SyncHandler(object):
                     "Sync result for newly joined room %s: %r", room_id, joined_room
                 )
 
-        self._generate_sync_entry_for_solicitations(sync_result_builder)
+        yield self._generate_sync_entry_for_solicitations(sync_result_builder)
 
         return SyncResult(
             presence=sync_result_builder.presence,
@@ -1075,17 +1075,24 @@ class SyncHandler(object):
         )
 
     @measure_func("_generate_sync_entry_for_solicitations")
-    ##@defer.inlineCallbacks
+    @defer.inlineCallbacks
     def _generate_sync_entry_for_solicitations(self, sync_result_builder):
         user_id = sync_result_builder.sync_config.user.to_string()
-        since_token = sync_result_builder.since_token
-        now_token = sync_result_builder.now_token
 
-        print('solicitation_since_token: ' + str(since_token.solicitations_key))
-        print('solicitation_now_token: ' + str(now_token.solicitations_key))
+
+        # TODO Aplicar lazy loading no futuro.
+        # Por enquanto, os parâmetros não estão sendo usados.
+
+        '''if since_token and since_token.solicitations_key:
+            results = yield self.store.get_all_solicitation_updates(
+                user_id, since_token.solicitations_key, now_token.solicitations_key
+            )
+        '''
+
+        results = yield self.store.get_solicitations_by_params()
 
         sync_result_builder.solicitations = SolicitationsSyncResult(
-            events={'torada': "agora sim"}
+            events=results
         )
 
     @measure_func("_generate_sync_entry_for_device_list")

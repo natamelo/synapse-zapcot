@@ -91,6 +91,8 @@ class VoltageControlStore(SQLBaseStore):
                         "content": json.dumps(content)
                     }
                 )
+                self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
+                return stream_id
 
         except Exception as e:
             logger.warning("create_solicitation_updated_event failed: %s", e)
@@ -138,6 +140,38 @@ class VoltageControlStore(SQLBaseStore):
         )
         return defer.returnValue(results)
 
+    def get_all_solicitation_updates(self, user_id, from_token, to_token):
+
+        from_token = int(from_token)
+        has_changed = self._solicitation_updates_stream_cache.has_entity_changed(
+            user_id, from_token
+        )
+        if not has_changed:
+            return []
+
+        def _get_all_solicitation_updates_txn(txn):
+            sql = """
+                SELECT solicitation_id, type, content
+                FROM solicitation_updates
+                WHERE user_id = ? AND ? < stream_id AND stream_id <= ?
+            """
+            txn.execute(sql, (user_id, from_token, to_token))
+            return [
+                {
+                    "solicitation_id": solicitation_id,
+                    "type": stype,
+                    "content": json.loads(content),
+                }
+                for solicitation_id, stype, content in txn
+            ]
+
+        return self.runInteraction(
+            "get_all_solicitation_updates", _get_all_solicitation_updates_txn
+        )
+
+    def get_solicitation_stream_token(self):
+        return self._solicitation_updates_id_gen.get_current_token()
+
     @defer.inlineCallbacks
     def get_solicitations_by_params(
         self,
@@ -147,7 +181,7 @@ class VoltageControlStore(SQLBaseStore):
         exclude_expired=None,
         table_code=None,
         from_id=0,
-        limit=50
+        limit=1000
     ):
 
         #Refazer ordenação e filtro baseado nos eventos de solicitação

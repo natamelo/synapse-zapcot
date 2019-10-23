@@ -45,6 +45,7 @@ class VoltageControlHandler(BaseHandler):
         self.substation_handler = hs.get_substation_handler()
         self._room_creation_handler = hs.get_room_creation_handler()
         self.store = hs.get_datastore()
+        self.notifier = hs.get_notifier()
 
     @defer.inlineCallbacks
     def create_solicitations(self, requester, solicitations):
@@ -56,8 +57,11 @@ class VoltageControlHandler(BaseHandler):
 
         for solicitation in solicitations:
             solicitation_created = yield self.create_solicitation(solicitation, user_id)
-            yield self.create_room_associated_to_solicitation(requester, solicitation_created)
-            yield self.store.create_solicitation_updated_event(solicitation_created['id'], user_id, solicitation)
+    
+            #TODO Liberar a criação de sala depois
+            #yield self.create_room_associated_to_solicitation(requester, solicitation_created)
+            token = yield self.store.create_solicitation_updated_event(solicitation_created['id'], user_id, solicitation)
+            self.notifier.on_new_event("solicitations_key", token, users=[user_id])
 
     @defer.inlineCallbacks
     def create_solicitation(self, solicitation, user_id):

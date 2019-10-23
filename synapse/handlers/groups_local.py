@@ -211,7 +211,7 @@ class GroupsLocalHandler(object):
             remote_attestation=remote_attestation,
             is_publicised=is_publicised,
         )
-        print("token: " + str(token))
+
         self.notifier.on_new_event("groups_key", token, users=[user_id])
 
         return res

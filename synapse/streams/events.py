@@ -44,7 +44,7 @@ class EventSources(object):
         to_device_key = self.store.get_to_device_stream_token()
         device_list_key = self.store.get_device_stream_token()
         groups_key = self.store.get_group_stream_token()
-        solicitations_key = 0
+        solicitations_key = self.store.get_solicitation_stream_token()
 
         token = StreamToken(
             room_key=(yield self.sources["room"].get_current_key()),

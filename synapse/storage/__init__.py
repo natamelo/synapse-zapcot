@@ -250,6 +250,21 @@ class DataStore(
             prefilled_cache=_group_updates_prefill,
         )
 
+        _solicitation_updates_prefill, min_solicitation_updates_id = self._get_cache_dict(
+            db_conn,
+            "solicitation_updates",
+            entity_column="user_id",
+            stream_column="stream_id",
+            max_value=self._solicitation_updates_id_gen.get_current_token(),
+            limit=1000,
+        )
+
+        self._solicitation_updates_stream_cache = StreamChangeCache(
+            "_solicitation_updates_stream_cache",
+            min_solicitation_updates_id,
+            prefilled_cache=_solicitation_updates_prefill,
+        )
+
         self._stream_order_on_start = self.get_room_max_stream_ordering()
         self._min_stream_order_on_start = self.get_room_min_stream_ordering()
 
