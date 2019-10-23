@@ -47,33 +47,49 @@ class VoltageControlHandler(BaseHandler):
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks
-    def create_solicitations(self, requester, solicitations, user_id):
-        status = SolicitationStatus.NEW
-
+    def create_solicitations(self, requester, solicitations):
+        user_id = requester.user.to_string()
         for solicitation in solicitations:
             treat_solicitation_data(solicitation)
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
 
         for solicitation in solicitations:
-            ts = calendar.timegm(time.gmtime())
+            solicitation_created = yield self.create_solicitation(solicitation, user_id)
+            yield self.create_room_associated_to_solicitation(requester, solicitation_created)
+            yield self.store.create_solicitation_updated_event(solicitation_created['id'], user_id, solicitation)
 
-            solicitation_id = yield self.store.create_solicitation(
-                action=solicitation["action"],
-                equipment=solicitation["equipment"],
-                substation=solicitation["substation"], 
-                staggered=solicitation["staggered"],
-                amount=solicitation["amount"],
-                voltage=solicitation["voltage"],
-                user_id=user_id,
-                ts=ts,
-                status=status
-            )
+    @defer.inlineCallbacks
+    def create_solicitation(self, solicitation, user_id):
+        ts = calendar.timegm(time.gmtime())
 
-            room_name = "%s - %s - %s" % (solicitation["equipment"], solicitation["substation"], ts)
-            room_id = yield self._room_creation_handler.create_room_by_name(requester, room_name)
+        solicitation_id = yield self.store.create_solicitation(
+            action=solicitation["action"],
+            equipment=solicitation["equipment"],
+            substation=solicitation["substation"],
+            staggered=solicitation["staggered"],
+            amount=solicitation["amount"],
+            voltage=solicitation["voltage"],
+            user_id=user_id,
+            ts=ts,
+            status=SolicitationStatus.NEW)
 
-            yield self.store.associate_solicitation_to_room(solicitation_id, room_id)
+        solicitation = yield self.get_solicitation_by_id(solicitation_id)
+
+        return solicitation
+
+    @defer.inlineCallbacks
+    def create_room_associated_to_solicitation(self, requester, solicitation):
+        timestamp = self.get_timestamp_by_solicitation_status(solicitation, SolicitationStatus.NEW)
+        room_name = "%s - %s (%s)" % (solicitation["equipment_code"], solicitation["substation_code"], timestamp)
+        room_id = yield self._room_creation_handler.create_room_by_name(requester, room_name)
+        yield self.store.associate_solicitation_to_room(solicitation["id"], room_id)
+
+    def get_timestamp_by_solicitation_status(self, solicitation, status):
+        for event in solicitation["events"]:
+            if event['status'] == status:
+                return event["time_stamp"]
+        return 0
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
@@ -96,7 +112,7 @@ class VoltageControlHandler(BaseHandler):
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
         ts = calendar.timegm(time.gmtime())
-        yield self.store.create_solicitation_event(id, user_id, new_status, ts)
+        yield self.store.create_solicitation_status_signature(id, user_id, new_status, ts)
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):

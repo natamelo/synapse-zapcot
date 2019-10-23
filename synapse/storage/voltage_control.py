@@ -3,9 +3,11 @@ import logging
 from synapse.storage._base import SQLBaseStore
 from synapse.api.errors import StoreError
 from twisted.internet import defer
-from synapse.api.constants import SolicitationStatus
 
-from synapse.api.constants import SolicitationSortParams
+from synapse.api.constants import SolicitationSortParams, \
+    SolicitationStatus, EventTypes
+
+from canonicaljson import json
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class VoltageControlStore(SQLBaseStore):
             result = yield self._simple_select_one(
                 "voltage_control_solicitation",
                 {"id": id},
-                retcols=("action_code", "equipment_code", "substation_code", "amount",
+                retcols=("id", "action_code", "equipment_code", "substation_code", "amount",
                          "voltage"),
                 allow_none=True,
             )
@@ -31,13 +33,13 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation_event(self, solicitation_id, user_id, new_status, ts):
+    def create_solicitation_status_signature(self, solicitation_id, user_id, new_status, ts):
         try:
 
             self.get_solicitation_by_id(solicitation_id)
 
-            event = yield self._simple_insert(
-                table="solicitation_event",
+            yield self._simple_insert(
+                table="solicitation_status_signature",
                 values={
                     "user_id": user_id,
                     "status": new_status,
@@ -46,8 +48,6 @@ class VoltageControlStore(SQLBaseStore):
                 }
             )
 
-            return event
-
         except Exception as e:
             logger.warning("change_solicitation_status failed: %s", e)
             raise StoreError(500, "Problem on update solicitation")
@@ -55,11 +55,11 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status):
         try:
-            next_id = self._voltage_list_id_gen.get_next()
+            solicitation_id = self._solicitation_list_id_gen.get_next()
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
-                    "id": next_id,
+                    "id": solicitation_id,
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
@@ -69,15 +69,32 @@ class VoltageControlStore(SQLBaseStore):
                 }
             )
 
-            yield self.create_solicitation_event(next_id, user_id, status, ts)
+            yield self.create_solicitation_status_signature(solicitation_id, user_id, status, ts)
 
-            #solicitation['events'] = [event]
-
-            return next_id
+            return solicitation_id
 
         except Exception as e:
             logger.warning("create_solicitation failed: %s", e)
             raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
+    def create_solicitation_updated_event(self, solicitation_id, user_id, content):
+        try:
+            with self._solicitation_updates_id_gen.get_next() as stream_id:
+                yield self._simple_insert(
+                    table="solicitation_updates",
+                    values={
+                        "stream_id": stream_id,
+                        "solicitation_id": solicitation_id,
+                        "user_id": user_id,
+                        "type": EventTypes.CreateSolicitation,
+                        "content": json.dumps(content)
+                    }
+                )
+
+        except Exception as e:
+            logger.warning("create_solicitation_updated_event failed: %s", e)
+            raise StoreError(500, "Problem creating solicitation update event.")
 
     @defer.inlineCallbacks
     def associate_solicitation_to_room(self, solicitation_id, room_id):
@@ -105,7 +122,7 @@ class VoltageControlStore(SQLBaseStore):
                 " event.user_id,"
                 " event.status,"
                 " event.time_stamp "
-                " from solicitation_event event "
+                " from solicitation_status_signature event "
                 " where event.solicitation_id = ? order by"
                 " CASE WHEN event.status = 'NEW' then '1' "
                 "      WHEN event.status = 'LATE' then '2' "
