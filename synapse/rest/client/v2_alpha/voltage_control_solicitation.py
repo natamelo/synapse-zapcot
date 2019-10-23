@@ -158,17 +158,16 @@ class VoltageControlStatusServlet(RestServlet):
             return 200, {"message": "Solicitation status changed."}
 
     def _is_valid_create_time(self, creation_ts):
-
-        result = calendar.timegm(time.gmtime()) - creation_ts
+        result = calendar.timegm(time.gmtime()) - int(creation_ts)
         return result <= 300  # 300 = 5 minutes in timestamp
 
     def _validate_status_change(self, current_status, new_status, user_company_code, creation_ts):
-
         if new_status == SolicitationStatus.ACCEPTED:
+            allowed_transitions = [SolicitationStatus.NEW, SolicitationStatus.REQUIRED]
             if user_company_code == Companies.ONS:
                 error_message = "Not allowed for users from " + user_company_code
                 raise InvalidClientTokenError(401, error_message)
-            elif current_status != SolicitationStatus.NEW:
+            elif current_status not in allowed_transitions:
                 raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             elif not self._is_valid_create_time(creation_ts):
                 raise SynapseError(400, "Solicitation expired.", Codes.LIMIT_EXCEEDED)
@@ -187,6 +186,7 @@ class VoltageControlStatusServlet(RestServlet):
             if user_company_code != Companies.ONS:
                 error_message = "Not allowed for users from " + user_company_code
                 raise InvalidClientTokenError(401, error_message)
+
             elif current_status not in allowed_transitions:
                 raise SynapseError(400, "Inconsistent change of status.", Codes.INVALID_PARAM)
             else:
