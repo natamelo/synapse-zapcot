@@ -106,4 +106,41 @@ public class Test06ChangeControlSolicitationStatus {
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
     }
+
+
+    @Test
+    public void test02ChangeStatusToAccepted() {
+
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        int atualSoliciatationId = START_SOLICITATION_ID + 2;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+        "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + atualSoliciatationId).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+    }
 }
