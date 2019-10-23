@@ -15,9 +15,9 @@
 # limitations under the License.
 
 import logging
+from synapse.api.constants import EventTypes
 
 from ._base import BaseHandler
-from synapse.types import create_requester
 from twisted.internet import defer
 from synapse.api.constants import (
     SolicitationStatus,
@@ -31,9 +31,8 @@ from synapse.api.errors import (
     SynapseError,
 )
 
-
-import calendar;
-import time;
+import calendar
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +56,13 @@ class VoltageControlHandler(BaseHandler):
 
         for solicitation in solicitations:
             solicitation_created = yield self.create_solicitation(solicitation, user_id)
-    
+
             #TODO Liberar a criação de sala depois
             #yield self.create_room_associated_to_solicitation(requester, solicitation_created)
-            token = yield self.store.create_solicitation_updated_event(solicitation_created['id'], user_id, solicitation)
-            self.notifier.on_new_event("solicitations_key", token, users=[user_id])
+            token = yield self.store.create_solicitation_updated_event(EventTypes.CreateSolicitation,
+                                                                       solicitation_created['id'],
+                                                                       user_id, solicitation)
+            self.notifier.on_new_event("solicitations_key", token)
 
     @defer.inlineCallbacks
     def create_solicitation(self, solicitation, user_id):
@@ -117,6 +118,11 @@ class VoltageControlHandler(BaseHandler):
     def change_solicitation_status(self, new_status, id, user_id):
         ts = calendar.timegm(time.gmtime())
         yield self.store.create_solicitation_status_signature(id, user_id, new_status, ts)
+
+        token = yield self.store.create_solicitation_updated_event(
+            EventTypes.ChangeSolicitationStatus, id, user_id, {"status": new_status}
+        )
+        self.notifier.on_new_event("solicitations_key", token)
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):

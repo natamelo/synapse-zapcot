@@ -5,7 +5,7 @@ from synapse.api.errors import StoreError
 from twisted.internet import defer
 
 from synapse.api.constants import SolicitationSortParams, \
-    SolicitationStatus, EventTypes
+    SolicitationStatus
 
 from canonicaljson import json
 
@@ -78,7 +78,7 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem creating solicitation.")
 
     @defer.inlineCallbacks
-    def create_solicitation_updated_event(self, solicitation_id, user_id, content):
+    def create_solicitation_updated_event(self, event_type, solicitation_id, user_id, content):
         try:
             with self._solicitation_updates_id_gen.get_next() as stream_id:
                 yield self._simple_insert(
@@ -87,7 +87,7 @@ class VoltageControlStore(SQLBaseStore):
                         "stream_id": stream_id,
                         "solicitation_id": solicitation_id,
                         "user_id": user_id,
-                        "type": EventTypes.CreateSolicitation,
+                        "type": event_type,
                         "content": json.dumps(content)
                     }
                 )

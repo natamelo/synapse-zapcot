@@ -96,7 +96,7 @@ class EventTypes(object):
 
     # There are used for Solicitations
     CreateSolicitation = "m.solicitation.create"
-    ChangeSolicitationStatus = "m.solicitation.create"
+    ChangeSolicitationStatus = "m.solicitation.change_status"
 
 
 class RejectedReason(object):
