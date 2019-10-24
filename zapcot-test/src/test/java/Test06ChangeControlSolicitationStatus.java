@@ -1,16 +1,20 @@
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import util.DataUtil;
-import util.ServiceUtil;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import util.DataUtil;
+import util.ServiceUtil;
 
 
 public class Test06ChangeControlSolicitationStatus {
+
+    // Fill with the ID of the last solicitation created
+    public static int LAST_SOLICITATION_ID = 1;
 
     @BeforeClass
     public static void setup() {
@@ -56,26 +60,63 @@ public class Test06ChangeControlSolicitationStatus {
         userCTEEP.put("auth", ServiceUtil.getAuthObject(session));
 
         RestAssured.
-            given().
-                contentType(ContentType.JSON).
-                body(userCTEEP).
-            when().
-                post("register").
-            then().
-                statusCode(200).
-                extract().path("user_id");
+                given().
+                    contentType(ContentType.JSON).
+                    body(userCTEEP).
+                when().
+                    post("register").
+                then().
+                    statusCode(200).
+                    extract().path("user_id");
 
         ServiceUtil.wait(2);
 
     }
 
     @Test
-    public void test01SolicitationStatusHappyPath() {
+    public void test01ChangeStatusToCanceled() {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CANCELED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+    }
+
+
+    @Test
+    public void test02ChangeStatusToAccepted() {
+
+        // NEW > ACCEPTED
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -91,83 +132,26 @@ public class Test06ChangeControlSolicitationStatus {
 
         access_token = ServiceUtil.doLogin("testercteep06", "tester123");
 
-        ServiceUtil.wait(5);
-
-        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("AWARE");
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
 
         RestAssured.
                 given().
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/2").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
 
-        ServiceUtil.wait(5);
 
-        payloadChangeStatus.put("status", "ANSWERED");
+        // REQUIRED > ACCEPTED (NEW > CONTESTED > REQUIRED > ACCEPTED)
 
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + access_token).
-                    body(payloadChangeStatus)
-                .when().
-                    put("voltage_control_solicitation/2").
-                then().
-                    statusCode(200).
-                    body("message", equalTo("Solicitation status changed."));
+        access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        ServiceUtil.wait(5);
-    }
-
-    @Test
-    public void test02SolicitationCanceled() {
-
-        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
-        
-        ServiceUtil.wait(5);        
-
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
-
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + access_token).
-                    body(payloadSolicitation)
-                .when().
-                    post("voltage_control_solicitation").
-                then().
-                    statusCode(201).
-                    body("message", equalTo("Voltage control solicitations created with success."));
-
-        ServiceUtil.wait(5);
-
-        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CANCELED");
-
-        RestAssured.
-                given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
-                .when().
-                put("voltage_control_solicitation/3").
-                then().
-                statusCode(200).
-                body("message", equalTo("Solicitation status changed."));
-
-        ServiceUtil.wait(5);
-    }
-
-    @Test
-    public void test03InconsistentStatusChange() {
-
-        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
-
-        ServiceUtil.wait(5);
-        
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
@@ -182,93 +166,78 @@ public class Test06ChangeControlSolicitationStatus {
         ServiceUtil.wait(20);
 
         access_token = ServiceUtil.doLogin("testercteep06", "tester123");
-        
-        ServiceUtil.wait(5);
 
-        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ANSWERED");
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/4").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                statusCode(400).
-                body("error", equalTo("Inconsistent change of status."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
 
-        payloadChangeStatus.put("status", "RETURNED");
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CONTESTED");
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/4").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                statusCode(400).
-                body("error", equalTo("Inconsistent change of status."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
 
-        payloadChangeStatus.put("status", "AWARE");
+        access_token = ServiceUtil.doLogin("testerons06", "tester123");
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("REQUIRED");
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/4").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                statusCode(200).
-                body("message", equalTo("Solicitation status changed."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
-        ServiceUtil.wait(5);
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
 
-        payloadChangeStatus.put("status", "RETURNED");
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
 
         RestAssured.
                 given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
                 .when().
-                put("voltage_control_solicitation/4").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                statusCode(400).
-                body("error", equalTo("Inconsistent change of status."));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
-        ServiceUtil.wait(5);
 
-        payloadChangeStatus.put("status", "AWARE");
-
-        RestAssured.
-                given().
-                header("Authorization", "Bearer " + access_token).
-                body(payloadChangeStatus)
-                .when().
-                put("voltage_control_solicitation/4").
-                then().
-                statusCode(400).
-                body("error", equalTo("Inconsistent change of status."));
-
-        ServiceUtil.wait(5);
     }
 
     @Test
-    public void test04UnauthorizedStatusChange() {
+    public void test03ChangeStatusToExecuted() {
 
-        String ons_access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        ServiceUtil.wait(5);
-
-        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("LIGAR", "CAPACITOR", "MOS",
-        "5", "", true, "CTEEP");
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + ons_access_token).
+                    header("Authorization", "Bearer " + access_token).
                     body(payloadSolicitation)
                 .when().
                     post("voltage_control_solicitation").
@@ -278,39 +247,237 @@ public class Test06ChangeControlSolicitationStatus {
 
         ServiceUtil.wait(20);
 
-        String cteep_access_token = ServiceUtil.doLogin("testercteep06", "tester123");
-        
-        ServiceUtil.wait(5);
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
 
-        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CANCELED");
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + cteep_access_token).
+                    header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/2").
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                    statusCode(401).
-                    body("soft_logout", equalTo("Not allowed for users from CTEEP"));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
 
-        payloadChangeStatus.put("status", "AWARE");
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("EXECUTED");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + ons_access_token).
-                    body(payloadChangeStatus).
-                when().
-                    put("voltage_control_solicitation/5").
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
-                    statusCode(401).
-                    body("soft_logout", equalTo("Not allowed for users from ONS"));
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+    }
+
+    @Test
+    public void test04ChangeStatusToContested() {
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
         ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CONTESTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
     }
 
-    //TODO: CHANGE STATUS WITH TIME EXPIRED
+    @Test
+    public void test05ChangeStatusToRequired() {
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CONTESTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        access_token = ServiceUtil.doLogin("testerons06", "tester123");
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("REQUIRED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+
+    }
+
+    @Test
+    public void test06ChangeStatusToBlocked() {
+        String access_token = ServiceUtil.doLogin("testerons06", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("BLOCKED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        access_token = ServiceUtil.doLogin("testerons06", "tester123");
+
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep06", "tester123");
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("BLOCKED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+
+    }
 }
