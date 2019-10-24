@@ -14,7 +14,7 @@ import util.ServiceUtil;
 public class Test06ChangeControlSolicitationStatus {
 
     // Fill with the ID of the last solicitation created
-    public static int last_solicitation_id = 1;
+    public static int LAST_SOLICITATION_ID = 1;
 
     @BeforeClass
     public static void setup() {
@@ -77,7 +77,7 @@ public class Test06ChangeControlSolicitationStatus {
     public void test01ChangeStatusToCancelled() {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
-        last_solicitation_id = last_solicitation_id + 1;
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "5", "500kV", true, "CTEEP");
@@ -101,7 +101,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/" + last_solicitation_id).
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
@@ -112,7 +112,7 @@ public class Test06ChangeControlSolicitationStatus {
     public void test02ChangeStatusToAccepted() {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
-        last_solicitation_id = last_solicitation_id + 1;
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "5", "500kV", true, "CTEEP");
@@ -138,7 +138,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/" + last_solicitation_id).
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
@@ -148,7 +148,7 @@ public class Test06ChangeControlSolicitationStatus {
     public void test03ChangeStatusToExecuted() {
 
         String access_token = ServiceUtil.doLogin("testerons06", "tester123");
-        last_solicitation_id = last_solicitation_id + 1;
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
         Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
         "5", "500kV", true, "CTEEP");
@@ -174,7 +174,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/" + last_solicitation_id).
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));
@@ -188,7 +188,7 @@ public class Test06ChangeControlSolicitationStatus {
                     header("Authorization", "Bearer " + access_token).
                     body(payloadChangeStatus)
                 .when().
-                    put("voltage_control_solicitation/" + last_solicitation_id).
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
                     body("message", equalTo("Solicitation status changed."));

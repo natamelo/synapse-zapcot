@@ -18,15 +18,18 @@ import logging
 
 from ._base import BaseHandler
 from twisted.internet import defer
+
 from synapse.api.constants import (
     SolicitationStatus,
     SolicitationActions,
     EquipmentTypes,
-    VoltageTransformerLevels
+    VoltageTransformerLevels,
+    Companies,
 )
 
 from synapse.api.errors import (
     Codes,
+    InvalidClientTokenError,
     SynapseError,
 )
 
@@ -37,6 +40,35 @@ logger = logging.getLogger(__name__)
 
 
 class VoltageControlHandler(BaseHandler):
+
+    __STATE_MACHINE_ONS = {
+        SolicitationStatus.NEW: [SolicitationStatus.CANCELED],
+        SolicitationStatus.ACCEPTED: [],
+        SolicitationStatus.EXECUTED: [],
+        SolicitationStatus.BLOCKED: [SolicitationStatus.CANCELED],
+        SolicitationStatus.CONTESTED: [SolicitationStatus.REQUIRED,
+                                       SolicitationStatus.CANCELED],
+        SolicitationStatus.CANCELED: [],
+        SolicitationStatus.REQUIRED: [],
+        SolicitationStatus.LATE: []
+    }
+
+    __STATE_MACHINE_CTEEP = {
+        SolicitationStatus.NEW: [SolicitationStatus.ACCEPTED,
+                                 SolicitationStatus.CONTESTED,
+                                 SolicitationStatus.BLOCKED,
+                                 ],
+        SolicitationStatus.ACCEPTED: [SolicitationStatus.BLOCKED,
+                                      SolicitationStatus.EXECUTED,
+                                      SolicitationStatus.CONTESTED],
+        SolicitationStatus.EXECUTED: [],
+        SolicitationStatus.BLOCKED: [],
+        SolicitationStatus.CONTESTED: [],
+        SolicitationStatus.CANCELED: [],
+        SolicitationStatus.REQUIRED: [SolicitationStatus.ACCEPTED],
+        SolicitationStatus.LATE: [SolicitationStatus.EXECUTED,
+                                  SolicitationStatus.BLOCKED]
+    }
 
     def __init__(self, hs):
         self.hs = hs
@@ -94,16 +126,59 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
+
+        solicitation = yield self.get_solicitation_by_id(id)
+
+        if not solicitation:
+            raise SynapseError(404, "Solicitation not found.", Codes.NOT_FOUND)
+
+        if new_status not in SolicitationStatus.ALL_SOLICITATION_TYPES:
+            raise SynapseError(400, "Invalid status.", Codes.INVALID_PARAM)
+
+        last_event_index = 0
+        first_event_index = -1
+        current_status = solicitation["events"][last_event_index]["status"]
+        creation_ts = solicitation["events"][first_event_index]["time_stamp"]
+
+        user_company_code = yield self.store.get_company_code(user_id)
+
+        self._validate_status_change(current_status, new_status, user_company_code, creation_ts)
+
         ts = calendar.timegm(time.gmtime())
         yield self.store.create_solicitation_event(id, user_id, new_status, ts)
+
+    @classmethod
+    def _get_state_machine_by_user_company(cls, company_code):
+        if company_code == Companies.ONS:
+            return VoltageControlHandler.__STATE_MACHINE_ONS
+
+        return VoltageControlHandler.__STATE_MACHINE_CTEEP
+
+    @classmethod
+    def _validate_status_change(cls, current_status, new_status, user_company_code, creation_ts):
+
+        if current_status == new_status:
+            raise SynapseError(400, "Status has already changed.", Codes.INVALID_PARAM)
+
+        state_machine = cls._get_state_machine_by_user_company(user_company_code)
+        next_states_possible = state_machine[current_status]
+
+        if new_status not in next_states_possible:
+            raise SynapseError(400, "Inconsistent status change.", Codes.INVALID_PARAM)
+
+        if new_status == SolicitationStatus.ACCEPTED:
+            cls._check_timeout_to_accept(creation_ts)
+
+    @classmethod
+    def _check_timeout_to_accept(cls, creation_ts):
+        result = calendar.timegm(time.gmtime()) - int(creation_ts)
+        if result > 300:  # 300 = 5 minutes in timestamp
+            raise SynapseError(400, "Expired solicitation!", Codes.INVALID_PARAM)
 
     @defer.inlineCallbacks
     def check_substation(self, company_code, substation):
         substation_object = yield self.substation_handler. \
-            get_substation_by_company_code_and_substation_code(
-            company_code,
-            substation
-        )
+            get_substation_by_company_code_and_substation_code(company_code, substation)
         if substation_object is None:
             raise SynapseError(400, "Invalid substation!", Codes.INVALID_PARAM)
 
