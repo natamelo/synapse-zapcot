@@ -94,6 +94,10 @@ class EventTypes(object):
     ServerACL = "m.room.server_acl"
     Pinned = "m.room.pinned_events"
 
+    # There are used for Solicitations
+    CreateSolicitation = "m.solicitation.create"
+    ChangeSolicitationStatus = "m.solicitation.change_status"
+
 
 class RejectedReason(object):
     AUTH_ERROR = "auth_error"

@@ -315,6 +315,7 @@ class StreamToken(
             "to_device_key",
             "device_list_key",
             "groups_key",
+            "solicitations_key"
         ),
     )
 ):
@@ -355,6 +356,7 @@ class StreamToken(
             or (int(other.to_device_key) < int(self.to_device_key))
             or (int(other.device_list_key) < int(self.device_list_key))
             or (int(other.groups_key) < int(self.groups_key))
+            or (int(other.solicitations_key) < int(self.solicitations_key))
         )
 
     def copy_and_advance(self, key, new_value):

@@ -211,6 +211,7 @@ class GroupsLocalHandler(object):
             remote_attestation=remote_attestation,
             is_publicised=is_publicised,
         )
+
         self.notifier.on_new_event("groups_key", token, users=[user_id])
 
         return res
@@ -388,6 +389,7 @@ class GroupsLocalHandler(object):
             membership="invite",
             content={"profile": local_profile, "inviter": content["inviter"]},
         )
+
         self.notifier.on_new_event("groups_key", token, users=[user_id])
         try:
             user_profile = yield self.profile_handler.get_profile(user_id)

@@ -3,7 +3,11 @@ import logging
 from synapse.storage._base import SQLBaseStore
 from synapse.api.errors import StoreError
 from twisted.internet import defer
-from synapse.api.constants import SolicitationSortParams
+
+from synapse.api.constants import SolicitationSortParams, \
+    SolicitationStatus
+
+from canonicaljson import json
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +20,7 @@ class VoltageControlStore(SQLBaseStore):
             result = yield self._simple_select_one(
                 "voltage_control_solicitation",
                 {"id": id},
-                retcols=("action_code", "equipment_code", "substation_code", "amount",
+                retcols=("id", "action_code", "equipment_code", "substation_code", "amount",
                          "voltage"),
                 allow_none=True,
             )
@@ -29,13 +33,13 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation_event(self, solicitation_id, user_id, new_status, ts):
+    def create_solicitation_status_signature(self, solicitation_id, user_id, new_status, ts):
         try:
 
             self.get_solicitation_by_id(solicitation_id)
 
             yield self._simple_insert(
-                table="solicitation_event",
+                table="solicitation_status_signature",
                 values={
                     "user_id": user_id,
                     "status": new_status,
@@ -51,11 +55,11 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status):
         try:
-            next_id = self._voltage_list_id_gen.get_next()
+            solicitation_id = self._solicitation_list_id_gen.get_next()
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
-                    "id": next_id,
+                    "id": solicitation_id,
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
@@ -65,11 +69,49 @@ class VoltageControlStore(SQLBaseStore):
                 }
             )
 
-            self.create_solicitation_event(next_id, user_id, status, ts)
+            yield self.create_solicitation_status_signature(solicitation_id, user_id, status, ts)
+
+            return solicitation_id
 
         except Exception as e:
             logger.warning("create_solicitation failed: %s", e)
             raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
+    def create_solicitation_updated_event(self, event_type, solicitation_id, user_id, content):
+        try:
+            with self._solicitation_updates_id_gen.get_next() as stream_id:
+                yield self._simple_insert(
+                    table="solicitation_updates",
+                    values={
+                        "stream_id": stream_id,
+                        "solicitation_id": solicitation_id,
+                        "user_id": user_id,
+                        "type": event_type,
+                        "content": json.dumps(content)
+                    }
+                )
+                self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
+                return stream_id
+
+        except Exception as e:
+            logger.warning("create_solicitation_updated_event failed: %s", e)
+            raise StoreError(500, "Problem creating solicitation update event.")
+
+    @defer.inlineCallbacks
+    def associate_solicitation_to_room(self, solicitation_id, room_id):
+        try:
+            yield self._simple_insert(
+                table="solicitation_room",
+                values={
+                    "solicitation_id": solicitation_id,
+                    "room_id": room_id,
+                }
+            )
+
+        except Exception as e:
+            logger.warning("associate solicitation to room failed: %s", e)
+            raise StoreError(500, "Problem associating solicitation.")
 
     @defer.inlineCallbacks
     def get_events_by_solicitation_id(self, solicitation_id):
@@ -82,7 +124,7 @@ class VoltageControlStore(SQLBaseStore):
                 " event.user_id,"
                 " event.status,"
                 " event.time_stamp "
-                " from solicitation_event event "
+                " from solicitation_status_signature event "
                 " where event.solicitation_id = ? order by"
                 " CASE WHEN event.status = 'NEW' then '1' "
                 "      WHEN event.status = 'LATE' then '2' "
@@ -98,6 +140,38 @@ class VoltageControlStore(SQLBaseStore):
         )
         return defer.returnValue(results)
 
+    def get_all_solicitation_updates(self, user_id, from_token, to_token):
+
+        from_token = int(from_token)
+        has_changed = self._solicitation_updates_stream_cache.has_entity_changed(
+            user_id, from_token
+        )
+        if not has_changed:
+            return []
+
+        def _get_all_solicitation_updates_txn(txn):
+            sql = """
+                SELECT solicitation_id, type, content
+                FROM solicitation_updates
+                WHERE user_id = ? AND ? < stream_id AND stream_id <= ?
+            """
+            txn.execute(sql, (user_id, from_token, to_token))
+            return [
+                {
+                    "solicitation_id": solicitation_id,
+                    "type": stype,
+                    "content": json.loads(content),
+                }
+                for solicitation_id, stype, content in txn
+            ]
+
+        return self.runInteraction(
+            "get_all_solicitation_updates", _get_all_solicitation_updates_txn
+        )
+
+    def get_solicitation_stream_token(self):
+        return self._solicitation_updates_id_gen.get_current_token()
+
     @defer.inlineCallbacks
     def get_solicitations_by_params(
         self,
@@ -105,7 +179,7 @@ class VoltageControlStore(SQLBaseStore):
         company_code=None,
         table_code=None,
         from_id=0,
-        limit=50
+        limit=1000
     ):
 
         #Refazer ordenação e filtro baseado nos eventos de solicitação

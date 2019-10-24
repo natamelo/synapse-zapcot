@@ -422,6 +422,7 @@ class SyncReplicationHandler(ReplicationClientHandler):
                 self.notifier.on_new_event(
                     "groups_key", token, users=[row.user_id for row in rows]
                 )
+
         except Exception:
             logger.exception("Error processing replication")
 

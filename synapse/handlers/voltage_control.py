@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+from synapse.api.constants import EventTypes
 
 from ._base import BaseHandler
 from twisted.internet import defer
@@ -73,32 +74,64 @@ class VoltageControlHandler(BaseHandler):
     def __init__(self, hs):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
+        self._room_creation_handler = hs.get_room_creation_handler()
         self.profiler_handler = hs.get_profile_handler()
         self.store = hs.get_datastore()
+        self.notifier = hs.get_notifier()
 
     @defer.inlineCallbacks
-    def create_solicitations(self, solicitations, user_id):
-        status = SolicitationStatus.NEW
-
+    def create_solicitations(self, requester, solicitations):
+        user_id = requester.user.to_string()
         for solicitation in solicitations:
             treat_solicitation_data(solicitation)
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
 
-        for solicitation in solicitations:
-            ts = calendar.timegm(time.gmtime())
+        #Enquanto não tem as permissões, recupera todos os usuários.
+        users = yield self.store.get_users()
 
-            yield self.store.create_solicitation(
-                action=solicitation["action"],
-                equipment=solicitation["equipment"],
-                substation=solicitation["substation"],
-                staggered=solicitation["staggered"],
-                amount=solicitation["amount"],
-                voltage=solicitation["voltage"],
-                user_id=user_id,
-                ts=ts,
-                status=status
-            )
+        for solicitation in solicitations:
+            solicitation_created = yield self.create_solicitation(solicitation, user_id)
+
+            #TODO Liberar a criação de sala depois
+            #yield self.create_room_associated_to_solicitation(requester, solicitation_created)
+            token = yield self.store.create_solicitation_updated_event(EventTypes.CreateSolicitation,
+                                                                       solicitation_created['id'],
+                                                                       user_id, solicitation)
+
+            self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
+
+    @defer.inlineCallbacks
+    def create_solicitation(self, solicitation, user_id):
+        ts = calendar.timegm(time.gmtime())
+
+        solicitation_id = yield self.store.create_solicitation(
+            action=solicitation["action"],
+            equipment=solicitation["equipment"],
+            substation=solicitation["substation"],
+            staggered=solicitation["staggered"],
+            amount=solicitation["amount"],
+            voltage=solicitation["voltage"],
+            user_id=user_id,
+            ts=ts,
+            status=SolicitationStatus.NEW)
+
+        solicitation = yield self.get_solicitation_by_id(solicitation_id)
+
+        return solicitation
+
+    @defer.inlineCallbacks
+    def create_room_associated_to_solicitation(self, requester, solicitation):
+        timestamp = self.get_timestamp_by_solicitation_status(solicitation, SolicitationStatus.NEW)
+        room_name = "%s - %s (%s)" % (solicitation["equipment_code"], solicitation["substation_code"], timestamp)
+        room_id = yield self._room_creation_handler.create_room_by_name(requester, room_name)
+        yield self.store.associate_solicitation_to_room(solicitation["id"], room_id)
+
+    def get_timestamp_by_solicitation_status(self, solicitation, status):
+        for event in solicitation["events"]:
+            if event['status'] == status:
+                return event["time_stamp"]
+        return 0
 
     @defer.inlineCallbacks
     def add_creators_to_solicitations(self, solicitations):
@@ -145,7 +178,16 @@ class VoltageControlHandler(BaseHandler):
         self._validate_status_change(current_status, new_status, user_company_code, creation_ts)
 
         ts = calendar.timegm(time.gmtime())
-        yield self.store.create_solicitation_event(id, user_id, new_status, ts)
+        yield self.store.create_solicitation_status_signature(id, user_id, new_status, ts)
+
+        token = yield self.store.create_solicitation_updated_event(
+            EventTypes.ChangeSolicitationStatus, id, user_id, {"status": new_status}
+        )
+
+        #Enquanto não tem as permissões, recupera todos os usuários.
+        users = yield self.store.get_users()
+
+        self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
     @classmethod
     def _get_state_machine_by_user_company(cls, company_code):

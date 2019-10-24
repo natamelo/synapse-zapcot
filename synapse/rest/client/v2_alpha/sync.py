@@ -219,6 +219,7 @@ class SyncRestServlet(RestServlet):
                 "invite": sync_result.groups.invite,
                 "leave": sync_result.groups.leave,
             },
+            "solicitations": sync_result.solicitations,
             "device_one_time_keys_count": sync_result.device_one_time_keys_count,
             "next_batch": sync_result.next_batch.to_string(),
         }

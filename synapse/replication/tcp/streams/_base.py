@@ -96,6 +96,11 @@ GroupsStreamRow = namedtuple(
     ("group_id", "user_id", "type", "content"),  # str  # str  # str  # dict
 )
 
+SolicitationStreamRow = namedtuple(
+    "SolicitationStreamRow",
+    ("solicitation_id", "user_id", "type", "content"),  # str  # str  # str  # dict
+)
+
 
 class Stream(object):
     """Base class for the streams.
@@ -438,3 +443,16 @@ class GroupServerStream(Stream):
         self.update_function = store.get_all_groups_changes
 
         super(GroupServerStream, self).__init__(hs)
+
+
+class SolicitationServerStream(Stream):
+    NAME = "solicitation"
+    ROW_TYPE = SolicitationStreamRow
+
+    def __init__(self, hs):
+        store = hs.get_datastore()
+
+        self.current_token = store.get_solicitation_stream_token
+        self.update_function = store.get_all_solicitation_updates
+
+        super(SolicitationServerStream, self).__init__(hs)

@@ -163,6 +163,17 @@ class GroupsSyncResult(
     __bool__ = __nonzero__  # python3
 
 
+class SolicitationsSyncResult(
+    collections.namedtuple("SolicitationsSyncResult", ["events"])
+):
+    __slots__ = []
+
+    def __nonzero__(self):
+        return bool(self.events)
+
+    __bool__ = __nonzero__  # python3
+
+
 class DeviceLists(
     collections.namedtuple(
         "DeviceLists",
@@ -195,6 +206,7 @@ class SyncResult(
             "device_one_time_keys_count",  # Dict of algorithm to count for one time keys
             # for this device
             "groups",
+            "solicitations",
         ],
     )
 ):
@@ -214,6 +226,7 @@ class SyncResult(
             or self.to_device
             or self.device_lists
             or self.groups
+            or self.solicitations
         )
 
     __bool__ = __nonzero__  # python3
@@ -1001,6 +1014,8 @@ class SyncHandler(object):
                     "Sync result for newly joined room %s: %r", room_id, joined_room
                 )
 
+        yield self._generate_sync_entry_for_solicitations(sync_result_builder)
+
         return SyncResult(
             presence=sync_result_builder.presence,
             account_data=sync_result_builder.account_data,
@@ -1010,6 +1025,7 @@ class SyncHandler(object):
             to_device=sync_result_builder.to_device,
             device_lists=device_lists,
             groups=sync_result_builder.groups,
+            solicitations=sync_result_builder.solicitations,
             device_one_time_keys_count=one_time_key_counts,
             next_batch=sync_result_builder.now_token,
         )
@@ -1056,6 +1072,27 @@ class SyncHandler(object):
 
         sync_result_builder.groups = GroupsSyncResult(
             join=joined, invite=invited, leave=left
+        )
+
+    @measure_func("_generate_sync_entry_for_solicitations")
+    @defer.inlineCallbacks
+    def _generate_sync_entry_for_solicitations(self, sync_result_builder):
+        user_id = sync_result_builder.sync_config.user.to_string()
+
+
+        # TODO Aplicar lazy loading no futuro.
+        # Por enquanto, os parâmetros não estão sendo usados.
+
+        '''if since_token and since_token.solicitations_key:
+            results = yield self.store.get_all_solicitation_updates(
+                user_id, since_token.solicitations_key, now_token.solicitations_key
+            )
+        '''
+
+        results = yield self.store.get_solicitations_by_params()
+
+        sync_result_builder.solicitations = SolicitationsSyncResult(
+            events=results
         )
 
     @measure_func("_generate_sync_entry_for_device_list")
@@ -2019,6 +2056,7 @@ class SyncResultBuilder(object):
         device (list)
         groups (GroupsSyncResult|None)
         to_device (list)
+        solicitations (SolicitationsSyncResult|None)
     """
 
     def __init__(
@@ -2046,6 +2084,7 @@ class SyncResultBuilder(object):
         self.device = []
         self.groups = None
         self.to_device = []
+        self.solicitations = None
 
 
 class RoomSyncResultBuilder(object):
