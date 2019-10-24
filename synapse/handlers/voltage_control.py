@@ -43,6 +43,7 @@ class VoltageControlHandler(BaseHandler):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
         self._room_creation_handler = hs.get_room_creation_handler()
+        self.profiler_handler = hs.get_profile_handler()
         self.store = hs.get_datastore()
         self.notifier = hs.get_notifier()
 
@@ -101,16 +102,22 @@ class VoltageControlHandler(BaseHandler):
         return 0
 
     @defer.inlineCallbacks
+    def add_creators_to_solicitations(self, solicitations):
+        for solicitation in solicitations:
+            creator_id = solicitation['events'][0]['user_id']
+            creator_profile = yield self.profiler_handler.get_profile(creator_id)
+            solicitation['created_by'] = creator_profile
+
+    @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
         result = yield self.store.get_solicitations_by_params(
             company_code=company_code,
             substations=substations,
-            sort_params=sort_params,
-            exclude_expired=exclude_expired,
             table_code=table_code,
             from_id=from_id,
             limit=limit
         )
+        yield self.add_creators_to_solicitations(result)
         return result
 
     @defer.inlineCallbacks
