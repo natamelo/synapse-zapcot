@@ -390,8 +390,6 @@ class GroupsLocalHandler(object):
             content={"profile": local_profile, "inviter": content["inviter"]},
         )
 
-        print('notifier: ' + str(token) + " - " + user_id)
-
         self.notifier.on_new_event("groups_key", token, users=[user_id])
         try:
             user_profile = yield self.profile_handler.get_profile(user_id)
