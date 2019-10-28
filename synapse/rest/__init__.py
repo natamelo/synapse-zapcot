@@ -57,6 +57,7 @@ from synapse.rest.client.v2_alpha import (
     user_directory,
     tables,
     voltage_control_solicitation,
+    timeservice,
 )
 
 
@@ -124,6 +125,7 @@ class ClientRestResource(JsonResource):
         tables.register_servlets(hs, client_resource)
         voltage_control_solicitation.register_servlets(hs, client_resource)
         substations.register_servlets(hs, client_resource)
+        timeservice.register_servlets(hs, client_resource)
 
         # moving to /_synapse/admin
         synapse.rest.admin.register_servlets_for_client_rest_resource(
