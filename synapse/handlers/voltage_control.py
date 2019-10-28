@@ -208,8 +208,8 @@ class VoltageControlHandler(BaseHandler):
         if new_status not in next_states_possible:
             raise SynapseError(400, "Inconsistent status change.", Codes.INVALID_PARAM)
 
-        if new_status == SolicitationStatus.ACCEPTED:
-            cls._check_timeout_to_accept(creation_ts)
+        #if new_status == SolicitationStatus.ACCEPTED:
+        #    cls._check_timeout_to_accept(creation_ts)
 
     @classmethod
     def _check_timeout_to_accept(cls, creation_ts):
