@@ -180,7 +180,14 @@ class VoltageControlStore(SQLBaseStore):
         limit=1000
     ):
 
+        """ Order By Status and Timestamp
+            Group 1: 'BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED' (Timestamp ASC)
+            Group 2: 'LATE', 'ACCEPTED' (Timestamp ASC)
+            Group 3: 'EXECUTED', 'CANCELED' (Timestamp DESC)
+        """
+
         def get_solicitations(txn):
+
             args = [from_id, limit]
 
             sql = (
@@ -197,7 +204,11 @@ class VoltageControlStore(SQLBaseStore):
                 "   CASE WHEN sig.status IN ('BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED') THEN '1' "
                 "        WHEN sig.status IN ('LATE', 'ACCEPTED') THEN '2' "
                 "        WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN '3' "
-                "        ELSE sig.status END ASC, sig.time_stamp ASC LIMIT ? "
+                "   END ASC, "
+                "   CASE WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN (sig.time_stamp * -1) "
+                "        ELSE sig.time_stamp  "
+                "   END ASC "
+                "   LIMIT ? "
             )
 
             txn.execute(sql, args)
