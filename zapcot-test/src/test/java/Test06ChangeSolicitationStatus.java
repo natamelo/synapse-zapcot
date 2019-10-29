@@ -11,7 +11,7 @@ import util.DataUtil;
 import util.ServiceUtil;
 
 
-public class Test06ChangeControlSolicitationStatus {
+public class Test06ChangeSolicitationStatus {
 
     // Fill with the ID of the last solicitation created
     public static int LAST_SOLICITATION_ID = 1;

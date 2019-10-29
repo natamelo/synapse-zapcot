@@ -38,9 +38,12 @@ class VoltageControlStore(SQLBaseStore):
 
             self.get_solicitation_by_id(solicitation_id)
 
+            signature_id = self._solicitation_signature_id_gen.get_next()
+
             yield self._simple_insert(
                 table="solicitation_status_signature",
                 values={
+                    "id": signature_id,
                     "user_id": user_id,
                     "status": new_status,
                     "time_stamp": ts,
@@ -120,16 +123,10 @@ class VoltageControlStore(SQLBaseStore):
             args = [solicitation_id]
 
             sql = (
-                " SELECT "
-                " event.user_id,"
-                " event.status,"
-                " event.time_stamp "
-                " from solicitation_status_signature event "
-                " where event.solicitation_id = ? order by"
-                " CASE WHEN event.status = 'NEW' then '1' "
-                "      WHEN event.status = 'LATE' then '2' "
-                "      WHEN event.status = 'ACCEPTED' then '3' "
-                "      ELSE event.status END DESC "
+                " SELECT event.user_id, event.status, event.time_stamp "
+                " FROM solicitation_status_signature event "
+                " WHERE event.solicitation_id = ? "
+                " ORDER BY event.time_stamp DESC "
             )
             txn.execute(sql, args)
 
@@ -175,89 +172,50 @@ class VoltageControlStore(SQLBaseStore):
     @defer.inlineCallbacks
     def get_solicitations_by_params(
         self,
-        substations=None,
-        company_code=None,
-        table_code=None,
+        substations=[],
+        companies=[],
+        tables=[],
+        status=[],
         from_id=0,
         limit=1000
     ):
 
-        #Refazer ordenação e filtro baseado nos eventos de solicitação
-        #order_clause = get_order_clause_by_sort_params(sort_params)
-        filter_clause = get_filter_clause(substations, False)
+        """ Order By Status and Timestamp
+            Group 1: 'BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED' (Timestamp ASC)
+            Group 2: 'LATE', 'ACCEPTED' (Timestamp ASC)
+            Group 3: 'EXECUTED', 'CANCELED' (Timestamp DESC)
+        """
 
-        def get_solicitations_by_table_code(txn):
-            args = [company_code, table_code, from_id, limit]
+        def get_solicitations(txn):
 
-            sql = (
-                " SELECT "
-                " solicitation.id,"
-                " solicitation.action_code,"
-                " solicitation.equipment_code, "
-                " solicitation.substation_code, "
-                " solicitation.amount, "
-                " solicitation.voltage "
-                " from voltage_control_solicitation solicitation, "
-                " substation_table table_, substation substation "
-                " where table_.substation_code = solicitation.substation_code and "
-                " substation.company_code = ? and substation.code = solicitation.substation_code "
-                " and table_.table_code = ? and solicitation.id >= ? %s "
-                " LIMIT ? "
-                % filter_clause
-            )
-            txn.execute(sql, args)
-
-            return self.cursor_to_dict(txn)
-
-        def get_solicitations_by_company_code(txn):
-            args = [company_code, from_id, limit]
-
-            sql = (
-                " SELECT "
-                " solicitation.id,"
-                " solicitation.action_code,"
-                " solicitation.equipment_code, "
-                " solicitation.substation_code, "
-                " solicitation.amount, "
-                " solicitation.voltage "
-                " from voltage_control_solicitation solicitation, substation substation "
-                " where solicitation.substation_code = substation.code and "
-                " substation.company_code = ? and solicitation.id >= ? %s "
-                " LIMIT ? "
-                % filter_clause
-            )
-            txn.execute(sql, args)
-
-            return self.cursor_to_dict(txn)
-
-        def get_all_solicitations(txn):
             args = [from_id, limit]
 
             sql = (
-                " SELECT "
-                " solicitation.id,"
-                " solicitation.action_code,"
-                " solicitation.equipment_code, "
-                " solicitation.substation_code, "
-                " solicitation.staggered, "
-                " solicitation.amount, "
-                " solicitation.voltage "
-                " from voltage_control_solicitation solicitation "
-                " where solicitation.id >= ? %s "
-                " LIMIT ? "
-                % filter_clause
+                " SELECT sol.id, sol.action_code, sol.equipment_code, "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
+                " WHERE sol.id >= ? AND sig.id = "
+                "       (SELECT id "
+                "        FROM (SELECT id, MAX(time_stamp) "
+                "              FROM solicitation_status_signature "
+                "              WHERE sol.id = solicitation_id) "
+                "       ) "
+                " ORDER BY "
+                "   CASE WHEN sig.status IN ('BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED') THEN '1' "
+                "        WHEN sig.status IN ('LATE', 'ACCEPTED') THEN '2' "
+                "        WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN '3' "
+                "   END ASC, "
+                "   CASE WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN (sig.time_stamp * -1) "
+                "        ELSE sig.time_stamp  "
+                "   END ASC "
+                "   LIMIT ? "
             )
+
             txn.execute(sql, args)
 
             return self.cursor_to_dict(txn)
 
-        #if table_code and company_code:
-        #    query_to_call = get_solicitations_by_table_code
-        #elif company_code:
-        #    query_to_call = get_solicitations_by_company_code
-        #else:
-
-        query_to_call = get_all_solicitations
+        query_to_call = get_solicitations
 
         results = yield self.runInteraction(
             "get_solicitations_by_params", query_to_call

@@ -12,6 +12,9 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 public class Test08SortVoltageControlSolicitation {
 
+    // Fill with the ID of the last solicitation created
+    public static int LAST_SOLICITATION_ID = 1;
+
     @BeforeClass
     public static void setup() {
         String port = System.getProperty("server.port");
@@ -69,144 +72,406 @@ public class Test08SortVoltageControlSolicitation {
 
     }
 
+    /*
+        Order By Status and Timestamp
+        Group 1: 'BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED' (Timestamp ASC)
+        Group 2: 'LATE', 'ACCEPTED' (Timestamp ASC)
+        Group 3: 'EXECUTED', 'CANCELED' (Timestamp DESC)
+    */
+
     @Test
-    public void test01SortByCreationTime() {
+    public void test1ONSSorting() {
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "TES", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "CAPACITOR", "TES", "5", "", true, "CTEEP");
-        ServiceUtil.wait(5);
+        createSolicitationWithStatusNew();
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token)
                 .when().
-                    get("voltage_control_solicitation?sort=creation_time").
+                    get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("get(0).action_code", equalTo("TURN_OFF"));
+                    body("get(0).events[0].status", equalTo("NEW"));
 
-        ServiceUtil.wait(5);
-
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "CAPACITOR", "TES", "5", "", true, "CTEEP");
-        ServiceUtil.wait(5);
+        createSolicitationWithStatusCanceled();
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token)
                 .when().
-                    get("voltage_control_solicitation?sort=creation_time").
+                    get("voltage_control_solicitation").
                 then().
                     statusCode(200).
-                    body("get(0).action_code", equalTo("TURN_ON"));
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("CANCELED"));
 
-        ServiceUtil.wait(2);
+        createSolicitationWithStatusAccepted();
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token)
+                .when().
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("ACCEPTED")).
+                    body("get(2).events[0].status", equalTo("CANCELED"));
+
+        createSolicitationWithStatusExecuted();
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token)
+                .when().
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("ACCEPTED")).
+                    body("get(2).events[0].status", equalTo("EXECUTED")).
+                    body("get(3).events[0].status", equalTo("CANCELED"));
+
+        createSolicitationWithStatusBlocked();
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token)
+                .when().
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("BLOCKED")).
+                    body("get(2).events[0].status", equalTo("ACCEPTED")).
+                    body("get(3).events[0].status", equalTo("EXECUTED")).
+                    body("get(4).events[0].status", equalTo("CANCELED"));
+
+        createSolicitationWithStatusRequired();
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token)
+                .when().
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("BLOCKED")).
+                    body("get(2).events[0].status", equalTo("REQUIRED")).
+                    body("get(3).events[0].status", equalTo("ACCEPTED")).
+                    body("get(4).events[0].status", equalTo("EXECUTED")).
+                    body("get(5).events[0].status", equalTo("CANCELED"));
+
+        createSolicitationWithStatusContested();
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token)
+                .when().
+                    get("voltage_control_solicitation").
+                then().
+                    statusCode(200).
+                    body("get(0).events[0].status", equalTo("NEW")).
+                    body("get(1).events[0].status", equalTo("BLOCKED")).
+                    body("get(2).events[0].status", equalTo("REQUIRED")).
+                    body("get(3).events[0].status", equalTo("CONTESTED")).
+                    body("get(4).events[0].status", equalTo("ACCEPTED")).
+                    body("get(5).events[0].status", equalTo("EXECUTED")).
+                    body("get(6).events[0].status", equalTo("CANCELED"));
 
     }
 
+    private void createSolicitationWithStatusNew() {
+        LAST_SOLICITATION_ID += 1;
 
-    @Test
-    public void test02SortBySubstations() {
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
-
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
                 .when().
-                    get("voltage_control_solicitation?sort=substation").
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+    }
+
+    private void createSolicitationWithStatusCanceled() {
+        LAST_SOLICITATION_ID += 1;
+
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CANCELED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
-                    body("get(1).substation_code", equalTo("ATI"));
+                    body("message", equalTo("Solicitation status changed."));
+    }
+
+    private void createSolicitationWithStatusAccepted() {
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(5);
+
+        access_token = ServiceUtil.doLogin("testercteep08", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+    }
+
+    private void createSolicitationWithStatusExecuted() {
+                String access_token = ServiceUtil.doLogin("testerons08", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
+
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
+                .when().
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep08", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("EXECUTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
     }
 
-    @Test
-    public void test03SortByStatus() {
+    private void createSolicitationWithStatusBlocked() {
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
 
-        RestAssured.
-                given().
-                    header("Authorization", "Bearer " + onsAccessToken)
-                .when().
-                    get("voltage_control_solicitation?sort=status").
-                then().
-                    statusCode(200).
-                    body("get(0).status", equalTo("NOT_ANSWERED"));
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
                 .when().
-                    get("voltage_control_solicitation?sort=status").
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep08", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("BLOCKED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
-                    body("get(2).status", equalTo("NOT_ANSWERED"));
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
 
     }
 
-    @Test
-    public void test04sortByStatusAndSubstation() {
+    private void createSolicitationWithStatusRequired() {
+                String access_token = ServiceUtil.doLogin("testerons08", "tester123");
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
-
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
                 .when().
-                    get("voltage_control_solicitation?sort=status+substation").
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep08", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
-                    body("get(0).substation_code", equalTo("ATI")).
-                    body("get(0).status", equalTo("NOT_ANSWERED")).
-                    body("get(1).substation_code", equalTo("ATI")).
-                    body("get(1).status", equalTo("NOT_ANSWERED"));
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CONTESTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
+
+        ServiceUtil.wait(5);
+
+        access_token = ServiceUtil.doLogin("testerons08", "tester123");
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("REQUIRED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
 
     }
 
-    @Test
-    public void test05sortByStatusAndSubstationAndCreationTime() {
+    private void createSolicitationWithStatusContested() {
+        LAST_SOLICITATION_ID = LAST_SOLICITATION_ID + 1;
 
-        String onsAccessToken = ServiceUtil.doLogin("testerons08", "tester123");
+        String access_token = ServiceUtil.doLogin("testerons08", "tester123");
 
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_ON", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-        ServiceUtil.createSingleSolicitation(onsAccessToken, "TURN_OFF", "REACTOR", "ATI", "5", "500kV", true, "CTEEP");
-        ServiceUtil.wait(5);
-
+        Map<String, Object> payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("TURN_ON", "REACTOR", "MOS",
+                "5", "500kV", true, "CTEEP");
 
         RestAssured.
                 given().
-                    header("Authorization", "Bearer " + onsAccessToken)
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadSolicitation)
                 .when().
-                    get("voltage_control_solicitation?sort=status+creation_time+substation").
+                    post("voltage_control_solicitation").
+                then().
+                    statusCode(201).
+                    body("message", equalTo("Voltage control solicitations created with success."));
+
+        ServiceUtil.wait(20);
+
+        access_token = ServiceUtil.doLogin("testercteep08", "tester123");
+
+        Map<String, String> payloadChangeStatus = DataUtil.buildPayloadChangeStatus("ACCEPTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                    body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
                 then().
                     statusCode(200).
-                    body("get(0).substation_code", equalTo("ATI")).
-                    body("get(0).action_code", equalTo("TURN_OFF")).
-                    body("get(0).status", equalTo("NOT_ANSWERED")).
-                    body("get(1).substation_code", equalTo("ATI")).
-                    body("get(1).action_code", equalTo("TURN_OFF")).
-                    body("get(1).status", equalTo("NOT_ANSWERED")).
-                    body("get(2).substation_code", equalTo("ATI")).
-                    body("get(2).action_code", equalTo("TURN_ON")).
-                    body("get(2).status", equalTo("NOT_ANSWERED"));
+                    body("message", equalTo("Solicitation status changed."));
 
+        ServiceUtil.wait(5);
+
+        payloadChangeStatus = DataUtil.buildPayloadChangeStatus("CONTESTED");
+
+        RestAssured.
+                given().
+                    header("Authorization", "Bearer " + access_token).
+                body(payloadChangeStatus)
+                .when().
+                    put("voltage_control_solicitation/" + LAST_SOLICITATION_ID).
+                then().
+                    statusCode(200).
+                    body("message", equalTo("Solicitation status changed."));
     }
 
 }

@@ -143,9 +143,9 @@ class VoltageControlHandler(BaseHandler):
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
         result = yield self.store.get_solicitations_by_params(
-            company_code=company_code,
+            companies=[company_code],
             substations=substations,
-            table_code=table_code,
+            tables=[table_code],
             from_id=from_id,
             limit=limit
         )
@@ -208,8 +208,8 @@ class VoltageControlHandler(BaseHandler):
         if new_status not in next_states_possible:
             raise SynapseError(400, "Inconsistent status change.", Codes.INVALID_PARAM)
 
-        if new_status == SolicitationStatus.ACCEPTED:
-            cls._check_timeout_to_accept(creation_ts)
+        #if new_status == SolicitationStatus.ACCEPTED:
+        #    cls._check_timeout_to_accept(creation_ts)
 
     @classmethod
     def _check_timeout_to_accept(cls, creation_ts):
