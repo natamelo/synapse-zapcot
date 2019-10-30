@@ -56,7 +56,7 @@ from synapse.rest.client.v2_alpha import (
     tokenrefresh,
     user_directory,
     tables,
-    voltage_control_solicitation,
+    solicitations,
     timeservice,
 )
 
@@ -123,7 +123,7 @@ class ClientRestResource(JsonResource):
         account_validity.register_servlets(hs, client_resource)
         relations.register_servlets(hs, client_resource)
         tables.register_servlets(hs, client_resource)
-        voltage_control_solicitation.register_servlets(hs, client_resource)
+        solicitations.register_servlets(hs, client_resource)
         substations.register_servlets(hs, client_resource)
         timeservice.register_servlets(hs, client_resource)
 

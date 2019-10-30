@@ -37,6 +37,8 @@ from synapse.api.errors import (
 import calendar
 import time
 
+from synapse.metrics.background_process_metrics import run_as_background_process
+
 logger = logging.getLogger(__name__)
 
 
@@ -69,6 +71,17 @@ class VoltageControlHandler(BaseHandler):
         SolicitationStatus.REQUIRED: [SolicitationStatus.ACCEPTED],
         SolicitationStatus.LATE: [SolicitationStatus.EXECUTED,
                                   SolicitationStatus.BLOCKED]
+    }
+
+    __STATE_MACHINE_BOT = {
+        SolicitationStatus.NEW: [],
+        SolicitationStatus.ACCEPTED: [SolicitationStatus.LATE],
+        SolicitationStatus.EXECUTED: [],
+        SolicitationStatus.BLOCKED: [],
+        SolicitationStatus.CONTESTED: [],
+        SolicitationStatus.CANCELED: [],
+        SolicitationStatus.REQUIRED: [],
+        SolicitationStatus.LATE: []
     }
 
     def __init__(self, hs):
@@ -137,8 +150,9 @@ class VoltageControlHandler(BaseHandler):
     def add_creators_to_solicitations(self, solicitations):
         for solicitation in solicitations:
             creator_id = solicitation['events'][0]['user_id']
-            creator_profile = yield self.profiler_handler.get_profile(creator_id)
-            solicitation['created_by'] = creator_profile
+            if creator_id:
+                creator_profile = yield self.profiler_handler.get_profile(creator_id)
+                solicitation['created_by'] = creator_profile
 
     @defer.inlineCallbacks
     def filter_solicitations(self, company_code, substations, sort_params, exclude_expired, table_code, from_id, limit):
@@ -159,7 +173,6 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def change_solicitation_status(self, new_status, id, user_id):
-
         solicitation = yield self.get_solicitation_by_id(id)
 
         if not solicitation:
@@ -189,12 +202,27 @@ class VoltageControlHandler(BaseHandler):
 
         self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
+    def start_updating_late_solicitations(self):
+        run_as_background_process(
+            "sync_late_solicitations", self._update_status_from_late_solicitations
+        )
+
+    @defer.inlineCallbacks
+    def _update_status_from_late_solicitations(self):
+        current_time = calendar.timegm(time.gmtime())
+        solicitations = yield self.store.get_late_solicitations_with_status_new(current_time)
+        for solicitation in solicitations:
+            #TODO Put the bot user_id correct in the future
+            yield self.change_solicitation_status(SolicitationStatus.LATE, solicitation['id'], None)
+
     @classmethod
     def _get_state_machine_by_user_company(cls, company_code):
         if company_code == Companies.ONS:
             return VoltageControlHandler.__STATE_MACHINE_ONS
+        elif company_code == Companies.CTEEP:
+            return VoltageControlHandler.__STATE_MACHINE_CTEEP
 
-        return VoltageControlHandler.__STATE_MACHINE_CTEEP
+        return VoltageControlHandler.__STATE_MACHINE_BOT
 
     @classmethod
     def _validate_status_change(cls, current_status, new_status, user_company_code, creation_ts):

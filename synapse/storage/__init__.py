@@ -61,7 +61,7 @@ from .stats import StatsStore
 from .stream import StreamStore
 from .tags import TagsStore
 from .transactions import TransactionStore
-from .voltage_control import VoltageControlStore
+from .solicitations import VoltageControlStore
 from .substation import SubstationStore
 from .user_directory import UserDirectoryStore
 from .util.id_generators import ChainedIdGenerator, IdGenerator, StreamIdGenerator

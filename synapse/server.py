@@ -79,7 +79,7 @@ from synapse.handlers.stats import StatsHandler
 from synapse.handlers.sync import SyncHandler
 from synapse.handlers.typing import TypingHandler
 from synapse.handlers.user_directory import UserDirectoryHandler
-from synapse.handlers.voltage_control import VoltageControlHandler
+from synapse.handlers.solicitations import VoltageControlHandler
 from synapse.handlers.substation import SubstationHandler
 from synapse.http.client import InsecureInterceptableContextFactory, SimpleHttpClient
 from synapse.http.matrixfederationclient import MatrixFederationHttpClient
@@ -203,6 +203,7 @@ class HomeServer(object):
         "event_client_serializer",
         "table_handler",
         "substation_handler",
+        "solicitation_service"
     ]
 
     REQUIRED_ON_MASTER_STARTUP = ["user_directory_handler", "stats_handler"]

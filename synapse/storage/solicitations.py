@@ -227,6 +227,40 @@ class VoltageControlStore(SQLBaseStore):
 
         defer.returnValue(results)
 
+    @defer.inlineCallbacks
+    def get_late_solicitations_with_status_new(self, current_time):
+        """
+        :param current_time: current time in seconds
+        :return: late solicitations
+        """
+
+        def get_late_solicitations_with_status_new_(txn):
+            args = [current_time]
+
+            sql = (
+                " SELECT sol.id "
+                " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
+                " WHERE sig.status = 'ACCEPTED' AND sig.id = "
+                "       (SELECT id FROM "
+                "             (SELECT id, time_stamp "
+                "              FROM (SELECT id, MAX(time_stamp) as time_stamp "
+                "                    FROM solicitation_status_signature "
+                "                    WHERE sol.id = solicitation_id) "
+                "              WHERE (? - time_stamp) >= 300)) "
+            )
+
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
+
+        query_to_call = get_late_solicitations_with_status_new_
+
+        results = yield self.runInteraction(
+            "get_late_solicitations_with_status_new", query_to_call
+        )
+
+        defer.returnValue(results)
+
 
 def get_filter_clause(substations, exclude_expired):
 
