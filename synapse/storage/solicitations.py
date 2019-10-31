@@ -94,7 +94,8 @@ class VoltageControlStore(SQLBaseStore):
                         "content": json.dumps(content)
                     }
                 )
-                self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
+                if user_id:
+                    self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
                 return stream_id
 
         except Exception as e:
@@ -246,7 +247,7 @@ class VoltageControlStore(SQLBaseStore):
                 "              FROM (SELECT id, MAX(time_stamp) as time_stamp "
                 "                    FROM solicitation_status_signature "
                 "                    WHERE sol.id = solicitation_id) "
-                "              WHERE (? - time_stamp) >= 300)) "
+                "              WHERE (? - time_stamp) >= 10)) "
             )
 
             txn.execute(sql, args)
