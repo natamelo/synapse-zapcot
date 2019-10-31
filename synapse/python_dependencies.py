@@ -71,7 +71,7 @@ REQUIREMENTS = [
     "attrs>=17.4.0",
     "netaddr>=0.7.18",
     "Jinja2>=2.9",
-    "bleach>=1.4.3",
+    "bleach>=1.4.3"
 ]
 
 CONDITIONAL_REQUIREMENTS = {

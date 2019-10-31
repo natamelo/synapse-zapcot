@@ -11,6 +11,8 @@ from canonicaljson import json
 
 logger = logging.getLogger(__name__)
 
+FIVE_MINUTES_IN_SECONDS = 300
+
 
 class VoltageControlStore(SQLBaseStore):
 
@@ -94,7 +96,8 @@ class VoltageControlStore(SQLBaseStore):
                         "content": json.dumps(content)
                     }
                 )
-                self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
+                if user_id:
+                    self._solicitation_updates_stream_cache.entity_has_changed(user_id, stream_id)
                 return stream_id
 
         except Exception as e:
@@ -224,6 +227,40 @@ class VoltageControlStore(SQLBaseStore):
         for solicitation in results:
             events = yield self.get_events_by_solicitation_id(solicitation['id'])
             solicitation['events'] = events
+
+        defer.returnValue(results)
+
+    @defer.inlineCallbacks
+    def get_late_solicitations_with_status_new(self, current_time):
+        """
+        :param current_time: current time in seconds
+        :return: late solicitations
+        """
+
+        def get_late_solicitations_with_status_new_(txn):
+            args = [current_time, FIVE_MINUTES_IN_SECONDS]
+
+            sql = (
+                " SELECT sol.id "
+                " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
+                " WHERE sig.status = 'ACCEPTED' AND sig.id = "
+                "       (SELECT id FROM "
+                "             (SELECT id, time_stamp "
+                "              FROM (SELECT id, MAX(time_stamp) as time_stamp "
+                "                    FROM solicitation_status_signature "
+                "                    WHERE sol.id = solicitation_id) "
+                "              WHERE (? - time_stamp) >= ?)) "
+            )
+
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
+
+        query_to_call = get_late_solicitations_with_status_new_
+
+        results = yield self.runInteraction(
+            "get_late_solicitations_with_status_new", query_to_call
+        )
 
         defer.returnValue(results)
 

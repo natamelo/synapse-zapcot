@@ -203,6 +203,7 @@ class HomeServer(object):
         "event_client_serializer",
         "table_handler",
         "substation_handler",
+        "solicitation_service"
     ]
 
     REQUIRED_ON_MASTER_STARTUP = ["user_directory_handler", "stats_handler"]

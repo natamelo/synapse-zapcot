@@ -79,6 +79,8 @@ from synapse.util.versionstring import get_version_string
 
 logger = logging.getLogger("synapse.app.homeserver")
 
+ONE_SECOND_IN_MS = 1000
+
 
 def gz_wrap(r):
     return EncodingResourceWrapper(r, [GzipEncoderFactory()])
@@ -436,6 +438,11 @@ def setup(config_options):
 
             hs.get_pusherpool().start()
             hs.get_datastore().start_doing_background_updates()
+
+            # Update late solicitations
+            hs.get_clock().looping_call(hs.get_voltage_control_handler().start_updating_late_solicitations,
+                                        ONE_SECOND_IN_MS)
+
         except Exception:
             # Print the exception and bail out.
             print("Error during startup:", file=sys.stderr)
