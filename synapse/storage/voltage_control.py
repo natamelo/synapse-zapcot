@@ -11,6 +11,8 @@ from canonicaljson import json
 
 logger = logging.getLogger(__name__)
 
+FIVE_MINUTES_IN_SECONDS = 300
+
 
 class VoltageControlStore(SQLBaseStore):
 
@@ -236,7 +238,7 @@ class VoltageControlStore(SQLBaseStore):
         """
 
         def get_late_solicitations_with_status_new_(txn):
-            args = [current_time]
+            args = [current_time, FIVE_MINUTES_IN_SECONDS]
 
             sql = (
                 " SELECT sol.id "
@@ -247,7 +249,7 @@ class VoltageControlStore(SQLBaseStore):
                 "              FROM (SELECT id, MAX(time_stamp) as time_stamp "
                 "                    FROM solicitation_status_signature "
                 "                    WHERE sol.id = solicitation_id) "
-                "              WHERE (? - time_stamp) >= 10)) "
+                "              WHERE (? - time_stamp) >= ?)) "
             )
 
             txn.execute(sql, args)
