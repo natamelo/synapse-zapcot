@@ -54,10 +54,12 @@ class VoltageControlSolicitationServlet(RestServlet):
 
         body = parse_json_object_from_request(request)
         solicitations = body['solicitations']
+        creation_total_time = body['creation_total_time']
 
         yield self.voltage_control_handler.create_solicitations(
             requester=requester,
-            solicitations=solicitations
+            solicitations=solicitations,
+            creation_total_time=creation_total_time
         )
         return 201, {"message": "Voltage control solicitations created with success."}
 

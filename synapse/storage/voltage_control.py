@@ -58,13 +58,15 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem on update solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status):
+    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status,
+                            group_id):
         try:
             solicitation_id = self._solicitation_list_id_gen.get_next()
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
                     "id": solicitation_id,
+                    "solicitation_group_id": group_id,
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
@@ -81,6 +83,24 @@ class VoltageControlStore(SQLBaseStore):
         except Exception as e:
             logger.warning("create_solicitation failed: %s", e)
             raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
+    def create_solicitation_group(self, creation_time_total):
+        try:
+            group_id = self._solicitation_group_id_gen.get_next()
+            yield self._simple_insert(
+                table="solicitation_group",
+                values={
+                    "id": group_id,
+                    "creation_time_total": creation_time_total
+                }
+            )
+
+            return group_id
+
+        except Exception as e:
+            logger.warning("create_solicitation_group failed: %s", e)
+            raise StoreError(500, "Problem creating solicitation group.")
 
     @defer.inlineCallbacks
     def create_solicitation_updated_event(self, event_type, solicitation_id, user_id, content):

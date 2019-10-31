@@ -147,6 +147,7 @@ class DataStore(
         self._event_reports_id_gen = IdGenerator(db_conn, "event_reports", "id")
         self._solicitation_list_id_gen = IdGenerator(db_conn, "voltage_control_solicitation", "id")
         self._solicitation_signature_id_gen = IdGenerator(db_conn, "solicitation_status_signature", "id")
+        self._solicitation_group_id_gen = IdGenerator(db_conn, "solicitation_group", "id")
         self._push_rule_id_gen = IdGenerator(db_conn, "push_rules", "id")
         self._push_rules_enable_id_gen = IdGenerator(db_conn, "push_rules_enable", "id")
         self._push_rules_stream_id_gen = ChainedIdGenerator(
