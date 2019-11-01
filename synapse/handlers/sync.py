@@ -24,7 +24,7 @@ from prometheus_client import Counter
 
 from twisted.internet import defer
 
-from synapse.api.constants import EventTypes, Membership
+from synapse.api.constants import EventTypes, Membership, Companies
 from synapse.logging.context import LoggingContext
 from synapse.push.clientformat import format_push_rules_for_user
 from synapse.storage.roommember import MemberSummary
@@ -1089,7 +1089,9 @@ class SyncHandler(object):
             )
         '''
 
-        results = yield self.store.get_solicitations_by_params()
+        user_company_code = yield self.store.get_company_code(user_id)
+        is_order_by_cteep = Companies.CTEEP == user_company_code
+        results = yield self.store.get_solicitations(is_order_by_cteep)
 
         sync_result_builder.solicitations = SolicitationsSyncResult(
             events=results

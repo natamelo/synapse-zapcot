@@ -105,12 +105,9 @@ class VoltageControlSolicitationServlet(RestServlet):
                 if param not in SolicitationSortParams.ALL_PARAMS:
                     raise SynapseError(400, "Invalid sort param", Codes.INVALID_PARAM)
 
-        result = yield self.voltage_control_handler.filter_solicitations(
-            company_code=company_code,
-            substations=substations,
-            sort_params=sort_params,
-            exclude_expired=exclude_expired,
-            table_code=table_code,
+        is_order_by_cteep = Companies.CTEEP == user_company_code
+        result = yield self.voltage_control_handler.get_solicitations(
+            is_order_by_cteep=is_order_by_cteep,
             from_id=from_solicitation_id,
             limit=limit
         )

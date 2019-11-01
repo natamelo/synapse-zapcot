@@ -193,23 +193,58 @@ class VoltageControlStore(SQLBaseStore):
         return self._solicitation_updates_id_gen.get_current_token()
 
     @defer.inlineCallbacks
-    def get_solicitations_by_params(
-        self,
-        substations=[],
-        companies=[],
-        tables=[],
-        status=[],
-        from_id=0,
-        limit=1000
+    def get_solicitations(
+        self, is_order_by_cteep, from_id=0, limit=1000
     ):
+
+        """ Order By Status and Timestamp
+            Group 1: 'LATE' (Timestamp ASC)
+            Group 2: 'ACCEPTED'
+            Group 3: 'REQUIRED'
+            Group 4: 'NEW'
+            Group 5: 'CONTESTED'
+            Group 6: 'BLOCKED', 'EXECUTED', 'CANCELED' (Timestamp DESC)
+        """
+
+        def get_solicitations_ordered_by_cteep(txn):
+
+            args = [from_id, limit]
+
+            sql = (
+                " SELECT sol.id, sol.action_code, sol.equipment_code, "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
+                " WHERE sol.id >= ? AND sig.id = "
+                "       (SELECT id "
+                "        FROM (SELECT id, MAX(time_stamp) "
+                "              FROM solicitation_status_signature "
+                "              WHERE sol.id = solicitation_id) "
+                "       ) "
+                " ORDER BY "
+                "   CASE WHEN sig.status = 'LATE' THEN '1' "
+                "   WHEN sig.status = 'ACCEPTED' THEN '2' "
+                "   WHEN sig.status = 'REQUIRED' THEN '3' "
+                "   WHEN sig.status = 'NEW' THEN '4' "
+                "   WHEN sig.status = 'CONTESTED' THEN '5' "
+                "   WHEN sig.status in ('EXECUTED', 'CANCELED', 'BLOCKED') THEN '6' "
+                "   END ASC, "
+                "   CASE WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN (sig.time_stamp * -1) "
+                "        ELSE sig.time_stamp  "
+                "   END ASC "
+                "   LIMIT ? "
+
+            )
+
+            txn.execute(sql, args)
+
+            return self.cursor_to_dict(txn)
 
         """ Order By Status and Timestamp
             Group 1: 'BLOCKED', 'CONTESTED', 'NEW', 'REQUIRED' (Timestamp ASC)
             Group 2: 'LATE', 'ACCEPTED' (Timestamp ASC)
             Group 3: 'EXECUTED', 'CANCELED' (Timestamp DESC)
         """
-
-        def get_solicitations(txn):
+        def get_solicitations_ordered_by_ons(txn):
 
             args = [from_id, limit]
 
@@ -238,10 +273,13 @@ class VoltageControlStore(SQLBaseStore):
 
             return self.cursor_to_dict(txn)
 
-        query_to_call = get_solicitations
+        if is_order_by_cteep:
+            query_to_call = get_solicitations_ordered_by_cteep
+        else:
+            query_to_call = get_solicitations_ordered_by_ons
 
         results = yield self.runInteraction(
-            "get_solicitations_by_params", query_to_call
+            "get_solicitations", query_to_call
         )
 
         for solicitation in results:
