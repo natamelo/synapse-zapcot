@@ -228,7 +228,7 @@ class VoltageControlStore(SQLBaseStore):
                 "   WHEN sig.status = 'CONTESTED' THEN '5' "
                 "   WHEN sig.status in ('EXECUTED', 'CANCELED', 'BLOCKED') THEN '6' "
                 "   END ASC, "
-                "   CASE WHEN sig.status IN ('EXECUTED', 'CANCELED') THEN (sig.time_stamp * -1) "
+                "   CASE WHEN sig.status IN ('EXECUTED', 'CANCELED', 'BLOCKED') THEN (sig.time_stamp * -1) "
                 "        ELSE sig.time_stamp  "
                 "   END ASC "
                 "   LIMIT ? "

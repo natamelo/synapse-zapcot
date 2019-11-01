@@ -85,8 +85,6 @@ class VoltageControlSolicitationServlet(RestServlet):
                 raise SynapseError(404, "Company not found", Codes.NOT_FOUND)
             elif user_company_code != Companies.ONS and user_company_code != company_code:
                 raise SynapseError(403, "User can only access the solicitations of your company", Codes.FORBIDDEN)
-        elif user_company_code != Companies.ONS:
-            raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
 
         if table_code is not None:
             table = yield self.table_handler.get_table_by_company_code_and_table_code(company_code, table_code)
