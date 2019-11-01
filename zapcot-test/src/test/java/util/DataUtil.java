@@ -45,6 +45,7 @@ public class DataUtil {
         Map<String, Object> payload = new HashMap<>();
 
         payload.put("solicitations", solicitations);
+        payload.put("creation_total_time", 0);
 
         return payload;
     }
