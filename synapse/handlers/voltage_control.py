@@ -93,7 +93,10 @@ class VoltageControlHandler(BaseHandler):
         self.notifier = hs.get_notifier()
 
     @defer.inlineCallbacks
-    def create_solicitations(self, requester, solicitations):
+    def create_solicitations(self, requester, solicitations, creation_total_time):
+        check_param_create_total_time(creation_total_time)
+        group_id = yield self.store.create_solicitation_group(creation_total_time)
+
         user_id = requester.user.to_string()
         for solicitation in solicitations:
             treat_solicitation_data(solicitation)
@@ -104,7 +107,7 @@ class VoltageControlHandler(BaseHandler):
         users = yield self.store.get_users()
 
         for solicitation in solicitations:
-            solicitation_created = yield self.create_solicitation(solicitation, user_id)
+            solicitation_created = yield self._create_solicitation(solicitation, user_id, group_id)
 
             #TODO Liberar a criação de sala depois
             #yield self.create_room_associated_to_solicitation(requester, solicitation_created)
@@ -115,7 +118,7 @@ class VoltageControlHandler(BaseHandler):
             self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
     @defer.inlineCallbacks
-    def create_solicitation(self, solicitation, user_id):
+    def _create_solicitation(self, solicitation, user_id, group_id):
         ts = calendar.timegm(time.gmtime())
 
         solicitation_id = yield self.store.create_solicitation(
@@ -127,7 +130,8 @@ class VoltageControlHandler(BaseHandler):
             voltage=solicitation["voltage"],
             user_id=user_id,
             ts=ts,
-            status=SolicitationStatus.NEW)
+            status=SolicitationStatus.NEW,
+            group_id=group_id)
 
         solicitation = yield self.get_solicitation_by_id(solicitation_id)
 
@@ -265,6 +269,13 @@ def treat_solicitation_data(solicitation):
 
     if solicitation["equipment"] == EquipmentTypes.TRANSFORMER:
         solicitation["staggered"] = None
+
+
+def check_param_create_total_time(create_total_time):
+    try:
+        int(create_total_time)
+    except ValueError:
+        raise SynapseError(400, "Invalid creation total time!", Codes.INVALID_PARAM)
 
 
 def check_solicitation_params(solicitation):
