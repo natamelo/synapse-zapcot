@@ -59,14 +59,15 @@ class VoltageControlStore(SQLBaseStore):
 
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status,
-                            group_id):
+                            group_id, room_id):
         try:
             solicitation_id = self._solicitation_list_id_gen.get_next()
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
                     "id": solicitation_id,
-                    "solicitation_group_id": group_id,
+                    "group_id": group_id,
+                    "room_id": room_id,
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
@@ -212,7 +213,8 @@ class VoltageControlStore(SQLBaseStore):
 
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
-                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
+                "        sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
@@ -250,7 +252,8 @@ class VoltageControlStore(SQLBaseStore):
 
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
-                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
+                "        sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "

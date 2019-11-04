@@ -34,6 +34,8 @@ from synapse.api.errors import (
     SynapseError,
 )
 
+from synapse.types import UserID
+
 import calendar
 import time
 
@@ -88,6 +90,7 @@ class VoltageControlHandler(BaseHandler):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
         self._room_creation_handler = hs.get_room_creation_handler()
+        self._room_member_handler = hs.get_room_member_handler()
         self.profiler_handler = hs.get_profile_handler()
         self.store = hs.get_datastore()
         self.notifier = hs.get_notifier()
@@ -105,12 +108,16 @@ class VoltageControlHandler(BaseHandler):
 
         #Enquanto não tem as permissões, recupera todos os usuários.
         users = yield self.store.get_users()
+        users_to_invite = self._get_users_name_to_invite(users, user_id)
 
         for solicitation in solicitations:
-            solicitation_created = yield self._create_solicitation(solicitation, user_id, group_id)
+            room_id = yield self.create_room_for_solicitation(requester, solicitation,
+                                                              users_to_invite)
 
-            #TODO Liberar a criação de sala depois
-            #yield self.create_room_associated_to_solicitation(requester, solicitation_created)
+            yield self.join_users_to_room(requester, users_to_invite, room_id)
+
+            solicitation_created = yield self._create_solicitation(solicitation, user_id, group_id, room_id)
+
             token = yield self.store.create_solicitation_updated_event(EventTypes.CreateSolicitation,
                                                                        solicitation_created['id'],
                                                                        user_id, solicitation)
@@ -118,7 +125,7 @@ class VoltageControlHandler(BaseHandler):
             self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
     @defer.inlineCallbacks
-    def _create_solicitation(self, solicitation, user_id, group_id):
+    def _create_solicitation(self, solicitation, user_id, group_id, room_id):
         ts = calendar.timegm(time.gmtime())
 
         solicitation_id = yield self.store.create_solicitation(
@@ -131,18 +138,18 @@ class VoltageControlHandler(BaseHandler):
             user_id=user_id,
             ts=ts,
             status=SolicitationStatus.NEW,
-            group_id=group_id)
+            group_id=group_id,
+            room_id=room_id)
 
         solicitation = yield self.get_solicitation_by_id(solicitation_id)
 
         return solicitation
 
     @defer.inlineCallbacks
-    def create_room_associated_to_solicitation(self, requester, solicitation):
-        timestamp = self.get_timestamp_by_solicitation_status(solicitation, SolicitationStatus.NEW)
-        room_name = "%s - %s (%s)" % (solicitation["equipment_code"], solicitation["substation_code"], timestamp)
-        room_id = yield self._room_creation_handler.create_room_by_name(requester, room_name)
-        yield self.store.associate_solicitation_to_room(solicitation["id"], room_id)
+    def create_room_for_solicitation(self, requester, solicitation, users):
+        room_name = "%s - %s" % (solicitation["equipment"], solicitation["substation"])
+        room_id = yield self._room_creation_handler.create_room_for_solicitation(requester, room_name, users)
+        return room_id
 
     def get_timestamp_by_solicitation_status(self, solicitation, status):
         for event in solicitation["events"]:
@@ -217,6 +224,20 @@ class VoltageControlHandler(BaseHandler):
         for solicitation in solicitations:
             #TODO Put the bot user_id correct in the future
             yield self.change_solicitation_status(SolicitationStatus.LATE, solicitation['id'], None)
+
+    @defer.inlineCallbacks
+    def join_users_to_room(self, requester, users, room_id):
+        for user in users:
+            user_object = UserID.from_string(user)
+            yield self._room_member_handler.update_membership(requester, user_object, room_id, 'join')
+
+    @classmethod
+    def _get_users_name_to_invite(cls, users, user_to_remove):
+        users_to_invite = []
+        for user in users:
+            if user['name'] != user_to_remove:
+                users_to_invite.append(user['name'])
+        return users_to_invite
 
     @classmethod
     def _get_state_machine_by_user_company(cls, company_code):

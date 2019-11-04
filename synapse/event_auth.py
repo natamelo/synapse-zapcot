@@ -277,9 +277,12 @@ def _is_membership_change_allowed(event, auth_events):
         # Joins are valid iff caller == target and they were:
         # invited: They are accepting the invitation
         # joined: It's a NOOP
-        if event.user_id != target_user_id:
-            raise AuthError(403, "Cannot force another user to join.")
-        elif target_banned:
+
+        #TODO: Comment this code to force join invited user
+        #if event.user_id != target_user_id:
+        #    raise AuthError(403, "Cannot force another user to join.")
+        #el
+        if target_banned:
             raise AuthError(403, "You are banned from this room")
         elif join_rule == JoinRules.PUBLIC:
             pass
