@@ -182,9 +182,10 @@ class VoltageControlHandler(BaseHandler):
         return solicitation
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id, user_id):
+    def change_solicitation_status(self, new_status, id, user_id, justification):
         solicitation = yield self.get_solicitation_by_id(id)
 
+        logger.info("JUSTIFICATION ON HANDLER %r", justification)
         if not solicitation:
             raise SynapseError(404, "Solicitation not found.", Codes.NOT_FOUND)
 
