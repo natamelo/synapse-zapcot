@@ -152,8 +152,9 @@ class VoltageControlHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def add_creators_to_solicitations(self, solicitations):
+        creation_index = -1
         for solicitation in solicitations:
-            creator_id = solicitation['events'][0]['user_id']
+            creator_id = solicitation['events'][creation_index]['user_id']
             if creator_id:
                 creator_profile = yield self.profiler_handler.get_profile(creator_id)
                 solicitation['created_by'] = creator_profile
