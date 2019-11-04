@@ -243,6 +243,7 @@ class SyncHandler(object):
         self.response_cache = ResponseCache(hs, "sync")
         self.state = hs.get_state_handler()
         self.auth = hs.get_auth()
+        self.voltage_control_handler = hs.get_voltage_control_handler()
 
         # ExpiringCache((User, Device)) -> LruCache(state_key => event_id)
         self.lazy_loaded_members_cache = ExpiringCache(
@@ -1091,7 +1092,7 @@ class SyncHandler(object):
 
         user_company_code = yield self.store.get_company_code(user_id)
         is_order_by_cteep = Companies.CTEEP == user_company_code
-        results = yield self.store.get_solicitations(is_order_by_cteep)
+        results = yield self.voltage_control_handler.get_solicitations(is_order_by_cteep)
 
         sync_result_builder.solicitations = SolicitationsSyncResult(
             events=results

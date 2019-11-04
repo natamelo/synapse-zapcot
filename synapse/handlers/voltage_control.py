@@ -167,7 +167,7 @@ class VoltageControlHandler(BaseHandler):
                 solicitation['created_by'] = creator_profile
 
     @defer.inlineCallbacks
-    def get_solicitations(self, is_order_by_cteep, from_id, limit):
+    def get_solicitations(self, is_order_by_cteep, from_id=0, limit=1000):
         result = yield self.store.get_solicitations(
             is_order_by_cteep=is_order_by_cteep,
             from_id=from_id,
