@@ -470,7 +470,7 @@ class RoomCreationHandler(BaseHandler):
             # we returned the new room to the client at this point.
             logger.error("Unable to send updated alias events in new room: %s", e)
 
-    def _get_room_config(self, name):
+    def _get_room_default_config(self, name, users):
         """
         Default configuration to create a room.
          
@@ -485,11 +485,12 @@ class RoomCreationHandler(BaseHandler):
                     {'content': {'guest_access': 'can_join'},
                      'type': 'm.room.guest_access',
                      'state_key': ''}
-                ]}
+                ],
+                'invite': users}
 
     @defer.inlineCallbacks
-    def create_room_by_name(self, requester, name):
-        info = yield self.create_room(requester, self._get_room_config(name))
+    def create_room_for_solicitation(self, requester, name, users):
+        info = yield self.create_room(requester, self._get_room_default_config(name, users))
         return info['room_id']
 
     @defer.inlineCallbacks

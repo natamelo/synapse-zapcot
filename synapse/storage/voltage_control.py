@@ -59,14 +59,15 @@ class VoltageControlStore(SQLBaseStore):
 
     @defer.inlineCallbacks
     def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status,
-                            group_id):
+                            group_id, room_id):
         try:
             solicitation_id = self._solicitation_list_id_gen.get_next()
             yield self._simple_insert(
                 table="voltage_control_solicitation",
                 values={
                     "id": solicitation_id,
-                    "solicitation_group_id": group_id,
+                    "group_id": group_id,
+                    "room_id": room_id,
                     "action_code": action,
                     "equipment_code": equipment,
                     "substation_code": substation,
@@ -212,7 +213,8 @@ class VoltageControlStore(SQLBaseStore):
 
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
-                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
+                "        sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
@@ -250,7 +252,8 @@ class VoltageControlStore(SQLBaseStore):
 
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
-                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage "
+                "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
+                "        sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
@@ -321,43 +324,3 @@ class VoltageControlStore(SQLBaseStore):
         )
 
         defer.returnValue(results)
-
-
-def get_filter_clause(substations, exclude_expired):
-
-    filter_clause = ""
-
-    #if exclude_expired == "true":
-    #    filter_clause = "and solicitation.status <> 'LATE' "
-
-    if substations:
-        if len(substations) > 1:
-            filter_clause = filter_clause + "and solicitation.substation_code IN " + str(tuple(substations))
-        elif len(substations) == 1:
-            filter_clause = filter_clause + "and solicitation.substation_code = '" + substations[0] + "'"
-
-    return filter_clause
-
-
-def get_order_clause_by_sort_params(sort_params):
-
-    order_by_status = (
-        "CASE WHEN solicitation.status = 'NEW' then '1' "
-        "WHEN solicitation.status = 'LATE' then '2' "
-        "WHEN solicitation.status = 'ACCEPTED' then '3' "
-        "ELSE solicitation.status END ASC "
-    )
-
-    order_clause = "ORDER BY "
-
-    if not sort_params or SolicitationSortParams.STATUS in sort_params:
-        order_clause += order_by_status + ", "
-    if sort_params and SolicitationSortParams.CREATION_TIME in sort_params:
-        order_clause += "solicitation.creation_timestamp DESC, "
-    if sort_params and SolicitationSortParams.SUBSTATION in sort_params:
-        order_clause += "solicitation.substation_code ASC, "
-
-    order_clause = order_clause[0:-2]
-
-    return order_clause
-
