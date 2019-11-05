@@ -86,6 +86,20 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem creating solicitation.")
 
     @defer.inlineCallbacks
+    def update_solicitation_room(self, solicitation_id, room_id):
+        try:
+            yield self._simple_update_one(
+                table="voltage_control_solicitation",
+                keyvalues={"id": solicitation_id},
+                updatevalues={"room_id": room_id},
+                desc="update_solicitation_room",
+            )
+
+        except Exception as e:
+            logger.warning("create_solicitation failed: %s", e)
+            raise StoreError(500, "Problem creating solicitation.")
+
+    @defer.inlineCallbacks
     def create_solicitation_group(self, creation_time_total):
         try:
             group_id = self._solicitation_group_id_gen.get_next()
