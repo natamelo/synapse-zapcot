@@ -85,8 +85,6 @@ class VoltageControlSolicitationServlet(RestServlet):
                 raise SynapseError(404, "Company not found", Codes.NOT_FOUND)
             elif user_company_code != Companies.ONS and user_company_code != company_code:
                 raise SynapseError(403, "User can only access the solicitations of your company", Codes.FORBIDDEN)
-        elif user_company_code != Companies.ONS:
-            raise SynapseError(400, "Company code not informed", Codes.INVALID_PARAM)
 
         if table_code is not None:
             table = yield self.table_handler.get_table_by_company_code_and_table_code(company_code, table_code)
@@ -105,12 +103,9 @@ class VoltageControlSolicitationServlet(RestServlet):
                 if param not in SolicitationSortParams.ALL_PARAMS:
                     raise SynapseError(400, "Invalid sort param", Codes.INVALID_PARAM)
 
-        result = yield self.voltage_control_handler.filter_solicitations(
-            company_code=company_code,
-            substations=substations,
-            sort_params=sort_params,
-            exclude_expired=exclude_expired,
-            table_code=table_code,
+        is_order_by_cteep = Companies.CTEEP == user_company_code
+        result = yield self.voltage_control_handler.get_solicitations(
+            is_order_by_cteep=is_order_by_cteep,
             from_id=from_solicitation_id,
             limit=limit
         )
