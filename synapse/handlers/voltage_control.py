@@ -447,6 +447,11 @@ def check_synchronous_params(solicitation):
             max_value=150,
             equipment_type=solicitation["equipment"])
 
+    check_voltage(
+        voltage=solicitation["voltage"],
+        equipment_type=solicitation["equipment"]
+    )
+
 
 def check_action_type(action, possible_actions, equipment_type):
     if action not in possible_actions:
@@ -492,10 +497,8 @@ def check_staggered(staggered, equipment_type):
 
 
 def check_voltage(voltage, equipment_type):
-    is_optional = equipment_type == EquipmentTypes.REACTOR or \
-                  equipment_type == EquipmentTypes.CAPACITOR
 
-    if is_optional and voltage is None:
+    if voltage is None:
         return
 
     if voltage not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
