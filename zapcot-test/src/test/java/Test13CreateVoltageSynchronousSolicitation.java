@@ -160,7 +160,7 @@ public class Test13CreateVoltageSynchronousSolicitation {
         ServiceUtil.wait(5);
 
         payloadSolicitation = DataUtil.buildPayloadSingleSolicitation("ADJUST", "SYNCHRONOUS", "MOS",
-        "-5", "", null, "CTEEP");
+        "-151", "", null, "CTEEP");
 
         RestAssured.
                 given().

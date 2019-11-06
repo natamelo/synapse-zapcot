@@ -350,6 +350,7 @@ def check_reactor_params(solicitation):
     check_amount(
         amount=solicitation["amount"],
         min_value=1,
+        max_value=None,
         equipment_type=solicitation["equipment"]
     )
 
@@ -374,6 +375,7 @@ def check_capacitor_params(solicitation):
     check_amount(
         amount=solicitation["amount"],
         min_value=1,
+        max_value=None,
         equipment_type=solicitation["equipment"]
     )
 
@@ -405,6 +407,7 @@ def check_transform_params(solicitation):
         check_amount(
             amount=solicitation["amount"],
             min_value=-100000,
+            max_value=None,
             equipment_type=solicitation["equipment"]
         )
 
@@ -414,6 +417,7 @@ def check_transform_params(solicitation):
         check_amount(
             amount=solicitation["amount"],
             min_value=1,
+            max_value=None,
             equipment_type=solicitation["equipment"]
         )
 
@@ -439,7 +443,8 @@ def check_synchronous_params(solicitation):
     if solicitation["action"] == SolicitationActions.ADJUST:
         check_amount(
             amount=solicitation["amount"],
-            min_value=1,
+            min_value=-150,
+            max_value=150,
             equipment_type=solicitation["equipment"])
 
 
@@ -452,13 +457,22 @@ def check_action_type(action, possible_actions, equipment_type):
         )
 
 
-def check_amount(amount, min_value, equipment_type):
+def check_amount(amount, min_value, max_value, equipment_type):
     try:
-        if int(amount) < min_value:
-            raise SynapseError(
-                400,
-                "Invalid amount value for equipment type '%s'." % equipment_type,
-                Codes.INVALID_PARAM
+        amount = int(amount)
+        if equipment_type == EquipmentTypes.SYNCHRONOUS:
+            if amount < min_value or amount > max_value:
+                raise SynapseError(
+                    400,
+                    "Invalid amount value for equipment type '%s'." % equipment_type,
+                    Codes.INVALID_PARAM
+                )
+        else:
+            if amount < min_value:
+                raise SynapseError(
+                    400,
+                    "Invalid amount value for equipment type '%s'." % equipment_type,
+                    Codes.INVALID_PARAM
             )
     except Exception as e:
         raise SynapseError(
