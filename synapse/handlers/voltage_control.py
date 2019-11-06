@@ -108,21 +108,19 @@ class VoltageControlHandler(BaseHandler):
 
         #Enquanto não tem as permissões, recupera todos os usuários.
         users = yield self.store.get_users()
-        users_to_invite = self._get_users_name_to_invite(users, user_id)
 
         for solicitation in solicitations:
-            room_id = yield self.create_room_for_solicitation(requester, solicitation,
-                                                              users_to_invite)
-
-            yield self.join_users_to_room(requester, users_to_invite, room_id)
-
-            solicitation_created = yield self._create_solicitation(solicitation, user_id, group_id, room_id)
+            solicitation_created = yield self._create_solicitation(solicitation, user_id, group_id, None)
 
             token = yield self.store.create_solicitation_updated_event(EventTypes.CreateSolicitation,
                                                                        solicitation_created['id'],
                                                                        user_id, solicitation)
 
             self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
+
+            self.create_room_and_join_users(requester, users, solicitation_created['id'],
+                                            solicitation_created['substation_code'],
+                                            solicitation_created['equipment_code'])
 
     @defer.inlineCallbacks
     def _create_solicitation(self, solicitation, user_id, group_id, room_id):
@@ -146,8 +144,8 @@ class VoltageControlHandler(BaseHandler):
         return solicitation
 
     @defer.inlineCallbacks
-    def create_room_for_solicitation(self, requester, solicitation, users):
-        room_name = "%s - %s" % (solicitation["equipment"], solicitation["substation"])
+    def create_room_for_solicitation(self, requester, users, substation, equipment):
+        room_name = "%s - %s" % (equipment, substation)
         room_id = yield self._room_creation_handler.create_room_for_solicitation(requester, room_name, users)
         return room_id
 
@@ -226,10 +224,27 @@ class VoltageControlHandler(BaseHandler):
             yield self.change_solicitation_status(SolicitationStatus.LATE, solicitation['id'], None)
 
     @defer.inlineCallbacks
-    def join_users_to_room(self, requester, users, room_id):
+    def _join_users_to_room(self, requester, users, room_id):
         for user in users:
             user_object = UserID.from_string(user)
             yield self._room_member_handler.update_membership(requester, user_object, room_id, 'join')
+
+    @defer.inlineCallbacks
+    def _create_room_and_join_users(self, requester, users, solicitation_id, substation, equipment):
+        requester_user_id = requester.user.to_string()
+        users_to_invite = self._get_users_name_to_invite(users, requester_user_id)
+
+        room_id = yield self.create_room_for_solicitation(requester, users_to_invite, substation, equipment)
+
+        yield self.store.update_solicitation_room(solicitation_id, room_id)
+
+        yield self._join_users_to_room(requester, users_to_invite, room_id)
+
+    def create_room_and_join_users(self, requester, users, solicitation_id, substation, equipment):
+        run_as_background_process(
+            "create_room_and_join_users", self._create_room_and_join_users, requester, users,
+            solicitation_id, substation, equipment
+        )
 
     @classmethod
     def _get_users_name_to_invite(cls, users, user_to_remove):
