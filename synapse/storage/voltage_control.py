@@ -230,7 +230,7 @@ class VoltageControlStore(SQLBaseStore):
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
                 "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
-                "        sol.group_id, sol.room_id "
+                "        sol.at_, sol.bt, sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
@@ -269,7 +269,7 @@ class VoltageControlStore(SQLBaseStore):
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
                 "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
-                "        sol.group_id, sol.room_id "
+                "        sol.at_, sol.bt, sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
