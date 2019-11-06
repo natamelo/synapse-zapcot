@@ -74,6 +74,10 @@ public class DataUtil {
         single_solicitation.put("voltage", voltage);
         single_solicitation.put("company_code", company_code);
 
+        //TODO Refatorar prar deixar passando por parâmetro
+        single_solicitation.put("at", "500kv");
+        single_solicitation.put("bt", "500kv");
+
         if (staggered != null) {
             single_solicitation.put("staggered", staggered);
         }
