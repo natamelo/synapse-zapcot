@@ -58,7 +58,7 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem on update solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status,
+    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, at, bt, user_id, ts, status,
                             group_id, room_id):
         try:
             solicitation_id = self._solicitation_list_id_gen.get_next()
@@ -73,7 +73,9 @@ class VoltageControlStore(SQLBaseStore):
                     "substation_code": substation,
                     "staggered": staggered,
                     "amount": amount,
-                    "voltage": voltage
+                    "voltage": voltage,
+                    "at_": at,
+                    "bt": bt,
                 }
             )
 
