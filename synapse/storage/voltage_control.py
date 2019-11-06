@@ -23,7 +23,7 @@ class VoltageControlStore(SQLBaseStore):
                 "voltage_control_solicitation",
                 {"id": id},
                 retcols=("id", "action_code", "equipment_code", "substation_code", "amount",
-                         "voltage"),
+                         "voltage", "room_id"),
                 allow_none=True,
             )
             if result:
