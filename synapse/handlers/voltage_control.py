@@ -34,7 +34,10 @@ from synapse.api.errors import (
     SynapseError,
 )
 
-from synapse.types import UserID
+from synapse.types import (
+    UserID,
+    create_requester
+)
 
 import calendar
 import time
@@ -88,6 +91,7 @@ class VoltageControlHandler(BaseHandler):
     def __init__(self, hs):
         self.hs = hs
         self.substation_handler = hs.get_substation_handler()
+        self.event_creation_handler = hs.get_event_creation_handler()
         self._room_creation_handler = hs.get_room_creation_handler()
         self._room_member_handler = hs.get_room_member_handler()
         self.profiler_handler = hs.get_profile_handler()
@@ -181,7 +185,8 @@ class VoltageControlHandler(BaseHandler):
         return solicitation
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id, user_id):
+    def change_solicitation_status(self, new_status, id, requester, justification):
+        user_id = requester.user.to_string()
         solicitation = yield self.get_solicitation_by_id(id)
 
         if not solicitation:
@@ -211,9 +216,45 @@ class VoltageControlHandler(BaseHandler):
 
         self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
+        if justification:
+            self._send_justification_to_chat(
+                user_id=user_id,
+                room_id=solicitation["room_id"],
+                new_status=new_status,
+                justification=justification,
+                requester=requester
+            )
+
     def start_updating_late_solicitations(self):
         run_as_background_process(
             "sync_late_solicitations", self._update_status_from_late_solicitations
+        )
+
+    @defer.inlineCallbacks
+    def _send_justification_to_chat(self, user_id, room_id, new_status, justification, requester):
+
+        if new_status == SolicitationStatus.CANCELED:
+            status_text = "do cancelamento"
+        elif new_status == SolicitationStatus.CONTESTED:
+            status_text = "da contestação"
+        else:
+            status_text = "do impedimento"
+
+        event_dict = {
+            "type": "m.room.message",
+            "content": {
+                'msgtype': 'm.text',
+                "format": "org.matrix.custom.html",
+                "body": "**Motivo " + status_text + ":** " + justification,
+                "formatted_body": "<strong>Motivo " + status_text + ":</strong> " + "<font color='red'>" + justification + "</font>"
+            },
+            "room_id": room_id,
+            "sender": user_id,
+        }
+
+        yield self.event_creation_handler.create_and_send_nonmember_event(
+            requester,
+            event_dict
         )
 
     @defer.inlineCallbacks

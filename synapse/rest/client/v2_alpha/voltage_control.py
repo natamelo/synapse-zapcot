@@ -125,15 +125,19 @@ class VoltageControlStatusServlet(RestServlet):
     @defer.inlineCallbacks
     def on_PUT(self, request, solicitation_id):
         requester = yield self.auth.get_user_by_req(request)
-        user_id = requester.user.to_string()
 
         body = parse_json_object_from_request(request)
         new_status = body["status"]
+        justification = None
+        
+        if "justification" in body:
+            justification = body["justification"]
 
         yield self.voltage_control_handler.change_solicitation_status(
             new_status=new_status,
             id=solicitation_id,
-            user_id=user_id)
+            requester=requester,
+            justification=justification)
         return 200, {"message": "Solicitation status changed."}
 
 
