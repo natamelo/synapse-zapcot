@@ -117,9 +117,9 @@ class VoltageControlHandler(BaseHandler):
 
             self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
 
-            self.create_room_and_join_users(requester, users, solicitation_created['id'],
-                                            solicitation_created['substation_code'],
-                                            solicitation_created['equipment_code'])
+            #self.create_room_and_join_users(requester, users, solicitation_created['id'],
+            #                                solicitation_created['substation_code'],
+            #                                solicitation_created['equipment_code'])
 
     @defer.inlineCallbacks
     def _create_solicitation(self, solicitation, user_id, group_id, room_id):
