@@ -58,7 +58,7 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem on update solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, user_id, ts, status,
+    def create_solicitation(self, action, equipment, substation, staggered, amount, voltage, at, bt, user_id, ts, status,
                             group_id, room_id):
         try:
             solicitation_id = self._solicitation_list_id_gen.get_next()
@@ -73,7 +73,9 @@ class VoltageControlStore(SQLBaseStore):
                     "substation_code": substation,
                     "staggered": staggered,
                     "amount": amount,
-                    "voltage": voltage
+                    "voltage": voltage,
+                    "at_": at,
+                    "bt": bt,
                 }
             )
 
@@ -228,7 +230,7 @@ class VoltageControlStore(SQLBaseStore):
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
                 "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
-                "        sol.group_id, sol.room_id "
+                "        sol.at_, sol.bt, sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "
@@ -267,7 +269,7 @@ class VoltageControlStore(SQLBaseStore):
             sql = (
                 " SELECT sol.id, sol.action_code, sol.equipment_code, "
                 "        sol.substation_code, sol.staggered, sol.amount, sol.voltage, "
-                "        sol.group_id, sol.room_id "
+                "        sol.at_, sol.bt, sol.group_id, sol.room_id "
                 " FROM voltage_control_solicitation sol, solicitation_status_signature sig "
                 " WHERE sol.id >= ? AND sig.id = "
                 "       (SELECT id "

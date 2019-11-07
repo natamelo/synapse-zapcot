@@ -45,7 +45,6 @@ logger = logging.getLogger(__name__)
 
 
 class VoltageControlHandler(BaseHandler):
-
     __STATE_MACHINE_ONS = {
         SolicitationStatus.NEW: [SolicitationStatus.CANCELED],
         SolicitationStatus.ACCEPTED: [],
@@ -106,7 +105,7 @@ class VoltageControlHandler(BaseHandler):
             yield self.check_substation(solicitation['company_code'], solicitation['substation'])
             yield check_solicitation_params(solicitation)
 
-        #Enquanto não tem as permissões, recupera todos os usuários.
+        # Enquanto não tem as permissões, recupera todos os usuários.
         users = yield self.store.get_users()
 
         for solicitation in solicitations:
@@ -133,6 +132,8 @@ class VoltageControlHandler(BaseHandler):
             staggered=solicitation["staggered"],
             amount=solicitation["amount"],
             voltage=solicitation["voltage"],
+            at=solicitation["at"],
+            bt=solicitation["bt"],
             user_id=user_id,
             ts=ts,
             status=SolicitationStatus.NEW,
@@ -205,7 +206,7 @@ class VoltageControlHandler(BaseHandler):
             EventTypes.ChangeSolicitationStatus, id, user_id, {"status": new_status}
         )
 
-        #Enquanto não tem as permissões, recupera todos os usuários.
+        # Enquanto não tem as permissões, recupera todos os usuários.
         users = yield self.store.get_users()
 
         self.notifier.on_new_event("solicitations_key", token, [user["name"] for user in users])
@@ -220,7 +221,7 @@ class VoltageControlHandler(BaseHandler):
         current_time = calendar.timegm(time.gmtime())
         solicitations = yield self.store.get_late_solicitations_with_status_new(current_time)
         for solicitation in solicitations:
-            #TODO Put the bot user_id correct in the future
+            # TODO Put the bot user_id correct in the future
             yield self.change_solicitation_status(SolicitationStatus.LATE, solicitation['id'], None)
 
     @defer.inlineCallbacks
@@ -275,7 +276,7 @@ class VoltageControlHandler(BaseHandler):
         if new_status not in next_states_possible:
             raise SynapseError(400, "Inconsistent status change.", Codes.INVALID_PARAM)
 
-        #if new_status == SolicitationStatus.ACCEPTED:
+        # if new_status == SolicitationStatus.ACCEPTED:
         #    cls._check_timeout_to_accept(creation_ts)
 
     @classmethod
@@ -304,6 +305,16 @@ def treat_solicitation_data(solicitation):
 
     if solicitation["equipment"] == EquipmentTypes.TRANSFORMER:
         solicitation["staggered"] = None
+
+        if "at" not in solicitation:
+            solicitation["at"] = None
+
+        if "bt" not in solicitation:
+            solicitation["bt"] = None
+
+    else:
+        solicitation["at"] = None
+        solicitation["bt"] = None
 
 
 def check_param_create_total_time(create_total_time):
@@ -339,6 +350,7 @@ def check_reactor_params(solicitation):
     check_amount(
         amount=solicitation["amount"],
         min_value=1,
+        max_value=None,
         equipment_type=solicitation["equipment"]
     )
 
@@ -363,6 +375,7 @@ def check_capacitor_params(solicitation):
     check_amount(
         amount=solicitation["amount"],
         min_value=1,
+        max_value=None,
         equipment_type=solicitation["equipment"]
     )
 
@@ -394,17 +407,29 @@ def check_transform_params(solicitation):
         check_amount(
             amount=solicitation["amount"],
             min_value=-100000,
+            max_value=None,
             equipment_type=solicitation["equipment"]
         )
 
     if solicitation["action"] == SolicitationActions.RISE or \
-        solicitation["action"] == SolicitationActions.REDUCE or \
-        solicitation["action"] == SolicitationActions.ADJUST:
+            solicitation["action"] == SolicitationActions.REDUCE or \
+            solicitation["action"] == SolicitationActions.ADJUST:
         check_amount(
             amount=solicitation["amount"],
             min_value=1,
+            max_value=None,
             equipment_type=solicitation["equipment"]
         )
+
+    check_at(
+        voltage=solicitation["at"],
+        equipment_type=solicitation["equipment"]
+    )
+
+    check_bt(
+        voltage=solicitation["bt"],
+        equipment_type=solicitation["equipment"]
+    )
 
 
 def check_synchronous_params(solicitation):
@@ -418,8 +443,14 @@ def check_synchronous_params(solicitation):
     if solicitation["action"] == SolicitationActions.ADJUST:
         check_amount(
             amount=solicitation["amount"],
-            min_value=1,
+            min_value=-150,
+            max_value=150,
             equipment_type=solicitation["equipment"])
+
+    check_voltage(
+        voltage=solicitation["voltage"],
+        equipment_type=solicitation["equipment"]
+    )
 
 
 def check_action_type(action, possible_actions, equipment_type):
@@ -431,13 +462,22 @@ def check_action_type(action, possible_actions, equipment_type):
         )
 
 
-def check_amount(amount, min_value, equipment_type):
+def check_amount(amount, min_value, max_value, equipment_type):
     try:
-        if int(amount) < min_value:
-            raise SynapseError(
-                400,
-                "Invalid amount value for equipment type '%s'." % equipment_type,
-                Codes.INVALID_PARAM
+        amount = int(amount)
+        if equipment_type == EquipmentTypes.SYNCHRONOUS:
+            if amount < min_value or amount > max_value:
+                raise SynapseError(
+                    400,
+                    "Invalid amount value for equipment type '%s'." % equipment_type,
+                    Codes.INVALID_PARAM
+                )
+        else:
+            if amount < min_value:
+                raise SynapseError(
+                    400,
+                    "Invalid amount value for equipment type '%s'." % equipment_type,
+                    Codes.INVALID_PARAM
             )
     except Exception as e:
         raise SynapseError(
@@ -457,15 +497,31 @@ def check_staggered(staggered, equipment_type):
 
 
 def check_voltage(voltage, equipment_type):
-    is_optional = equipment_type == EquipmentTypes.REACTOR or \
-                  equipment_type == EquipmentTypes.CAPACITOR
 
-    if is_optional and voltage is None:
+    if voltage is None:
         return
 
     if voltage not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
         raise SynapseError(
             400,
             "Invalid voltage value for equipment type '%s'." % equipment_type,
+            Codes.INVALID_PARAM
+        )
+
+
+def check_at(voltage, equipment_type):
+    if voltage not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
+        raise SynapseError(
+            400,
+            "Invalid AT value for equipment type '%s'." % equipment_type,
+            Codes.INVALID_PARAM
+        )
+
+
+def check_bt(voltage, equipment_type):
+    if voltage not in VoltageTransformerLevels.ALL_ALLOWED_LEVELS:
+        raise SynapseError(
+            400,
+            "Invalid BT value for equipment type '%s'." % equipment_type,
             Codes.INVALID_PARAM
         )

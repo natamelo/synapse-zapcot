@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 
-public class Test12CreateVoltageTransformSolicitation {
+public class Test12CreateVoltageTransformerSolicitation {
 
     @BeforeClass
     public static void setup() {
