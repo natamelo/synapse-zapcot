@@ -35,7 +35,7 @@ class VoltageControlStore(SQLBaseStore):
             raise StoreError(500, "Problem recovering solicitation")
 
     @defer.inlineCallbacks
-    def create_solicitation_status_signature(self, solicitation_id, user_id, new_status, ts):
+    def create_solicitation_status_signature(self, solicitation_id, user_id, new_status, ts, justification):
         try:
 
             self.get_solicitation_by_id(solicitation_id)
@@ -50,6 +50,7 @@ class VoltageControlStore(SQLBaseStore):
                     "status": new_status,
                     "time_stamp": ts,
                     "solicitation_id": solicitation_id,
+                    "justification": justification
                 }
             )
 
@@ -79,7 +80,7 @@ class VoltageControlStore(SQLBaseStore):
                 }
             )
 
-            yield self.create_solicitation_status_signature(solicitation_id, user_id, status, ts)
+            yield self.create_solicitation_status_signature(solicitation_id, user_id, status, ts, None)
 
             return solicitation_id
 
@@ -163,7 +164,7 @@ class VoltageControlStore(SQLBaseStore):
             args = [solicitation_id]
 
             sql = (
-                " SELECT event.user_id, event.status, event.time_stamp "
+                " SELECT event.user_id, event.status, event.time_stamp, event.justification "
                 " FROM solicitation_status_signature event "
                 " WHERE event.solicitation_id = ? "
                 " ORDER BY event.time_stamp DESC "

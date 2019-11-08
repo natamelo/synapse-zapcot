@@ -129,9 +129,11 @@ class VoltageControlStatusServlet(RestServlet):
 
         body = parse_json_object_from_request(request)
         new_status = body["status"]
+        justification = body["justification"] if "justification" in body else None
 
         yield self.voltage_control_handler.change_solicitation_status(
             new_status=new_status,
+            justification=justification,
             id=solicitation_id,
             user_id=user_id)
         return 200, {"message": "Solicitation status changed."}
