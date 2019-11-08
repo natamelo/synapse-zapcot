@@ -181,7 +181,7 @@ class VoltageControlHandler(BaseHandler):
         return solicitation
 
     @defer.inlineCallbacks
-    def change_solicitation_status(self, new_status, id, user_id):
+    def change_solicitation_status(self, new_status, justification, id, user_id):
         solicitation = yield self.get_solicitation_by_id(id)
 
         if not solicitation:
@@ -200,7 +200,7 @@ class VoltageControlHandler(BaseHandler):
         self._validate_status_change(current_status, new_status, user_company_code, creation_ts)
 
         ts = calendar.timegm(time.gmtime())
-        yield self.store.create_solicitation_status_signature(id, user_id, new_status, ts)
+        yield self.store.create_solicitation_status_signature(id, user_id, new_status, ts, justification)
 
         token = yield self.store.create_solicitation_updated_event(
             EventTypes.ChangeSolicitationStatus, id, user_id, {"status": new_status}
